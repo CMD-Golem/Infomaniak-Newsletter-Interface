@@ -1,0 +1,115 @@
+body {
+	display: flex;
+	margin: 0;
+}
+
+path {
+	fill: black;
+}
+
+aside {
+	display: block;
+	height: 100vh;
+	width: 200px;
+	border-right: 2px black solid;
+}
+
+
+
+menu {
+	height: 100px;
+	background-color: red;
+	margin: 0;
+	padding: 0;
+	display: flex;
+}
+
+section {
+	height: inherit;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+subsection {
+	display: flex;
+	flex-direction: row;
+}
+
+section, button.divider {
+	padding-right: 1px;
+	border-right: 1.5px black solid;
+	margin-right: 1px;
+}
+
+button {
+	overflow: hidden;
+	padding: 0;
+	justify-content: center;
+	align-items: center;
+	margin: 0;
+	background-color: transparent;
+	border: none;
+}
+
+button:hover {
+	background-color: green;
+}
+
+button p {
+	margin: 0;
+	font-size: 17px;
+	font-weight: bold;
+}
+
+button svg {
+	width: 20px;
+	height: 20px;
+}
+
+button.big {
+	height: 90px;
+	width: 60px;
+}
+
+button.big svg {
+	height: 35px;
+	width: 35px;
+}
+
+button.long {
+	height: 30px;
+	display: flex;
+	justify-content: start;
+}
+
+button.long div {
+	margin: 0 5px;
+}
+
+
+button.small {
+	width: 30px;
+	height: 30px;
+}
+
+button.small div {
+	display: none;
+}
+
+
+header {
+	height: 200px;
+	background-color: blue;
+}
+
+header button {
+	border: 1.5px black solid;
+	width: 70px;
+	height: 90px;
+}
+
+header button svg {
+	height: 35px;
+	width: 35px;
+}
