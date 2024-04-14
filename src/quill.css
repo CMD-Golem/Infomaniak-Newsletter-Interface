@@ -1,3 +1,45 @@
+@font-face {
+	font-family: arial;
+	src: url(fonts/arial.ttf);
+	font-weight: normal;
+}
+
+@font-face {
+	font-family: calibri;
+	src: url(fonts/calibri.ttf);
+	font-weight: normal;
+}
+
+@font-face {
+	font-family: times;
+	src: url(fonts/times.ttf);
+	font-weight: normal;
+}
+
+#editor {
+	font-family: 'arial';
+}
+
+#toolbar .ql-font span[data-label='arial']::before {
+	font-family: 'arial';
+}
+#toolbar .ql-font span[data-label='calibri']::before {
+	font-family: 'calibri';
+}
+#toolbar .ql-font span[data-label='times']::before {
+	font-family: 'times';
+}
+
+.ql-font-arial {
+	font-family: 'arial';
+}
+.ql-font-calibri {
+	font-family: 'calibri';
+}
+.ql-font-times {
+	font-family: 'times';
+}
+
 .ql-snow .ql-picker.ql-size .ql-picker-label[data-value]::before, .ql-snow .ql-picker.ql-size .ql-picker-item[data-value]::before {
 	content: attr(data-value) !important;
 }
@@ -5,3 +47,4 @@
 .ql-container {
     font-size: 14px;
 }
+
