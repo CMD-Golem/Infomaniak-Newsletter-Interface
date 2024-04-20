@@ -1,0 +1,37 @@
+{
+  "build": {
+    "devPath": "../src",
+    "distDir": "../src",
+    "withGlobalTauri": true
+  },
+  "package": {
+    "productName": "infomaniak-newsletter-interface",
+    "version": "0.0.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "clipboard": {
+        "readText": true
+      }
+    },
+    "windows": [
+      {
+        "title": "Infomaniak Newsletter Interface",
+        "width": 800,
+        "height": 600
+      }
+    ],
+    "security": {
+      "csp": null
+    },
+    "bundle": {
+      "active": true,
+      "targets": "all",
+      "identifier": "com.cmd-golem.infomaniak-newsletter-interface",
+      "icon": [
+        "icons/icon.ico"
+      ]
+    }
+  }
+}

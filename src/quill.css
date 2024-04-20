@@ -17,7 +17,11 @@
 }
 
 #editor {
-	font-family: 'arial';
+	font-family: var(--font);
+}
+
+.ql-container {
+    font-size: var(--font_size);
 }
 
 #toolbar .ql-font span[data-label='arial']::before {
@@ -44,7 +48,6 @@
 	content: attr(data-value) !important;
 }
 
-.ql-container {
-    font-size: 14px;
+.ql-editor > * {
+    cursor: inherit;
 }
-

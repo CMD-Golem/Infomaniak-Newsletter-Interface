@@ -24,10 +24,11 @@ var standard_text_size = "14px";
 var size_selection = document.getElementById("size_selection");
 size_selection.value = standard_text_size;
 
+document.querySelector(":root").style.setProperty("--font_size", standard_text_size);
+document.querySelector(":root").style.setProperty("--font", "arial");
 quill.focus();
 
-
-quill.insertText(0, 'Ich heisse Fabian Kaufmann und wohne in Landquart', "size", standard_text_size);
+quill.insertText(0, 'Ich heisse Max Mustermann und wohne in der Schweiz');
 
 
 // function for toggle buttons
@@ -102,7 +103,72 @@ function removeFormat() {
 	}
 }
 
-// change size and font dropdowns dynamically
+// open color selection box
+var picker = document.getElementsByTagName("picker")[0];
+
+function quillColorSelection(id) {
+	var pos = document.getElementById(id).getBoundingClientRect();
+	picker.style.top = pos.top + 30 + "px";
+	picker.style.left = pos.left + "px";
+
+	picker.setAttribute("data-id", id);
+
+	picker.style.display = "block";
+	document.getElementsByTagName("editor")[0].addEventListener("mousedown", hideColorSelection);
+}
+
+var colors = picker.getElementsByTagName("td");
+for (var i = 0; i < colors.length; i++) {
+	colors[i].addEventListener("click", quillSetColor);
+}
+
+function quillSetColor(color) {
+	var color = color.target.style.backgroundColor;
+	quill.format("color", color);
+
+	document.getElementById(picker.getAttribute("data-id")).firstElementChild.firstElementChild.setAttribute("fill", color);
+
+	hideColorSelection();
+}
+
+function hideColorSelection() {
+	picker.style.display = "none";
+}
+
+
+// paste, copy, cut Text functions
+async function paste() {
+	var clipboard_text = await window.__TAURI__.clipboard.readText();
+
+	var range = quill.getSelection();
+	if (range) {
+		if (range.length > 0) {
+			quill.deleteText(range.index, range.length);
+		}
+
+		quill.insertText(range.index, clipboard_text);
+	}
+
+	
+}
+
+function copySelection(cut) {
+	var range = quill.getSelection();
+	if (range) {
+		if (range.length > 0) {
+			var selected_text = quill.getText(range.index, range.length);
+			navigator.clipboard.writeText(selected_text);
+		}
+		if (cut) {
+			quill.deleteText(range.index, range.length);
+		}
+	}
+	
+
+	
+}
+
+// change size and font dropdowns dynamically and format painter functions
 quill.on('selection-change', () => {
 	var format_object = quill.getFormat();
 	if ("size" in format_object) {
@@ -117,25 +183,35 @@ quill.on('selection-change', () => {
 	else {
 		font_selection.value = "arial";
 	}
+
+	if (selected_formats != false) {
+		var formats = Object.keys(selected_formats);
+		for (var i = 0; i < formats.length; i++) {
+			quill.format(formats[i], selected_formats[formats[i]]);
+		}
+		formatPainterEnd();
+	}
 });
 
-// open color selection box
-var picker = document.getElementsByTagName("picker")[0];
+// format painter
+var selected_formats = false;
+var editor_el = document.getElementById("editor");
+var format_painter = document.getElementById("format_painter");
 
-function quillColorSelection(id) {
-	var pos = document.getElementById(id).getBoundingClientRect();
-	picker.style.top = pos.top + 30 + "px";
-	picker.style.left = pos.left + "px";
-
-	picker.style.display = "block";
+function formatPainterStart() {
+	selected_formats = quill.getFormat();
+	editor_el.style.cursor = "copy";
+	format_painter.classList.add("active");
 }
 
-var colors = picker.getElementsByTagName("td");
-for (var i = 0; i < colors.length; i++) {
-	colors[i].addEventListener("click", quillSetColor);
+function formatPainterEnd() {
+	selected_formats = false;
+	editor_el.style.cursor = "auto";
+	format_painter.classList.remove("active");
 }
 
-function quillSetColor(color) {
-	quill.format("color", color.target.style.backgroundColor);
-	picker.style.display = "none";
-}
+document.addEventListener("keydown", e => {
+	if (e.key) {
+		formatPainterEnd()
+	}
+});
