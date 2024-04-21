@@ -1,40 +1,96 @@
 body {
 	display: flex;
 	margin: 0;
+	user-select: none;
+}
+
+* {
 	color: #3a3a3a;
+	font-size: 13px;
+	font-family: Arial, Helvetica, sans-serif;
 }
 
 svg {
 	fill: #3a3a3a;
 }
 
-aside {
-	display: block;
-	height: 100vh;
-	width: 200px;
-	border-right: 1.5px #3a3a3a solid;
-}
-
-editor {
-	width: calc(100vw - 202px);
-}
-
 select, select:focus {
 	outline: none;
 	border-radius: 0;
-	height: 20px;
-	margin: 5px;
-}
-
-select:hover {
-	border-color: #2b88d8;
+	font-size: inherit;
 }
 
 ::selection {
 	background-color: #c7c7c7;
 }
 
+input {
+	font-size: inherit;
+	font-family: inherit;
+	border: none;
+}
 
+input:focus, input:focus:hover {
+	outline: none;
+}
+
+
+/* Aside */
+aside {
+	display: block;
+	position: relative;
+	height: 100vh;
+	width: 250px;
+	border-right: 1.5px #3a3a3a solid;
+}
+
+navigation {
+	position: absolute;
+	display: flex;
+	border-top: 1.5px #3a3a3a solid;
+	bottom: 0;
+	height: 60px;
+	width: 100%;
+}
+
+navigation button {
+	width: 60px;
+	height: 60px;
+}
+
+navigation button div {
+	display: none;
+}
+
+navigation button svg {
+	width: 35px;
+	height: 35px;
+}
+
+.credits_button {
+	display: inline-block;
+	text-align: center;
+	border-left: 1.5px #3a3a3a solid;
+	width: 68.5px;
+	padding-top: 12px;
+}
+
+.credits_button div {
+	display: block;
+	margin-top: 5px;
+}
+
+.credits_button:link, .credits_button:visited, .credits_button:hover, .credits_button:active {
+	color: inherit;
+	text-decoration-line: none;
+	cursor: default;
+}
+
+
+/* Editor */
+editor {
+	width: calc(100% - 251.5px);
+}
 
 menu {
 	height: 90px;
@@ -72,7 +128,7 @@ button {
 	border: none;
 }
 
-button:hover {
+button:hover, .credits_button:hover {
 	background-color: #eff6fc;
 }
 
@@ -108,16 +164,15 @@ button.big svg {
 	width: 35px;
 }
 
-button.long {
+button.long, header button {
 	height: 30px;
 	display: flex;
 	justify-content: start;
 }
 
-button.long div {
+button.long div, header button div {
 	margin: 0 5px;
 }
-
 
 button.small {
 	width: 30px;
@@ -133,25 +188,18 @@ button.small div, button.narrow div {
 	display: none;
 }
 
-header {
-	margin: 15px;
+menu select {
+	height: 20px;
+	margin: 5px;
 }
 
-header button {
-	border: 1.5px #3a3a3a solid;
-	width: 70px;
-	height: 90px;
+menu select:hover {
+	border-color: #2b88d8;
 }
-
-header button svg {
-	height: 35px;
-	width: 35px;
-}
-
 
 
 picker {
-	display: inline-block;
+	display: none;
 	position: absolute;
 	top: 20px;
 	left: 30px;
@@ -193,3 +241,45 @@ picker input {
 	visibility: hidden;
 }
 
+
+/* Header */
+header {
+	padding: 15px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	border-bottom: 1.5px #3a3a3a solid;
+}
+
+headerbox {
+	display: flex;
+	width: 100%;
+}
+
+header button {
+	border: 1.5px #3a3a3a solid;
+	width: 120px;
+	padding-left: 5px;
+}
+
+header label {
+	display: inline-block;
+	width: 115px;
+	height: 23px;
+	margin-left: 15px;
+	padding-top: 7px;
+}
+
+header input, header select {
+	border-bottom: 1.5px #3a3a3a solid;
+	margin-left: 5px;
+	height: 29px;
+	padding: 0;
+	width: calc(100% - 255px);
+}
+
+header select, header select:focus {
+	border: none;
+	border-bottom: 1.5px #3a3a3a solid;
+	height: 30px;
+}

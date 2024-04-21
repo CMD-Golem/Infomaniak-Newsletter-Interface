@@ -20,16 +20,22 @@ var quill = new Quill('#editor',
 	}
 );
 
+// set standard font/ font size
 var standard_text_size = "14px";
 var size_selection = document.getElementById("size_selection");
 size_selection.value = standard_text_size;
-
 document.querySelector(":root").style.setProperty("--font_size", standard_text_size);
 document.querySelector(":root").style.setProperty("--font", "arial");
-quill.focus();
+
+// initalize and load everything after document loaded
+window.onload = function onload() {
+	quill.focus();
+	// loadCampaigns();
+	// loadMailinglists();
+	// loadCredits();
+}
 
 quill.insertText(0, 'Ich heisse Max Mustermann und wohne in der Schweiz');
-
 
 // function for toggle buttons
 function quillFormat(format, style) {
@@ -169,27 +175,29 @@ function copySelection(cut) {
 }
 
 // change size and font dropdowns dynamically and format painter functions
-quill.on('selection-change', () => {
-	var format_object = quill.getFormat();
-	if ("size" in format_object) {
-		size_selection.value = format_object.size;
-	}
-	else {
-		size_selection.value = standard_text_size;
-	}
-	if ("font" in format_object) {
-		font_selection.value = format_object.font;
-	}
-	else {
-		font_selection.value = "arial";
-	}
-
-	if (selected_formats != false) {
-		var formats = Object.keys(selected_formats);
-		for (var i = 0; i < formats.length; i++) {
-			quill.format(formats[i], selected_formats[formats[i]]);
+quill.on('selection-change', (e) => {
+	if (e != null) {
+		var format_object = quill.getFormat();
+		if ("size" in format_object) {
+			size_selection.value = format_object.size;
 		}
-		formatPainterEnd();
+		else {
+			size_selection.value = standard_text_size;
+		}
+		if ("font" in format_object) {
+			font_selection.value = format_object.font;
+		}
+		else {
+			font_selection.value = "arial";
+		}
+
+		if (selected_formats != false) {
+			var formats = Object.keys(selected_formats);
+			for (var i = 0; i < formats.length; i++) {
+				quill.format(formats[i], selected_formats[formats[i]]);
+			}
+			formatPainterEnd();
+		}
 	}
 });
 
