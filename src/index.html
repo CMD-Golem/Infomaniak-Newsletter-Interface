@@ -5,15 +5,17 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Document</title>
 
-	<script src="https://cdn.jsdelivr.net/npm/quill@2.0.0-rc.4/dist/quill.js"></script>
-	<link href="https://cdn.jsdelivr.net/npm/quill@2.0.0-rc.4/dist/quill.snow.css" rel="stylesheet" />
+	<script src="lib/quill.js"></script>
+	<script src="lib/quill-resize-module.js"></script>
+	<link href="lib/quill.snow.css" rel="stylesheet" />
 	<link href="style.css" rel="stylesheet">
 	<link href="quill.css" rel="stylesheet">
 </head>
 <body>
 	<aside>
+		<campaigns></campaigns>
 		<navigation>
-			<button>
+			<button onclick="startCampaign()">
 				<svg width="24" height="24" viewBox="0 0 24 24"><path d="M23 6.5a5.5 5.5 0 1 0-11 0 5.5 5.5 0 0 0 11 0ZM18 7l.001 2.504a.5.5 0 1 1-1 0V7h-2.505a.5.5 0 0 1 0-1H17V3.5a.5.5 0 0 1 1 0V6h2.497a.5.5 0 0 1 0 1H18Zm-.5 6a6.478 6.478 0 0 0 4.5-1.81v5.56a3.25 3.25 0 0 1-3.066 3.245L18.75 20H5.25a3.25 3.25 0 0 1-3.245-3.066L2 16.75V8.608l9.652 5.056a.75.75 0 0 0 .696 0l2.417-1.266A6.477 6.477 0 0 0 17.5 13ZM5.25 4h6.248A6.479 6.479 0 0 0 11 6.5c0 1.993.897 3.776 2.308 4.968L12 12.153l-9.984-5.23a3.25 3.25 0 0 1 3.048-2.918L5.25 4Z"/></svg>
 				<div>Neuer Newsletter</div>
 			</button>
@@ -25,10 +27,10 @@
 				<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12.012 2.25c.734.008 1.465.093 2.182.253a.75.75 0 0 1 .582.649l.17 1.527a1.384 1.384 0 0 0 1.927 1.116l1.401-.615a.75.75 0 0 1 .85.174 9.792 9.792 0 0 1 2.204 3.792.75.75 0 0 1-.271.825l-1.242.916a1.381 1.381 0 0 0 0 2.226l1.243.915a.75.75 0 0 1 .272.826 9.797 9.797 0 0 1-2.204 3.792.75.75 0 0 1-.848.175l-1.407-.617a1.38 1.38 0 0 0-1.926 1.114l-.169 1.526a.75.75 0 0 1-.572.647 9.518 9.518 0 0 1-4.406 0 .75.75 0 0 1-.572-.647l-.168-1.524a1.382 1.382 0 0 0-1.926-1.11l-1.406.616a.75.75 0 0 1-.849-.175 9.798 9.798 0 0 1-2.204-3.796.75.75 0 0 1 .272-.826l1.243-.916a1.38 1.38 0 0 0 0-2.226l-1.243-.914a.75.75 0 0 1-.271-.826 9.793 9.793 0 0 1 2.204-3.792.75.75 0 0 1 .85-.174l1.4.615a1.387 1.387 0 0 0 1.93-1.118l.17-1.526a.75.75 0 0 1 .583-.65c.717-.159 1.45-.243 2.201-.252ZM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/></svg>
 				<div>Einstellungen</div>
 			</button>
-			<a class="credits_button" href="https://newsletter.infomaniak.com/credits/billing-plan">
+			<button class="credits_button" onclick="invoke('open_link', {url: 'https://newsletter.infomaniak.com/credits/billing-plan'});">
 				<b>Credits</b>
-				<div id="credits">1596</div>
-			</a>
+				<div id="credits"></div>
+			</button>
 			</navigation>
 	</aside>
 
@@ -56,10 +58,10 @@
 			</section>
 			<section>
 				<subsection>
-					<select id="font_selection" onchange="quill.format('font', this.value);" style="margin-right: 1px;">
-						<option value="arial">Arial</option>
+					<select id="font_selection" onchange="quill.format('font', this.value);" style="margin-right: 1px; width: 135px;">
+						<!-- <option value="arial">Arial</option> -->
 						<option value="calibri">Calibri</option>
-						<option value="times">Times New Roman</option>
+						<!-- <option value="times">Times New Roman</option> -->
 					</select>
 					<select id="size_selection" onchange="quill.format('size', this.value);" style="margin-left: 1px;">
 						<option value="8px">8</option>
@@ -122,12 +124,12 @@
 					</button>
 					<button class="small" id="background_color" onclick="quill.format('background', this.firstElementChild.firstElementChild.getAttribute('fill'))">
 						<svg width="24" height="24" viewBox="0 0 24 24">
-							<path fill="#ffff00" d="M2 12.414V17.5A2.5 2.5 0 0 0 4.5 20h15a2.5 2.5 0 0 0 2.5-2.5v-11A2.5 2.5 0 0 0 19.5 4h-8.944l2.422 2.422a3 3 0 0 1 .719 3.09c.38.042.75.21 1.04.501l.003.002.003.004.01.009.02.02a7.455 7.455 0 0 1 .311.338c.192.216.45.525.712.89.26.36.545.808.77 1.3.22.478.434 1.106.434 1.799C17 16.23 15.606 18 13.5 18S10 16.23 10 14.375c0-.29.037-.569.097-.83l-1.362 1.362a3 3 0 0 1-4.243 0L2 12.414Z"/>
+							<path class="background" fill="#ffff00" d="M2 12.414V17.5A2.5 2.5 0 0 0 4.5 20h15a2.5 2.5 0 0 0 2.5-2.5v-11A2.5 2.5 0 0 0 19.5 4h-8.944l2.422 2.422a3 3 0 0 1 .719 3.09c.38.042.75.21 1.04.501l.003.002.003.004.01.009.02.02a7.455 7.455 0 0 1 .311.338c.192.216.45.525.712.89.26.36.545.808.77 1.3.22.478.434 1.106.434 1.799C17 16.23 15.606 18 13.5 18S10 16.23 10 14.375c0-.29.037-.569.097-.83l-1.362 1.362a3 3 0 0 1-4.243 0L2 12.414Z"/>
 							<path d="M11.342 12.994c-.188.409-.342.888-.342 1.381C11 15.765 12.029 17 13.5 17c1.47 0 2.5-1.235 2.5-2.625 0-.493-.154-.972-.342-1.381a6.977 6.977 0 0 0-.674-1.134 10.41 10.41 0 0 0-.649-.812l-.305-.328a.75.75 0 0 0-1.06 0l-.006.005c-.058.062-.214.226-.3.323-.175.199-.411.48-.649.812a6.977 6.977 0 0 0-.673 1.134Zm2.158-.61c.086.108.176.225.265.35.202.281.392.586.53.886.14.305.205.56.205.755 0 .691-.481 1.125-1 1.125-.52 0-1-.434-1-1.125 0-.194.064-.45.205-.755.137-.3.327-.605.529-.886.09-.125.18-.242.266-.35ZM6.75 1a.75.75 0 0 0-.75.75v1.756a2.033 2.033 0 0 0-.093.087L1.664 7.836a2 2 0 0 0 0 2.828L5.199 14.2a2 2 0 0 0 2.829 0l4.242-4.243a2 2 0 0 0 0-2.828L8.736 3.593A1.992 1.992 0 0 0 7.5 3.015V1.75A.75.75 0 0 0 6.75 1ZM6 5.621v.629a.75.75 0 1 0 1.5 0V4.54a.498.498 0 0 1 .174.114l3.536 3.535c.09.09.138.205.145.322H3.11L6 5.62Zm.26 7.518-3.128-3.128h6.964l-3.129 3.128a.5.5 0 0 1-.707 0Z"/>
 						</svg>
 						<div>Texthervorhebungsfarbe</div>
 					</button>
-					<button class="narrow" onclick="quillColorSelection('background_color')">
+					<button class="narrow" onclick="quillColorSelection('background_color', 'background')">
 						<svg width="24" height="24" viewBox="0 0 24 24">
 							<path d="m 20.318529,7.0275449 a 1.000249,1.000249 0 1 1 1.374,1.454 l -9,8.5000001 a 1,1 0 0 1 -1.374,0 L 2.3175295,8.4815449 a 1,1 0 1 1 1.373,-1.454 l 8.3149995,7.8520001 z"/>
 						</svg>
@@ -135,12 +137,12 @@
 					</button>
 					<button class="small" id="text_color" onclick="quill.format('color', this.firstElementChild.firstElementChild.getAttribute('fill'))">
 						<svg width="24" height="24" viewBox="0 0 24 24">
-							<path fill="#000000" d="M 5.25 14.5 A 2.25 2.25 0 0 0 3 16.75 L 3 19.75 A 2.25 2.25 0 0 0 5.25 22 L 17.75 22 A 2.25 2.25 0 0 0 20 19.75 L 20 16.75 A 2.25 2.25 0 0 0 17.75 14.5 L 5.25 14.5 z"/>
+							<path class="color" fill="#000000" d="M 5.25 14.5 A 2.25 2.25 0 0 0 3 16.75 L 3 19.75 A 2.25 2.25 0 0 0 5.25 22 L 17.75 22 A 2.25 2.25 0 0 0 20 19.75 L 20 16.75 A 2.25 2.25 0 0 0 17.75 14.5 L 5.25 14.5 z"/>
 							<path d="M 11.453125 2.0019531 C 11.184125 2.0193281 10.924641 2.1771097 10.806641 2.4746094 L 7.0527344 11.96875 L 7.0527344 11.970703 L 7.0214844 12.066406 A 0.75 0.75 0 0 0 7.4746094 12.943359 L 7.5703125 12.974609 A 0.75 0.75 0 0 0 8.4472656 12.519531 L 9.4433594 10 L 13.556641 10 L 14.552734 12.525391 L 14.595703 12.617188 A 0.75 0.75 0 0 0 15.947266 11.974609 L 12.201172 2.4746094 L 12.150391 2.3691406 C 11.999391 2.1061409 11.722125 1.9845781 11.453125 2.0019531 z M 11.503906 4.7929688 L 12.964844 8.5 L 10.035156 8.5 L 11.503906 4.7929688 z"/>
 						</svg>
 						<div>Schriftfarbe</div>
 					</button>
-					<button class="narrow divider" onclick="quillColorSelection('text_color')">
+					<button class="narrow divider" onclick="quillColorSelection('text_color', 'color')">
 						<svg width="24" height="24" viewBox="0 0 24 24">
 							<path d="m 20.318529,7.0275449 a 1.000249,1.000249 0 1 1 1.374,1.454 l -9,8.5000001 a 1,1 0 0 1 -1.374,0 L 2.3175295,8.4815449 a 1,1 0 1 1 1.373,-1.454 l 8.3149995,7.8520001 z"/>
 						</svg>
@@ -177,11 +179,15 @@
 					<svg width="24" height="24" viewBox="0 0 24 24"><path d="m11.475 13.718.083-.071a.75.75 0 0 1 .874-.007l.093.078 6.928 6.8A3.235 3.235 0 0 1 17.75 21H6.25a3.235 3.235 0 0 1-1.703-.481l6.928-6.801.083-.071-.083.07ZM17.75 3A3.25 3.25 0 0 1 21 6.25v11.5c0 .627-.178 1.213-.485 1.71l-6.939-6.813-.128-.116a2.25 2.25 0 0 0-2.889-.006l-.135.123-6.939 6.811A3.235 3.235 0 0 1 3 17.75V6.25A3.25 3.25 0 0 1 6.25 3h11.5Zm-1.998 3a2.252 2.252 0 1 0 0 4.504 2.252 2.252 0 0 0 0-4.504Zm0 1.5a.752.752 0 1 1 0 1.504.752.752 0 0 1 0-1.504Z"/></svg>
 					<div>Bilder</div>
 				</button>
+				<button class="big" onclick="document.getElementsByClassName('ql-link')[0].click();">
+					<svg width="24" height="24" viewBox="0 0 24 24"><path d="M9.25 7a.75.75 0 0 1 .11 1.492l-.11.008H7a3.5 3.5 0 0 0-.206 6.994L7 15.5h2.25a.75.75 0 0 1 .11 1.492L9.25 17H7a5 5 0 0 1-.25-9.994L7 7h2.25ZM17 7a5 5 0 0 1 .25 9.994L17 17h-2.25a.75.75 0 0 1-.11-1.492l.11-.008H17a3.5 3.5 0 0 0 .206-6.994L17 8.5h-2.25a.75.75 0 0 1-.11-1.492L14.75 7H17ZM7 11.25h10a.75.75 0 0 1 .102 1.493L17 12.75H7a.75.75 0 0 1-.102-1.493L7 11.25h10H7Z"/></svg>
+					<div>Link</div>
+				</button>
 			</section>
 		</menu>
 		<header>
 			<headerbox>
-				<button>
+				<button onclick="sendCampaign(true)">
 					<svg width="24" height="24" viewBox="0 0 24 24"><path d="m 17.399143,11.599895 a 1.33083,1.33083 0 1 0 0,2.66166 1.33083,1.33083 0 0 0 0,-2.66166 z m 4.441778,2.405076 A 1.0699873,1.0699873 0 0 0 20.45047,13.336894 l -0.855457,0.319399 a 0.39924901,0.39924901 0 0 0 -0.22145,0.202819 2.1751086,2.1751086 0 0 1 -3.931805,0.0053 0.39924901,0.39924901 0 0 0 -0.220917,-0.202286 l -0.866637,-0.323635 a 1.0683903,1.0683903 0 0 0 -0.779334,1.988793 l 1.694945,0.697355 v 1.675781 l -1.049759,3.041212 a 1.0414384,1.0414384 0 0 0 1.960579,0.703211 l 0.982685,-2.639302 a 0.25551936,0.25551936 0 0 1 0.479099,-0.0011 l 1.001849,2.666451 a 1.0331332,1.0331332 0 0 0 1.944076,-0.700016 l -1.059873,-3.076844 v -1.668329 l 1.700801,-0.695758 a 1.0699873,1.0699873 0 0 0 0.611649,-1.324974 z M 2.8479857,1.8468252 c -0.487868,0.00484 -0.890953,0.506204 -0.689454,1.025391 l 2.597657,6.9570315 a 0.5,0.5 0 0 0 0.386719,0.3183593 l 7.5312503,1.253907 a 0.2,0.2 0 0 1 0,0.394531 l -7.5332043,1.255859 a 0.5,0.5 0 0 0 -0.386718,0.31836 l -2.595704,6.957031 c -0.247999,0.639999 0.421157,1.250359 1.035157,0.943359 l 10.0234373,-5.011719 -0.02734,-0.01172 c -2.025244,-0.855854 -1.48109,-3.859623 0.640626,-3.984375 0.288005,-0.01693 0.57767,0.02896 0.859374,0.130859 h 0.0059 l 0.402344,0.150391 c 0.15167,-1.025006 0.915866,-1.949219 2.296875,-1.949219 1.381977,0 2.147914,0.925305 2.298828,1.951172 l 0.40039,-0.150391 c 0.352232,-0.13143 0.716729,-0.161338 1.060547,-0.105469 l 0.03906,-0.01953 a 0.75,0.75 0 0 0 0,-1.341797 L 3.1936857,1.9288572 c -0.115122,-0.057563 -0.233116,-0.08315 -0.3457,-0.082032 z"/></svg>
 					<div>Test senden</div>
 				</button>
@@ -189,18 +195,15 @@
 				<input type="text" id="test_email">
 			</headerbox>
 			<headerbox>
-				<button>
+				<button onclick="sendCampaign()">
 					<svg width="24" height="24" viewBox="0 0 24 24"><path d="m12.815 12.197-7.532 1.256a.5.5 0 0 0-.386.318L2.3 20.728c-.248.64.421 1.25 1.035.943l18-9a.75.75 0 0 0 0-1.342l-18-9c-.614-.307-1.283.304-1.035.943l2.598 6.957a.5.5 0 0 0 .386.319l7.532 1.255a.2.2 0 0 1 0 .394Z"/></svg>
 					<div>Senden</div>
 				</button>
 				<label for="newsletter_group">An Kontaktgruppe</label>
-				<select id="newsletter_group">
-					<option style="display: none;"></option>
-					<option>Newsletter</option>
-				</select>
+				<select id="newsletter_group"></select>
 			</headerbox>
 			<headerbox>
-				<button>
+				<button onclick="saveCampaign()">
 					<svg width="24" height="24" viewBox="0 0 24 24"><path d="M6.75 3h-1A2.75 2.75 0 0 0 3 5.75v12.5A2.75 2.75 0 0 0 5.75 21H6v-6a2.25 2.25 0 0 1 2.25-2.25h7.5A2.25 2.25 0 0 1 18 15v6h.25A2.75 2.75 0 0 0 21 18.25V8.286a3.25 3.25 0 0 0-.952-2.299l-2.035-2.035A3.25 3.25 0 0 0 15.75 3v4.5a2.25 2.25 0 0 1-2.25 2.25H9A2.25 2.25 0 0 1 6.75 7.5V3Z" fill="#212121"/><path d="M14.25 3v4.5a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75V3h6ZM16.5 21v-6a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0-.75.75v6h9Z"/></svg>
 					<div>Speichern</div>
 				</button>
@@ -211,8 +214,58 @@
 		<text id="editor"></text>
 	</editor>
 
+	<selectionmenu onclick="event.stopImmediatePropagation(); context_menu.classList.remove('visible');">
+		<button class="small" onclick="quillFormat('bold')">
+			<p style="font-weight: bolder;">F</p>
+			<div>Fett</div>
+		</button>
+		<button class="small" onclick="quillFormat('italic')">
+			<p style="font-style: italic;">K</p>
+			<div>Kursiv</div>
+		</button>
+		<button class="small" onclick="quillFormat('underline')">
+			<p style="text-decoration: underline;">U</p>
+			<div>Unterstreichen</div>
+		</button>
+		<button class="small" onclick="document.getElementsByClassName('ql-link')[0].click();">
+			<svg width="24" height="24" viewBox="0 0 24 24"><path d="M9.25 7a.75.75 0 0 1 .11 1.492l-.11.008H7a3.5 3.5 0 0 0-.206 6.994L7 15.5h2.25a.75.75 0 0 1 .11 1.492L9.25 17H7a5 5 0 0 1-.25-9.994L7 7h2.25ZM17 7a5 5 0 0 1 .25 9.994L17 17h-2.25a.75.75 0 0 1-.11-1.492l.11-.008H17a3.5 3.5 0 0 0 .206-6.994L17 8.5h-2.25a.75.75 0 0 1-.11-1.492L14.75 7H17ZM7 11.25h10a.75.75 0 0 1 .102 1.493L17 12.75H7a.75.75 0 0 1-.102-1.493L7 11.25h10H7Z"/></svg>
+			<div>Link</div>
+		</button>
+		<button class="small" onclick="formatPainterStart()">
+			<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12.5 2v3.252a.75.75 0 0 0 1.5 0V2h1v4.251a.75.75 0 0 0 1.5 0V2h1.75a.75.75 0 0 1 .75.75V11H5V2.75A.75.75 0 0 1 5.75 2h6.75ZM5 12.5v1.752a2.25 2.25 0 0 0 2.25 2.25H10V20a2 2 0 1 0 4 0v-3.498h2.75a2.25 2.25 0 0 0 2.25-2.25V12.5H5Z"/></svg>
+			<div>Format übertragen</div>
+		</button>
+		<button class="small" id="selection_color" onclick="quill.format('color', this.firstElementChild.firstElementChild.getAttribute('fill'))">
+			<svg width="24" height="24" viewBox="0 0 24 24">
+				<path class="color" fill="#000000" d="M 5.25 14.5 A 2.25 2.25 0 0 0 3 16.75 L 3 19.75 A 2.25 2.25 0 0 0 5.25 22 L 17.75 22 A 2.25 2.25 0 0 0 20 19.75 L 20 16.75 A 2.25 2.25 0 0 0 17.75 14.5 L 5.25 14.5 z"/>
+				<path d="M 11.453125 2.0019531 C 11.184125 2.0193281 10.924641 2.1771097 10.806641 2.4746094 L 7.0527344 11.96875 L 7.0527344 11.970703 L 7.0214844 12.066406 A 0.75 0.75 0 0 0 7.4746094 12.943359 L 7.5703125 12.974609 A 0.75 0.75 0 0 0 8.4472656 12.519531 L 9.4433594 10 L 13.556641 10 L 14.552734 12.525391 L 14.595703 12.617188 A 0.75 0.75 0 0 0 15.947266 11.974609 L 12.201172 2.4746094 L 12.150391 2.3691406 C 11.999391 2.1061409 11.722125 1.9845781 11.453125 2.0019531 z M 11.503906 4.7929688 L 12.964844 8.5 L 10.035156 8.5 L 11.503906 4.7929688 z"/>
+			</svg>
+			<div>Schriftfarbe</div>
+		</button>
+		<button class="narrow" onclick="quillColorSelection('selection_color', 'color')">
+			<svg width="24" height="24" viewBox="0 0 24 24">
+				<path d="m 20.318529,7.0275449 a 1.000249,1.000249 0 1 1 1.374,1.454 l -9,8.5000001 a 1,1 0 0 1 -1.374,0 L 2.3175295,8.4815449 a 1,1 0 1 1 1.373,-1.454 l 8.3149995,7.8520001 z"/>
+			</svg>
+			<div>Schriftfarbe</div>
+		</button>
+	</selectionmenu>
 
-	<picker>
+	<contextmenu>
+		<button class="long" onclick="copySelection(true)">
+			<svg width="24" height="24" viewBox="0 0 24 24"><path d="M7.83 2.44a1 1 0 0 0-1.66 1.117l4.793 7.114-2.326 3.678a4 4 0 1 0 1.57 1.26l1.977-3.126 1.884 2.796a4 4 0 1 0 1.683-1.08l-3.62-5.375v.001L7.83 2.44ZM5 18a2 2 0 1 1 4 0 2 2 0 0 1-4 0Zm10 0a2 2 0 1 1 4 0 2 2 0 0 1-4 0ZM14.52 8.79l3.325-5.256a1 1 0 0 0-1.69-1.07L13.3 6.979l1.22 1.812Z"/></svg>
+			<div>Ausschneiden</div>
+		</button>
+		<button class="long" onclick="copySelection()">
+			<svg width="24" height="24" viewBox="0 0 24 24"><path d="M5.503 4.627 5.5 6.75v10.504a3.25 3.25 0 0 0 3.25 3.25h8.616a2.251 2.251 0 0 1-2.122 1.5H8.75A4.75 4.75 0 0 1 4 17.254V6.75c0-.98.627-1.815 1.503-2.123ZM17.75 2A2.25 2.25 0 0 1 20 4.25v13a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-13A2.25 2.25 0 0 1 8.75 2h9Z"/></svg>
+			<div>Kopieren</div>
+		</button>
+		<button class="long" onclick="paste()">
+			<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12.753 2c1.158 0 2.111.875 2.234 2h1.763a2.25 2.25 0 0 1 2.245 2.096L19 6.25a.75.75 0 0 1-.647.742L18.249 7a.75.75 0 0 1-.742-.647L17.5 6.25a.75.75 0 0 0-.648-.743L16.75 5.5h-2.132a2.244 2.244 0 0 1-1.865.993H9.247c-.777 0-1.461-.393-1.865-.992L5.25 5.5a.75.75 0 0 0-.743.648L4.5 6.25v13.505c0 .38.282.693.648.743l.102.007h3a.75.75 0 0 1 .743.647l.007.102a.75.75 0 0 1-.75.75h-3a2.25 2.25 0 0 1-2.245-2.095L3 19.755V6.25a2.25 2.25 0 0 1 2.096-2.245L5.25 4h1.763a2.247 2.247 0 0 1 2.234-2h3.506Zm5.997 6a2.25 2.25 0 0 1 2.245 2.096l.005.154v9.5a2.25 2.25 0 0 1-2.096 2.245L18.75 22h-6.5a2.25 2.25 0 0 1-2.245-2.096L10 19.75v-9.5a2.25 2.25 0 0 1 2.096-2.245L12.25 8h6.5Zm-5.997-4.5H9.247a.747.747 0 0 0 0 1.493h3.506a.747.747 0 1 0 0-1.493Z"/></svg>
+			<div>Einfügen</div>
+		</button>
+	</contextmenu>
+
+	<picker onmousedown="event.stopImmediatePropagation()">
 		<table>
 			 <tr><td style="background-color: #000000;"></td><td style="background-color: #e60000;"></td><td style="background-color: #ff9900;"></td><td style="background-color: #ffff00;"></td><td style="background-color: #008a00;"></td><td style="background-color: #0066cc;"></td><td style="background-color: #9933ff;"></td></tr>
 			 <tr><td style="background-color: #ffffff;"></td><td style="background-color: #facccc;"></td><td style="background-color: #ffebcc;"></td><td style="background-color: #ffffcc;"></td><td style="background-color: #cce8cc;"></td><td style="background-color: #cce0f5;"></td><td style="background-color: #ebd6ff;"></td></tr>
@@ -223,6 +276,16 @@
 		<label><input type="color" id="favcolor" value="#ff0000"><span>Weitere Farben</span></label>
 	</picker>
 
+	<dialog open>
+		<div>Die Änderungen wurden nicht gespeichert</div>
+		<p>Möchten Sie diese speichern?</p>
+		<button id="dialog_ok">Ok</button>
+		<button id="dialog_yes">Ja</button>
+		<button id="dialog_no">Nein</button>
+		<button id="dialog_cancel">Abbrechen</button>
+	</dialog>
+
 <script src="quill_logic.js"></script>
+<script src="rust_logic.js"></script>
 </body>
 </html>

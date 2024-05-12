@@ -5,6 +5,7 @@ use std::process::Command;
 
 const SECRET: &str = "Really Secret";
 
+
 #[tauri::command]
 fn get_campaigns() -> String {
 	let output = Command::new("curl")
@@ -241,11 +242,21 @@ fn get_credits() -> String {
 	String::from_utf8_lossy(&output.stdout).into()
 }
 
+#[tauri::command]
+fn open_link(url: &str) {
+	Command::new("cmd")
+        .args(&["/C", "start", url])
+        .output()
+        .expect("Failed to open URL");
+}
+
+
+
 
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![get_campaigns, get_campaign, create_campaign, update_campaign, delete_campaign, test_campaign, send_campaign, get_mailinglists, create_mailinglist, update_mailinglist, delete_mailinglist, mailinglist_get_contacts, mailinglist_add_contact, mailinglist_remove_contact, get_credits])
+        .invoke_handler(tauri::generate_handler![get_campaigns, get_campaign, create_campaign, update_campaign, delete_campaign, test_campaign, send_campaign, get_mailinglists, create_mailinglist, update_mailinglist, delete_mailinglist, mailinglist_get_contacts, mailinglist_add_contact, mailinglist_remove_contact, get_credits, open_link])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

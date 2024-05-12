@@ -1,4 +1,5 @@
-// https://github.com/soccerloway/quill-better-table
+// https://github.com/soccerloway/quill-better-table optional
+// https://github.com/scrapooo/quill-resize-module in use
 
 // add custom text sizes and fonts
 var Size = Quill.import('attributors/style/size');
@@ -9,33 +10,31 @@ var Font = Quill.import('formats/font');
 Font.whitelist = ['arial', 'calibri', "times"];
 Quill.register(Font, true);
 
+Quill.register("modules/resize", window.QuillResizeModule);
+
 // register editor
 var quill = new Quill('#editor', 
 	{
 		modules: {
-			toolbar: false,
+			toolbar: true,
+			resize: {
+				locale: {
+				  center: "center",
+				}
+			}
 		},
 		theme: 'snow',
-
 	}
 );
 
 // set standard font/ font size
 var standard_text_size = "14px";
+var standard_font = "calibri";
 var size_selection = document.getElementById("size_selection");
+var body = document.querySelector("body");
 size_selection.value = standard_text_size;
 document.querySelector(":root").style.setProperty("--font_size", standard_text_size);
-document.querySelector(":root").style.setProperty("--font", "arial");
-
-// initalize and load everything after document loaded
-window.onload = function onload() {
-	quill.focus();
-	// loadCampaigns();
-	// loadMailinglists();
-	// loadCredits();
-}
-
-quill.insertText(0, 'Ich heisse Max Mustermann und wohne in der Schweiz');
+document.querySelector(":root").style.setProperty("--font", standard_font);
 
 // function for toggle buttons
 function quillFormat(format, style) {
@@ -110,29 +109,42 @@ function removeFormat() {
 }
 
 // open color selection box
+body.addEventListener("mousedown", hideColorSelection);
+
 var picker = document.getElementsByTagName("picker")[0];
-
-function quillColorSelection(id) {
-	var pos = document.getElementById(id).getBoundingClientRect();
-	picker.style.top = pos.top + 30 + "px";
-	picker.style.left = pos.left + "px";
-
-	picker.setAttribute("data-id", id);
-
-	picker.style.display = "block";
-	document.getElementsByTagName("editor")[0].addEventListener("mousedown", hideColorSelection);
-}
-
 var colors = picker.getElementsByTagName("td");
 for (var i = 0; i < colors.length; i++) {
 	colors[i].addEventListener("click", quillSetColor);
 }
 
-function quillSetColor(color) {
-	var color = color.target.style.backgroundColor;
-	quill.format("color", color);
+function quillColorSelection(id, format) {
+	var pos = document.getElementById(id).getBoundingClientRect();
+	picker.style.top = pos.top + 30 + "px";
+	picker.style.left = pos.left + "px";
 
-	document.getElementById(picker.getAttribute("data-id")).firstElementChild.firstElementChild.setAttribute("fill", color);
+	picker.setAttribute("data-format", format);
+	picker.style.display = "block";
+}
+
+function quillSetColor(e) {
+	var color = e.target.style.backgroundColor;
+	var format = picker.getAttribute("data-format");
+
+	if (format == "background" && color == "rgb(255, 255, 255)") {
+		quill.format("background", false);
+		color = "#ffff00";
+	}
+	else if (format == "color" && color == "rgb(0, 0, 0)") {
+		quill.format("color", false);
+	}
+	else {
+		quill.format(format, color);
+	}
+
+	var path_class = document.getElementsByClassName(format);
+	for (var i = 0; i < path_class.length; i++) {
+		path_class[i].setAttribute("fill", color);
+	}
 
 	hideColorSelection();
 }
@@ -188,7 +200,7 @@ quill.on('selection-change', (e) => {
 			font_selection.value = format_object.font;
 		}
 		else {
-			font_selection.value = "arial";
+			font_selection.value = "calibri";
 		}
 
 		if (selected_formats != false) {
@@ -197,6 +209,10 @@ quill.on('selection-change', (e) => {
 				quill.format(formats[i], selected_formats[formats[i]]);
 			}
 			formatPainterEnd();
+		}
+
+		if (e.length > 0) {
+			selectionMenu();
 		}
 	}
 });
@@ -221,5 +237,90 @@ function formatPainterEnd() {
 document.addEventListener("keydown", e => {
 	if (e.key) {
 		formatPainterEnd()
+	}
+});
+
+
+// context and selection menu
+var context_menu = document.getElementsByTagName("contextmenu")[0];
+var selection_menu = document.getElementsByTagName("selectionmenu")[0];
+
+var normalizePozition = (mouseX, mouseY) => {
+	// compute what is the mouse position relative to the container element (body)
+	var {
+		left: bodyOffsetX,
+		top: bodyOffsetY,
+	} = body.getBoundingClientRect();
+
+	bodyOffsetX = bodyOffsetX < 0 ? 0 : bodyOffsetX;
+	bodyOffsetY = bodyOffsetY < 0 ? 0 : bodyOffsetY;
+
+	var bodyX = mouseX - bodyOffsetX;
+	var bodyY = mouseY - bodyOffsetY;
+
+	// check if the element will go out of bounds
+	var outOfBoundsOnX = bodyX + context_menu.offsetWidth > body.offsetWidth;
+	var outOfBoundsOnY = bodyY + context_menu.offsetHeight > body.offsetHeight;
+
+	var normalizedX = mouseX;
+	var normalizedY = mouseY;
+
+	// normalize on X
+	if (outOfBoundsOnX) {
+		normalizedX = bodyOffsetX + body.offsetWidth - context_menu.offsetWidth;
+	}
+
+	// normalize on Y
+	if (outOfBoundsOnY) {
+		normalizedY = bodyOffsetY + body.offsetHeight - context_menu.offsetHeight;
+	}
+	return { normalizedX, normalizedY };
+};
+
+body.addEventListener("contextmenu", (event) => {
+	event.preventDefault();
+	if (event.target.isContentEditable || event.target.nodeName == "INPUT") {
+
+		var { clientX: mouseX, clientY: mouseY } = event;
+		var { normalizedX, normalizedY } = normalizePozition(mouseX, mouseY);
+
+		context_menu.classList.remove("visible");
+		selection_menu.classList.remove("visible");
+
+		context_menu.style.top = `${normalizedY}px`;
+		context_menu.style.left = `${normalizedX}px`;
+
+		if (event.target.isContentEditable) selectionMenu();
+
+		setTimeout(() => {
+			context_menu.classList.add("visible");
+		});
+	}
+	else {
+		context_menu.classList.remove("visible");
+		selection_menu.classList.remove("visible");
+	}
+});
+
+function selectionMenu() {
+	var { clientX: mouseX, clientY: mouseY } = event;
+	var { normalizedX, normalizedY } = normalizePozition(mouseX, mouseY - 50);
+
+	selection_menu.classList.remove("visible");
+
+	selection_menu.style.top = `${normalizedY}px`;
+	selection_menu.style.left = `${normalizedX}px`;
+
+	setTimeout(() => {
+		selection_menu.classList.add("visible");
+	});
+}
+
+body.addEventListener("click", (e) => {
+	context_menu.classList.remove("visible");
+	selection_menu.classList.remove("visible");
+
+	if (e.target.nodeName == "A" && e.target.classList.contains("ql-preview")) {
+		invoke('open_link', {url: e.target.href});
 	}
 });

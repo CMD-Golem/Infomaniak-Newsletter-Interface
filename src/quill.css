@@ -20,6 +20,11 @@
 	font-family: var(--font);
 	user-select: auto;
 	border: none;
+	color: black;
+}
+
+.ql-toolbar, #editor-resizer .toolbar {
+	display: none;
 }
 
 .ql-container {

@@ -4,7 +4,7 @@ body {
 	user-select: none;
 }
 
-* {
+body, button {
 	color: #3a3a3a;
 	font-size: 13px;
 	font-family: Arial, Helvetica, sans-serif;
@@ -72,7 +72,6 @@ navigation button svg {
 	text-align: center;
 	border-left: 1.5px #3a3a3a solid;
 	width: 68.5px;
-	padding-top: 12px;
 }
 
 .credits_button div {
@@ -80,12 +79,49 @@ navigation button svg {
 	margin-top: 5px;
 }
 
-.credits_button:link, .credits_button:visited, .credits_button:hover, .credits_button:active {
-	color: inherit;
-	text-decoration-line: none;
-	cursor: default;
+campaigns {
+	padding: 0 10px;
+	display: block;
 }
 
+campaign {
+	display: flex;
+	align-items: center;
+	height: 60px;
+	border-bottom: 1px #c7c7c7 solid;
+}
+
+campaign p {
+	margin: 0;
+	margin-left: 15px;
+	margin-right: 10px;
+	font-size: 15px;
+	font-weight: bold;
+	width: calc(100% - 65px);
+	max-height: 35px;
+	overflow: hidden;
+}
+
+campaign button {
+	padding: 5px;
+}
+
+campaign svg {
+	width: 20px;
+	height: 20px;
+}
+
+campaign button:hover svg {
+	fill: #2b88d8;
+}
+
+campaign button:hover svg.fill_red {
+	fill: #e60000;
+}
+
+campaign div {
+	display: none;
+}
 
 /* Editor */
 editor {
@@ -128,7 +164,7 @@ button {
 	border: none;
 }
 
-button:hover, .credits_button:hover {
+button:hover, .credits_button:hover, campaign:hover {
 	background-color: #eff6fc;
 }
 
@@ -144,7 +180,7 @@ button p {
 	font-weight: bold;
 }
 
-button svg {
+editor button svg {
 	width: 20px;
 	height: 20px;
 }
@@ -197,7 +233,7 @@ menu select:hover {
 	border-color: #2b88d8;
 }
 
-
+/* Color Picker */
 picker {
 	display: none;
 	position: absolute;
@@ -242,6 +278,49 @@ picker input {
 }
 
 
+/* Context and Selection menu */
+selectionmenu, contextmenu {
+	display: flex;
+	flex-direction: row;
+	position: fixed;
+	border-radius: 8px;
+	padding: 5px;
+	transform: scale(0);
+	transform-origin: top left;
+	background-color: white;
+	box-shadow: 0 0 15px 0 rgba(0,0,0,0.65);
+}
+
+contextmenu {
+	flex-direction: column;
+}
+
+selectionmenu.visible, contextmenu.visible {
+	transform: scale(1);
+	transition: transform 50ms ease-in-out;
+}
+
+selectionmenu button:first-child {
+	border-top-left-radius: 3px;
+	border-bottom-left-radius: 3px;
+}
+
+selectionmenu button:last-child {
+	border-top-right-radius: 3px;
+	border-bottom-right-radius: 3px;
+}
+
+contextmenu button:first-child {
+	border-top-left-radius: 3px;
+	border-top-right-radius: 3px;
+}
+
+contextmenu button:last-child {
+	border-bottom-left-radius: 3px;
+	border-bottom-right-radius: 3px;
+}
+
+
 /* Header */
 header {
 	padding: 15px;
@@ -282,4 +361,29 @@ header select, header select:focus {
 	border: none;
 	border-bottom: 1.5px #3a3a3a solid;
 	height: 30px;
+}
+
+/* Dialog */
+dialog {
+	top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+	border: none;
+	margin: 0;
+	border-radius: 8px;
+	padding: 10px;
+	background-color: white;
+	box-shadow: 0 0 15px 0 rgba(0,0,0,0.65);
+	text-align: center;
+}
+
+dialog div {
+	font-size: 15px;
+	font-weight: bold;
+}
+
+dialog button {
+	padding: 5px 15px;
+	border: #2b88d8 1px solid;
+	margin: 0 10px;
 }
