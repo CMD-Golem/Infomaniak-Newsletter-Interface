@@ -19,7 +19,9 @@
       {
         "title": "Infomaniak Newsletter Interface",
         "width": 1100,
-        "height": 700
+        "height": 700,
+		"minWidth": 980,
+		"minHeight": 330
       }
     ],
     "security": {

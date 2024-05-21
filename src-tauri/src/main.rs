@@ -27,6 +27,14 @@ struct Config {
 	github_secret: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+struct ReturnConfig {
+	infomaniak_secret: bool,
+	ftp_user: bool,
+	ftp_password: bool,
+	github_secret: bool,
+}
+
 #[derive(Debug, Deserialize)]
 struct ChangeConfigObj {
     property: String,
@@ -83,32 +91,52 @@ fn change_config(data: &str) {
 			_ => (),
 		}
 	}
+	// check informaniak secret
+	if config.infomaniak_secret.chars().next().unwrap() == ':'
+		|| config.infomaniak_secret.chars().last().unwrap() == ':'
+		|| config.infomaniak_secret.len() < 3
+		|| config.infomaniak_secret.chars().filter(|&c| c == ':').count() == 0
+	{
+		println!("Infomaniak Secret doesn't have a valid format");
+		return
+	}
+
 	// save data and update global var
 	config.save().expect("Failed to save configuration");
     unsafe { CONFIG = Some(config) };
 }
 
 #[tauri::command]
-fn init_config() -> Bool {
+fn init_config() -> String {
 	let default_config = Config {
-		infomaniak_secret: "".to_string(),
+		infomaniak_secret: "CLIENT_API:CLIENT_SECRET".to_string(),
 		ftp_user: "".to_string(),
 		ftp_password: "".to_string(),
 		github_secret: "".to_string(),
 	};
 
+	let mut config_return = ReturnConfig {
+		infomaniak_secret: false.to_owned(),
+		ftp_user: false.to_owned(),
+		ftp_password: false.to_owned(),
+		github_secret: false.to_owned(),
+	};
+
 	let config = match Config::load() {
 		Ok(config) => {
-			true.into();
+			if config.infomaniak_secret != "CLIENT_API:CLIENT_SECRET".to_string() { config_return.infomaniak_secret = true.to_owned(); }
+			if config.ftp_user != "".to_string() { config_return.ftp_user = true.to_owned(); }
+			if config.ftp_password != "".to_string() { config_return.ftp_password = true.to_owned(); }
+			if config.github_secret != "".to_string() { config_return.github_secret = true.to_owned(); }
 			config
 		},
 		Err(_) => {
-			false.into();
 			default_config.save().expect("Failed to save configuration");
 			default_config
 		}
 	};
 	unsafe { CONFIG = Some(config) };
+	serde_json::to_string(&config_return).expect("Config could not be returned").into()
 }
 
 // #########################################################################
@@ -118,7 +146,7 @@ fn get_campaigns() -> String {
 	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
 
 	let output = Command::new("curl")
-        .arg("-u").arg(config.infomaniak_secret)
+        .arg("-u").arg(&config.infomaniak_secret)
         .arg("-X").arg("GET")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg("https://newsletter.infomaniak.com/api/v1/public/campaign")
@@ -134,7 +162,7 @@ fn get_campaign(id: i32) -> String {
 	let url: String = format!("https://newsletter.infomaniak.com/api/v1/public/campaign/{}", id);
 
 	let output = Command::new("curl")
-        .arg("-u").arg(config.infomaniak_secret)
+        .arg("-u").arg(&config.infomaniak_secret)
         .arg("-X").arg("GET")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg(&url)
@@ -146,11 +174,10 @@ fn get_campaign(id: i32) -> String {
 
 #[tauri::command]
 fn create_campaign(data: &str) -> String {
-	// let data = "{\"subject\":\"test\",\"email_from_name\":\"PR-Modellbau\",\"lang\":\"de\",\"email_from_addr\":\"info@example.com\",\"content\":\"<span>My content</span>\",\"mailinglistIds\": [226639]}";
 	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
 
 	let output = Command::new("curl")
-        .arg("-u").arg(config.infomaniak_secret)
+        .arg("-u").arg(&config.infomaniak_secret)
         .arg("-X").arg("POST")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg("-d").arg(data)
@@ -163,12 +190,11 @@ fn create_campaign(data: &str) -> String {
 
 #[tauri::command]
 fn update_campaign(id: i32, data: &str) -> String {
-	// let data = "{\"content\":\"<span>My content updated</span>\"}"
 	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
 	let url: String = format!("https://newsletter.infomaniak.com/api/v1/public/campaign/{}", id);
 
 	let output = Command::new("curl")
-        .arg("-u").arg(config.infomaniak_secret)
+        .arg("-u").arg(&config.infomaniak_secret)
         .arg("-X").arg("PUT")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg("-d").arg(data)
@@ -185,7 +211,7 @@ fn delete_campaign(id: i32) -> String {
 	let url: String = format!("https://newsletter.infomaniak.com/api/v1/public/campaign/{}", id);
 
 	let output = Command::new("curl")
-        .arg("-u").arg(config.infomaniak_secret)
+        .arg("-u").arg(&config.infomaniak_secret)
         .arg("-X").arg("DELETE")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg(&url)
@@ -197,12 +223,11 @@ fn delete_campaign(id: i32) -> String {
 
 #[tauri::command]
 fn test_campaign(id: i32, data: &str) -> String {
-	// let data = "{\"email\":\"myemail@mydomain.com\"}"
 	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
 	let url: String = format!("https://newsletter.infomaniak.com/api/v1/public/campaign/{}/test", id);
 
 	let output = Command::new("curl")
-        .arg("-u").arg(config.infomaniak_secret)
+        .arg("-u").arg(&config.infomaniak_secret)
         .arg("-X").arg("POST")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg("-d").arg(data)
@@ -219,7 +244,7 @@ fn send_campaign(id: i32) -> String {
 	let url: String = format!("https://newsletter.infomaniak.com/api/v1/public/campaign/{}/send", id);
 
 	let output = Command::new("curl")
-        .arg("-u").arg(config.infomaniak_secret)
+        .arg("-u").arg(&config.infomaniak_secret)
         .arg("-X").arg("POST")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg(&url)
@@ -234,7 +259,7 @@ fn get_mailinglists() -> String {
 	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
 
 	let output = Command::new("curl")
-        .arg("-u").arg(config.infomaniak_secret)
+        .arg("-u").arg(&config.infomaniak_secret)
         .arg("-X").arg("GET")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg("https://newsletter.infomaniak.com/api/v1/public/mailinglist")
@@ -250,7 +275,7 @@ fn create_mailinglist(data: &str) -> String {
 	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
 
 	let output = Command::new("curl")
-        .arg("-u").arg(config.infomaniak_secret)
+        .arg("-u").arg(&config.infomaniak_secret)
         .arg("-X").arg("POST")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg("-d").arg(data)
@@ -268,7 +293,7 @@ fn update_mailinglist(id: i32, data: &str) -> String {
 	let url: String = format!("https://newsletter.infomaniak.com/api/v1/public/mailinglist/{}", id);
 
 	let output = Command::new("curl")
-        .arg("-u").arg(config.infomaniak_secret)
+        .arg("-u").arg(&config.infomaniak_secret)
         .arg("-X").arg("PUT")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg("-d").arg(data)
@@ -285,7 +310,7 @@ fn delete_mailinglist(id: i32) -> String {
 	let url: String = format!("https://newsletter.infomaniak.com/api/v1/public/mailinglist/{}", id);
 
 	let output = Command::new("curl")
-        .arg("-u").arg(config.infomaniak_secret)
+        .arg("-u").arg(&config.infomaniak_secret)
         .arg("-X").arg("DELETE")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg(&url)
@@ -301,7 +326,7 @@ fn mailinglist_get_contacts(id: i32) -> String {
 	let url: String = format!("https://newsletter.infomaniak.com/api/v1/public/mailinglist/{}/contact", id);
 
 	let output = Command::new("curl")
-        .arg("-u").arg(config.infomaniak_secret)
+        .arg("-u").arg(&config.infomaniak_secret)
         .arg("-X").arg("GET")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg(&url)
@@ -318,7 +343,7 @@ fn mailinglist_add_contact(id: i32, data: &str) -> String {
 	let url: String = format!("https://newsletter.infomaniak.com/api/v1/public/mailinglist/{}/importcontact", id);
 
 	let output = Command::new("curl")
-        .arg("-u").arg(config.infomaniak_secret)
+        .arg("-u").arg(&config.infomaniak_secret)
         .arg("-X").arg("POST")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg("-d").arg(data)
@@ -336,7 +361,7 @@ fn mailinglist_remove_contact(id: i32, data: &str) -> String {
 	let url: String = format!("https://newsletter.infomaniak.com/api/v1/public/mailinglist/{}/managecontact", id);
 
 	let output = Command::new("curl")
-        .arg("-u").arg(config.infomaniak_secret)
+        .arg("-u").arg(&config.infomaniak_secret)
         .arg("-X").arg("POST")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg("-d").arg(data)
@@ -352,7 +377,7 @@ fn get_credits() -> String {
 	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
 
 	let output = Command::new("curl")
-        .arg("-u").arg(config.infomaniak_secret)
+        .arg("-u").arg(&config.infomaniak_secret)
         .arg("-X").arg("GET")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg("https://newsletter.infomaniak.com/api/v1/public/credit")

@@ -82,6 +82,8 @@ navigation button svg {
 campaigns {
 	padding: 0 10px;
 	display: block;
+	height: calc(100% - 61px);
+	overflow-y: auto;
 }
 
 campaign {

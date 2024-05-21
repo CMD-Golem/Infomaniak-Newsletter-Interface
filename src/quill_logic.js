@@ -40,37 +40,20 @@ document.querySelector(":root").style.setProperty("--font", standard_font);
 function quillFormat(format, style) {
 	var format_object = quill.getFormat();
 
-	if (style == undefined) {
-		style = true;
-	}
-
-	if (format in format_object) {
-		var current_style = format_object[format];
-	}
-	if (current_style == style) {
-		quill.format(format, false);
-	}
-	else {
-		quill.format(format, style);
-	}
+	if (style == undefined) style = true;
+	if (format in format_object) var current_style = format_object[format];
+	if (current_style == style) quill.format(format, false);
+	else quill.format(format, style);
 }
 
 // function for indent
 function quillIndent(action) {
 	var format_object = quill.getFormat();
-	if ("indent" in format_object) {
-		var current_indent = format_object.indent;
-	}
-	else {
-		current_indent = 0;
-	}
+	if ("indent" in format_object) var current_indent = format_object.indent;
+	else current_indent = 0;
 
-	if (action == "increase") {
-		new_indent = current_indent +1;
-	}
-	else if (current_indent != 0) {
-		new_indent = current_indent -1;
-	}
+	if (action == "increase") new_indent = current_indent +1;
+	else if (current_indent != 0) new_indent = current_indent -1;
 
 	quill.format("indent", new_indent);
 }
@@ -78,21 +61,13 @@ function quillIndent(action) {
 // function for in/decrease size
 function quillSize(action) {
 	var format_object = quill.getFormat();
-	if ("size" in format_object) {
-		var current_px = format_object.size;
-	}
-	else {
-		current_px = standard_text_size;
-	}
+	if ("size" in format_object) var current_px = format_object.size;
+	else current_px = standard_text_size;
 
 	var current_size = parseInt(current_px.slice(0, -2))
 
-	if (action == "increase" && current_size != 30) {
-		new_size = current_size +1;
-	}
-	else if (action == "decrease" && current_size != 8) {
-		new_size = current_size -1;
-	}
+	if (action == "increase" && current_size != 30) new_size = current_size +1;
+	else if (action == "decrease" && current_size != 8) new_size = current_size -1;
 
 	quill.format("size", new_size + "px");
 	size_selection.value = new_size + "px";
@@ -101,11 +76,7 @@ function quillSize(action) {
 // remove format
 function removeFormat() {
 	var range = quill.getSelection();
-	if (range) {
-		if (range.length > 0) {
-			quill.removeFormat(range.index, range.length);
-		}
-	}
+	if (range?.length > 0) quill.removeFormat(range.index, range.length);
 }
 
 // open color selection box
@@ -160,9 +131,7 @@ async function paste() {
 
 	var range = quill.getSelection();
 	if (range) {
-		if (range.length > 0) {
-			quill.deleteText(range.index, range.length);
-		}
+		if (range.length > 0) quill.deleteText(range.index, range.length);
 
 		quill.insertText(range.index, clipboard_text);
 	}
@@ -190,18 +159,10 @@ function copySelection(cut) {
 quill.on('selection-change', (e) => {
 	if (e != null) {
 		var format_object = quill.getFormat();
-		if ("size" in format_object) {
-			size_selection.value = format_object.size;
-		}
-		else {
-			size_selection.value = standard_text_size;
-		}
-		if ("font" in format_object) {
-			font_selection.value = format_object.font;
-		}
-		else {
-			font_selection.value = "calibri";
-		}
+		if ("size" in format_object) size_selection.value = format_object.size;
+		else size_selection.value = standard_text_size;
+		if ("font" in format_object) font_selection.value = format_object.font;
+		else font_selection.value = "calibri";
 
 		if (selected_formats != false) {
 			var formats = Object.keys(selected_formats);
@@ -211,9 +172,7 @@ quill.on('selection-change', (e) => {
 			formatPainterEnd();
 		}
 
-		if (e.length > 0) {
-			selectionMenu();
-		}
+		if (e.length > 0) selectionMenu();
 	}
 });
 
@@ -234,11 +193,7 @@ function formatPainterEnd() {
 	format_painter.classList.remove("active");
 }
 
-document.addEventListener("keydown", e => {
-	if (e.key) {
-		formatPainterEnd()
-	}
-});
+document.addEventListener("keydown", e => { if (e.key) formatPainterEnd(); });
 
 
 // context and selection menu
@@ -266,14 +221,10 @@ var normalizePozition = (mouseX, mouseY) => {
 	var normalizedY = mouseY;
 
 	// normalize on X
-	if (outOfBoundsOnX) {
-		normalizedX = bodyOffsetX + body.offsetWidth - context_menu.offsetWidth;
-	}
+	if (outOfBoundsOnX) normalizedX = bodyOffsetX + body.offsetWidth - context_menu.offsetWidth;
 
 	// normalize on Y
-	if (outOfBoundsOnY) {
-		normalizedY = bodyOffsetY + body.offsetHeight - context_menu.offsetHeight;
-	}
+	if (outOfBoundsOnY) normalizedY = bodyOffsetY + body.offsetHeight - context_menu.offsetHeight;
 	return { normalizedX, normalizedY };
 };
 
@@ -292,9 +243,7 @@ body.addEventListener("contextmenu", (event) => {
 
 		if (event.target.isContentEditable) selectionMenu();
 
-		setTimeout(() => {
-			context_menu.classList.add("visible");
-		});
+		setTimeout(() => { context_menu.classList.add("visible"); });
 	}
 	else {
 		context_menu.classList.remove("visible");
@@ -311,9 +260,7 @@ function selectionMenu() {
 	selection_menu.style.top = `${normalizedY}px`;
 	selection_menu.style.left = `${normalizedX}px`;
 
-	setTimeout(() => {
-		selection_menu.classList.add("visible");
-	});
+	setTimeout(() => { selection_menu.classList.add("visible"); });
 }
 
 body.addEventListener("click", (e) => {
