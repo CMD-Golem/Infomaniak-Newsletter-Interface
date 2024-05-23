@@ -214,6 +214,29 @@
 		<text id="editor"></text>
 	</editor>
 
+	<settings>
+		<settingsbox>
+			<label>API Key vom Infomaniak Newsletter <small><span onclick="invoke('open_link', {url: 'https://manager.infomaniak.com/v3/ng/profile/user/token/add'});" class="link">(Unter diesem Link</span> Scope Newsletter wählen und <span onclick="invoke('open_link', {url: 'https://newsletter.infomaniak.com/accounts/access-token'});" class="link">unter diesem Link</span> den API-Schlüssel und der geheimer Schlüssel im Format API-Schlüssel:geheimer Schlüssel einfügen.)</small></label>
+			<input type="text" placeholder="API_KEY:SECRET_KEY" id="infomaniak_secret">
+			<label>API Key vom FTP Server</label>
+			<input type="text" placeholder="username" id="ftp_user">
+			<input type="text" placeholder="password" id="ftp_password">
+			<label>Name vom Absender</label>
+			<input type="text" placeholder="Infomaniak Newsletter" id="email_from_name">
+			<label>Sprache vom Newsletter</label>
+			<input type="text" placeholder="de_DE" id="lang">
+			<label>Email vom Absender <small>(muss mit Newsletter Domain übereinstimmen)</small></label>
+			<input type="text" placeholder="info@domain.com" id="email_from_addr">
+			<label>Abmeldelink Text <small>(Text wird immer am Ende des Newsletter angezeigt)</small></label>
+			<input type="text" placeholder="Unsubscribe" id="unsubscribe">
+			<buttonbox>
+				<button onclick="saveSettings(); closeSettings();">OK</button>
+				<button onclick="closeSettings();">Abbrechen</button>
+				<button onclick="saveSettings();">Übernehmen</button>
+			</buttonbox>
+		</settingsbox>
+	</settings>
+
 	<selectionmenu onclick="event.stopImmediatePropagation(); context_menu.classList.remove('visible');">
 		<button class="small" onclick="quillFormat('bold')">
 			<p style="font-weight: bolder;">F</p>
@@ -279,7 +302,7 @@
 	<dialog>
 		<div>title</div>
 		<p>msg</p>
-		<button style="display: none;" id="dialog_ok">Ok</button>
+		<button style="display: none;" id="dialog_ok">OK</button>
 		<button style="display: none;" id="dialog_yes">Ja</button>
 		<button style="display: none;" id="dialog_no">Nein</button>
 		<button style="display: none;" id="dialog_cancel">Abbrechen</button>

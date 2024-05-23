@@ -1,4 +1,5 @@
 // https://github.com/soccerloway/quill-better-table optional
+// https://amourspirit.github.io/Typo.js/spell.html optional
 // https://github.com/scrapooo/quill-resize-module in use
 
 // add custom text sizes and fonts
@@ -200,7 +201,7 @@ document.addEventListener("keydown", e => { if (e.key) formatPainterEnd(); });
 var context_menu = document.getElementsByTagName("contextmenu")[0];
 var selection_menu = document.getElementsByTagName("selectionmenu")[0];
 
-var normalizePozition = (mouseX, mouseY) => {
+var normalizePozition = (mouseX, mouseY, menu, outOfBoundsCorrectionY) => {
 	// compute what is the mouse position relative to the container element (body)
 	var {
 		left: bodyOffsetX,
@@ -214,17 +215,16 @@ var normalizePozition = (mouseX, mouseY) => {
 	var bodyY = mouseY - bodyOffsetY;
 
 	// check if the element will go out of bounds
-	var outOfBoundsOnX = bodyX + context_menu.offsetWidth > body.offsetWidth;
-	var outOfBoundsOnY = bodyY + context_menu.offsetHeight > body.offsetHeight;
+	var outOfBoundsOnX = bodyX + menu.offsetWidth > body.offsetWidth;
+	var outOfBoundsOnY = bodyY + menu.offsetHeight + outOfBoundsCorrectionY > body.offsetHeight;
 
 	var normalizedX = mouseX;
 	var normalizedY = mouseY;
 
-	// normalize on X
-	if (outOfBoundsOnX) normalizedX = bodyOffsetX + body.offsetWidth - context_menu.offsetWidth;
+	// normalize
+	if (outOfBoundsOnX) normalizedX = bodyOffsetX + body.offsetWidth - menu.offsetWidth;
+	if (outOfBoundsOnY) normalizedY = bodyOffsetY + body.offsetHeight - menu.offsetHeight - outOfBoundsCorrectionY;
 
-	// normalize on Y
-	if (outOfBoundsOnY) normalizedY = bodyOffsetY + body.offsetHeight - context_menu.offsetHeight;
 	return { normalizedX, normalizedY };
 };
 
@@ -233,7 +233,7 @@ body.addEventListener("contextmenu", (event) => {
 	if (event.target.isContentEditable || event.target.nodeName == "INPUT") {
 
 		var { clientX: mouseX, clientY: mouseY } = event;
-		var { normalizedX, normalizedY } = normalizePozition(mouseX, mouseY);
+		var { normalizedX, normalizedY } = normalizePozition(mouseX, mouseY, context_menu, 0);
 
 		context_menu.classList.remove("visible");
 		selection_menu.classList.remove("visible");
@@ -253,7 +253,7 @@ body.addEventListener("contextmenu", (event) => {
 
 function selectionMenu() {
 	var { clientX: mouseX, clientY: mouseY } = event;
-	var { normalizedX, normalizedY } = normalizePozition(mouseX, mouseY - 50);
+	var { normalizedX, normalizedY } = normalizePozition(mouseX, mouseY - 50, selection_menu, context_menu.clientHeight + 12);
 
 	selection_menu.classList.remove("visible");
 

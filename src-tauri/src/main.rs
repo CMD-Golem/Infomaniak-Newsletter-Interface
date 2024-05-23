@@ -25,14 +25,27 @@ struct Config {
 	ftp_user: String,
 	ftp_password: String,
 	github_secret: String,
+	newsletter: Vec<NewsletterConfig>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 struct ReturnConfig {
+	result: String,
+	error: String,
 	infomaniak_secret: bool,
 	ftp_user: bool,
 	ftp_password: bool,
 	github_secret: bool,
+	newsletter: Vec<NewsletterConfig>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct NewsletterConfig {
+	email_from_name: String,
+	lang: String,
+	email_from_addr: String,
+	test_email: String,
+	unsubscribe: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -42,6 +55,26 @@ struct ChangeConfigObj {
 }
 
 impl Config {
+	fn default() -> Config {
+		let default_config = Config {
+			infomaniak_secret: "API_KEY:SECRET_KEY".to_string(),
+			ftp_user: "".to_string(),
+			ftp_password: "".to_string(),
+			github_secret: "".to_string(),
+			newsletter: vec![
+				NewsletterConfig {
+					email_from_name: "".to_string(),
+					lang: "".to_string(),
+					email_from_addr: "".to_string(),
+					test_email: "".to_string(),
+					unsubscribe: "".to_string(),
+				}
+			],
+		};
+
+		default_config
+	}
+
 	fn load() -> io::Result<Self> {
         let encrypted_content = fs::read_to_string(Config::path())?;
 		let decrypted_content = Config::encrypt(&encrypted_content);
@@ -78,63 +111,103 @@ impl Config {
 static mut CONFIG: Option<Config> = None;
 
 #[tauri::command]
-fn change_config(data: &str) {
-	// load current config or create new file
-    let mut config = Config::load().expect("Failed to load configuration");
-	let data_vec: Vec<ChangeConfigObj> = serde_json::from_str(data).expect("Invalid JSON");
-	for update in data_vec {
-		match update.property.as_str() {
-			"infomaniak_secret" => config.infomaniak_secret = update.value,
-			"ftp_user" => config.ftp_user = update.value,
-			"ftp_password" => config.ftp_password = update.value,
-			"github_secret" => config.github_secret = update.value,
-			_ => (),
-		}
-	}
-	// check informaniak secret
-	if config.infomaniak_secret.chars().next().unwrap() == ':'
-		|| config.infomaniak_secret.chars().last().unwrap() == ':'
-		|| config.infomaniak_secret.len() < 3
-		|| config.infomaniak_secret.chars().filter(|&c| c == ':').count() == 0
-	{
-		println!("Infomaniak Secret doesn't have a valid format");
-		return
-	}
+fn change_config(data: &str) -> String {
+	let mut return_value = "false".to_string();
 
-	// save data and update global var
-	config.save().expect("Failed to save configuration");
-    unsafe { CONFIG = Some(config) };
+	// load current config or create new file
+	match Config::load() {
+		Ok(mut config) => {
+			let data_vec: Vec<ChangeConfigObj> = serde_json::from_str(data).expect("Invalid JSON");
+
+			for update in data_vec {
+				match update.property.as_str() {
+					"infomaniak_secret" => config.infomaniak_secret = update.value,
+					"ftp_user" => config.ftp_user = update.value,
+					"ftp_password" => config.ftp_password = update.value,
+					"github_secret" => config.github_secret = update.value,
+					_ => {
+						for newsletter in &mut config.newsletter {
+							match update.property.as_str() {
+								"email_from_name" => newsletter.email_from_name = update.value.clone(),
+								"lang" => newsletter.lang = update.value.clone(),
+								"email_from_addr" => newsletter.email_from_addr = update.value.clone(),
+								"test_email" => newsletter.test_email = update.value.clone(),
+								"unsubscribe" => newsletter.unsubscribe = update.value.clone(),
+								_ => (),
+							}
+						}
+					}
+				}
+			}
+
+			// check informaniak secret
+			if config.infomaniak_secret.chars().next().unwrap() == ':'
+				|| config.infomaniak_secret.chars().last().unwrap() == ':'
+				|| config.infomaniak_secret.len() < 3
+				|| config.infomaniak_secret.chars().filter(|&c| c == ':').count() == 0
+			{
+				return_value = "Infomaniak Secret does not have a valid format".to_string();
+			}
+			// save data and update global var
+			else if return_value == "false".to_string() {
+				println!("{:?}", config);
+				
+				config.save().unwrap_or_else(|e| {
+					return_value = e.to_string();
+				});
+				unsafe { CONFIG = Some(config) };
+			}
+		}
+		Err(e) => {
+			return_value = e.to_string();
+		}
+	};
+	
+	return_value.into()
 }
 
 #[tauri::command]
 fn init_config() -> String {
-	let default_config = Config {
-		infomaniak_secret: "CLIENT_API:CLIENT_SECRET".to_string(),
-		ftp_user: "".to_string(),
-		ftp_password: "".to_string(),
-		github_secret: "".to_string(),
-	};
-
+	// prepare return object to now on the front end if secrets are defined
 	let mut config_return = ReturnConfig {
+		result: "error".to_string(),
+		error: "".to_string(),
 		infomaniak_secret: false.to_owned(),
 		ftp_user: false.to_owned(),
 		ftp_password: false.to_owned(),
 		github_secret: false.to_owned(),
+		newsletter: vec![
+			NewsletterConfig {
+				email_from_name: "".to_string(),
+				lang: "".to_string(),
+				email_from_addr: "".to_string(),
+				test_email: "".to_string(),
+				unsubscribe: "".to_string(),
+			}
+		],
 	};
 
 	let config = match Config::load() {
 		Ok(config) => {
-			if config.infomaniak_secret != "CLIENT_API:CLIENT_SECRET".to_string() { config_return.infomaniak_secret = true.to_owned(); }
+			// load config from file and set secrets to true for front_end
+			if config.infomaniak_secret != "API_KEY:SECRET_KEY".to_string() { config_return.infomaniak_secret = true.to_owned(); }
 			if config.ftp_user != "".to_string() { config_return.ftp_user = true.to_owned(); }
 			if config.ftp_password != "".to_string() { config_return.ftp_password = true.to_owned(); }
 			if config.github_secret != "".to_string() { config_return.github_secret = true.to_owned(); }
+			config_return.result = "success".to_string();
 			config
 		},
 		Err(_) => {
-			default_config.save().expect("Failed to save configuration");
-			default_config
+			// load default config
+			Config::default().save().unwrap_or_else(|e| {
+				config_return.error = e.to_string();
+			});
+			
+			Config::default()
 		}
 	};
+
+	// set global config and return to front end
 	unsafe { CONFIG = Some(config) };
 	serde_json::to_string(&config_return).expect("Config could not be returned").into()
 }

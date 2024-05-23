@@ -267,6 +267,10 @@ picker label {
 	padding: 3px;
 }
 
+picker label:hover {
+	background-color: #eff6fc;
+}
+
 picker span {
 	display: inline-block;
 	width: calc(100% - 6px);
@@ -366,7 +370,7 @@ header select, header select:focus {
 }
 
 /* Dialog */
-dialog {
+dialog, settingsbox {
 	top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -388,4 +392,28 @@ dialog button {
 	padding: 5px 15px;
 	border: #2b88d8 1px solid;
 	margin: 0 10px;
+}
+
+
+/* Settings */
+settings {
+	position: absolute;
+	width: 100vw;
+	height: 100vh;
+}
+
+settingsbox {
+	display: block;
+	position: relative;
+	text-align: left;
+}
+
+settings label, settings input {
+	display: block;
+}
+
+.link {
+	cursor: pointer;
+	color: #2b88d8;
+	text-decoration: underline;
 }
