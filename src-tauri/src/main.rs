@@ -25,7 +25,7 @@ struct Config {
 	ftp_user: String,
 	ftp_password: String,
 	github_secret: String,
-	newsletter: Vec<NewsletterConfig>,
+	newsletter: NewsletterConfig,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -36,10 +36,10 @@ struct ReturnConfig {
 	ftp_user: bool,
 	ftp_password: bool,
 	github_secret: bool,
-	newsletter: Vec<NewsletterConfig>,
+	newsletter: NewsletterConfig,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct NewsletterConfig {
 	email_from_name: String,
 	lang: String,
@@ -61,15 +61,13 @@ impl Config {
 			ftp_user: "".to_string(),
 			ftp_password: "".to_string(),
 			github_secret: "".to_string(),
-			newsletter: vec![
-				NewsletterConfig {
-					email_from_name: "".to_string(),
-					lang: "".to_string(),
-					email_from_addr: "".to_string(),
-					test_email: "".to_string(),
-					unsubscribe: "".to_string(),
-				}
-			],
+			newsletter: NewsletterConfig {
+				email_from_name: "".to_string(),
+				lang: "".to_string(),
+				email_from_addr: "".to_string(),
+				test_email: "".to_string(),
+				unsubscribe: "".to_string(),
+			},
 		};
 
 		default_config
@@ -125,18 +123,12 @@ fn change_config(data: &str) -> String {
 					"ftp_user" => config.ftp_user = update.value,
 					"ftp_password" => config.ftp_password = update.value,
 					"github_secret" => config.github_secret = update.value,
-					_ => {
-						for newsletter in &mut config.newsletter {
-							match update.property.as_str() {
-								"email_from_name" => newsletter.email_from_name = update.value.clone(),
-								"lang" => newsletter.lang = update.value.clone(),
-								"email_from_addr" => newsletter.email_from_addr = update.value.clone(),
-								"test_email" => newsletter.test_email = update.value.clone(),
-								"unsubscribe" => newsletter.unsubscribe = update.value.clone(),
-								_ => (),
-							}
-						}
-					}
+					"email_from_name" => config.newsletter.email_from_name = update.value,
+					"lang" => config.newsletter.lang = update.value,
+					"email_from_addr" => config.newsletter.email_from_addr = update.value,
+					"test_email" => config.newsletter.test_email = update.value,
+					"unsubscribe" => config.newsletter.unsubscribe = update.value,
+					_ =>  ()
 				}
 			}
 
@@ -149,9 +141,7 @@ fn change_config(data: &str) -> String {
 				return_value = "Infomaniak Secret does not have a valid format".to_string();
 			}
 			// save data and update global var
-			else if return_value == "false".to_string() {
-				println!("{:?}", config);
-				
+			else if return_value == "false".to_string() {				
 				config.save().unwrap_or_else(|e| {
 					return_value = e.to_string();
 				});
@@ -167,7 +157,7 @@ fn change_config(data: &str) -> String {
 }
 
 #[tauri::command]
-fn init_config() -> String {
+fn init_config(init: bool) -> String {
 	// prepare return object to now on the front end if secrets are defined
 	let mut config_return = ReturnConfig {
 		result: "error".to_string(),
@@ -176,15 +166,13 @@ fn init_config() -> String {
 		ftp_user: false.to_owned(),
 		ftp_password: false.to_owned(),
 		github_secret: false.to_owned(),
-		newsletter: vec![
-			NewsletterConfig {
-				email_from_name: "".to_string(),
-				lang: "".to_string(),
-				email_from_addr: "".to_string(),
-				test_email: "".to_string(),
-				unsubscribe: "".to_string(),
-			}
-		],
+		newsletter: NewsletterConfig {
+			email_from_name: "".to_string(),
+			lang: "".to_string(),
+			email_from_addr: "".to_string(),
+			test_email: "".to_string(),
+			unsubscribe: "".to_string(),
+		},
 	};
 
 	let config = match Config::load() {
@@ -195,6 +183,7 @@ fn init_config() -> String {
 			if config.ftp_password != "".to_string() { config_return.ftp_password = true.to_owned(); }
 			if config.github_secret != "".to_string() { config_return.github_secret = true.to_owned(); }
 			config_return.result = "success".to_string();
+			config_return.newsletter = config.newsletter.clone();
 			config
 		},
 		Err(_) => {
@@ -202,13 +191,14 @@ fn init_config() -> String {
 			Config::default().save().unwrap_or_else(|e| {
 				config_return.error = e.to_string();
 			});
-			
+
+			config_return.result = "loaded_default".to_string();
 			Config::default()
 		}
 	};
 
 	// set global config and return to front end
-	unsafe { CONFIG = Some(config) };
+	if init {unsafe { CONFIG = Some(config) };}
 	serde_json::to_string(&config_return).expect("Config could not be returned").into()
 }
 

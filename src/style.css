@@ -355,7 +355,7 @@ header label {
 	padding-top: 7px;
 }
 
-header input, header select {
+header input, header select, settings input {
 	border-bottom: 1.5px #3a3a3a solid;
 	margin-left: 5px;
 	height: 29px;
@@ -375,7 +375,7 @@ dialog, settingsbox {
     left: 50%;
     transform: translate(-50%, -50%);
 	border: none;
-	margin: 0;
+	margin: 20px 0;
 	border-radius: 8px;
 	padding: 10px;
 	background-color: white;
@@ -383,15 +383,23 @@ dialog, settingsbox {
 	text-align: center;
 }
 
-dialog div {
+dialog div, settings p {
 	font-size: 15px;
 	font-weight: bold;
 }
 
-dialog button {
+dialog button, settings button {
 	padding: 5px 15px;
 	border: #2b88d8 1px solid;
 	margin: 0 10px;
+}
+
+
+
+settings button:disabled, settings button:disabled:hover {
+	border: #6e6e6e 1px solid;
+	background-color: #eeeeee;
+	cursor: not-allowed;
 }
 
 
@@ -406,14 +414,53 @@ settingsbox {
 	display: block;
 	position: relative;
 	text-align: left;
+	padding: 20px;
+	max-width: 1200px;
 }
 
-settings label, settings input {
+settings p {
+	margin-top: 0;
+}
+
+settings input {
 	display: block;
+	width: 100%;
+	margin: 0;
+	margin-bottom: 15px;
+}
+
+settings svg {
+	height: 15px;
+	vertical-align: -2.5px;
+}
+
+.settings_show {
+	display: block;
+	width: 120px;
+	text-align: center;
+	margin: 0;
+	margin-top: 8px;
+	margin-bottom: 15px;
 }
 
 .link {
 	cursor: pointer;
 	color: #2b88d8;
 	text-decoration: underline;
+}
+
+.link:hover {
+	color: #2b62d8;
+}
+
+buttonbox {
+	display: block;
+	text-align: right;
+}
+
+@media screen and (max-width: 1280px) {
+	settingsbox {
+		margin: 0;
+		width: calc(100% - 80px);
+	}
 }

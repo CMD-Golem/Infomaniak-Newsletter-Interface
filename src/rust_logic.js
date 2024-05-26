@@ -1,14 +1,12 @@
 var invoke = window.__TAURI__.invoke;
 var unsaved_campaign = false;
 var active_campaign = null;
-var active_error_dialog;
-var defined_secrets;
-
-var settings = {email_from_name:"PR-Modellbau", lang:"de_DE", email_from_addr:"info", test_email:"dev@prmodellbau.ch", unsubscribe:"\n\nVom Newsletter abmelden"};
+var active_error_dialog, defined_secrets;
+var settings = {test_email:undefined};
 
 // error and info box
 var error_msg = [
-	{id:"newsletter_error", title:"Error", msg:"Folgender Fehler ist bei der Synchronisierung mit dem Newsletter Server aufgetreten:<br><br>${additional_info}", buttons:["dialog_ok"]},
+	{id:"backend_error", title:"Error", msg:"Folgender Fehler ist bei der Synchronisierung mit dem Newsletter Server aufgetreten:<br><br>${additional_info}", buttons:["dialog_ok"]},
 	{id:"unsaved_changes", title:"Die Änderungen wurden nicht gespeichert", msg:"Möchten Sie diese speichern?", buttons:["dialog_yes", "dialog_no", "dialog_cancel"]},
 	{id:"no_selection", title:"Es ist kein Newsletter ausgewählt", msg:"Wählen Sie einen Newsletter zur Bearbeitung aus", buttons:["dialog_ok"]},
 	{id:"no_mailinglist", msg:"Es muss eine Kontaktgruppe vor dem Speichern ausgewählt werden", buttons:["dialog_ok"]},
@@ -17,16 +15,15 @@ var error_msg = [
 	{id:"sent_test_mail", msg:"Das Testmail wurde erfolgreich versendet", buttons:["dialog_ok"]},
 	{id:"sent_campaign", msg:"Der Newsletter wird um ${additional_info} versendet", buttons:["dialog_ok"]},
 	{id:"delete_campaign", title:"Der Newsletter wird unwiederruflich gelöscht", msg:"Möchten Sie fortfahren?", buttons:["dialog_yes", "dialog_cancel"]},
-	{id:"no_infomaniak_secret", msg:"Der API Key vom Infomaniak Newsletter muss definiert sein, um das Programm nutzen zu können.", buttons:["dialog_ok"]},
 	{id:"no_file_upload_auth", msg:"Der API Key vom FTP Server muss definiert sein, wenn sie Dateien hochladen möchten.", buttons:["dialog_ok"]},
+	{id:"undefined_settings", msg:"Der API Key vom Infomaniak Newsletter und alle Einstellungen müssen definiert sein, um das Programm nutzen zu können.", buttons:["dialog_ok"]},
 	{id:"newsletter_programmed", title:"Speichern nicht möglich", msg:"Dieser Newsletter wird momentan versandt. Das Editieren ist erst möglich, sobald der Newsletter an alle Empfänger versendet wurde.", buttons:["dialog_ok"]},
 	{id:"delete_forbidden", title:"Löschen nicht möglich", msg:"Dieser Newsletter wird momentan versandt. Das Löschen ist erst möglich, sobald der Newsletter an alle Empfänger versendet wurde.", buttons:["dialog_ok"]},
 	{id:"already_sent", title:"Senden nicht möglich", msg:"Dieser Newsletter wird momentan versandt. Das erneute Senden ist erst möglich, sobald der Newsletter an alle Empfänger versendet wurde.", buttons:["dialog_ok"]}
 ]
 
-var dialog = document.getElementsByTagName("dialog")[0];
-
 function openDialog(id, additional_info) {
+	var dialog = document.getElementsByTagName("dialog")[0];
 	return new Promise((resolve) => {
 		dialog.open = true;
 
@@ -60,40 +57,58 @@ function openDialog(id, additional_info) {
 
 // initalize and load everything after document loaded
 var campaign_list = document.getElementsByTagName("campaigns")[0];
-var test_email = document.getElementById("test_email");
+var el_test_email = document.getElementById("test_email");
 var newsletter_group = document.getElementById("newsletter_group");
 var subject = document.getElementById("subject");
-var el_credits = document.getElementById("credits");
+var el_infomaniak_secret = document.getElementById("infomaniak_secret");
+var el_ftp_user = document.getElementById("ftp_user");
+var el_ftp_password = document.getElementById("ftp_password");
+
+quill.on('text-change', () => { unsaved_campaign = true });
+
 
 window.onload = async () => {
 	quill.focus();
-	test_email.value = settings.test_email;
 
-	var response = await invoke("init_config");
+	var response = await invoke("init_config", {init:true});
 	var json = JSON.parse(response);
 
-	if (json.infomaniak_secret == true) {
-		initSettings();
+	if (json.result == "error") {
+		openDialog("backend_error", json.error);
+	}
+	else if (
+		json.infomaniak_secret == true &&
+		json.newsletter.email_from_name != "" &&
+		json.newsletter.lang != "" &&
+		json.newsletter.email_from_addr != "" &&
+		json.newsletter.unsubscribe != ""
+	) {
+		settings = json.newsletter;
+		el_test_email.value = settings.test_email ?? "";
+		settings.secrets = [json.infomaniak_secret, json.ftp_user, json.ftp_password];
+
+		getMailinglists();
+		initEditor();
 		getCampaigns(true);
 		getCredits();
-		getMailinglists();
 	}
 	else {
-		console.log("Open Settings");
-		// openSettings(true);
+		openSettings(json, true);
 	}
 }
 
 async function getCredits() {
 	var response = await invoke("get_credits");
 	var json = JSON.parse(response);
-	if (json.result == "success") el_credits.innerHTML = json.data.credits;
-	else openDialog("newsletter_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+	if (json.result == "success") document.getElementById("credits").innerHTML = json.data.credits;
+	else openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
 
 }
 
-function initSettings() {
-	quill.insertText(0, settings.unsubscribe, {
+function initEditor() {
+	var unsubscribe = settings.unsubscribe.replaceAll("\\n", "\n");
+
+	quill.insertText(0, unsubscribe, {
 		link: "*|UNSUBSCRIBED|*",
 		size: "9px"
 	});
@@ -101,7 +116,101 @@ function initSettings() {
 	unsaved_campaign = false;
 }
 
-quill.on('text-change', () => { unsaved_campaign = true });
+// settings panel
+async function openSettings(json, disable_cancel) {
+	document.getElementsByTagName("settings")[0].style.display = "block";
+
+	if (json == undefined) {
+		var response = await invoke("init_config", {init:false});
+		json = JSON.parse(response);
+
+		if (json.result == "error") {
+			openDialog("backend_error", json.error);
+			return;
+		}
+	}
+
+	if (disable_cancel) document.getElementById("settings_cancel").disabled = true;
+
+	settings.secrets = [json.infomaniak_secret, json.ftp_user, json.ftp_password];
+
+	// show current settings on page
+	document.getElementById("email_from_name").value = json.newsletter.email_from_name;
+	document.getElementById("lang").value = json.newsletter.lang;
+	document.getElementById("email_from_addr").value = json.newsletter.email_from_addr;
+	document.getElementById("unsubscribe").value = json.newsletter.unsubscribe;
+}
+
+async function saveSettings(action) {
+	var email_from_name = document.getElementById("email_from_name").value;
+	var lang = document.getElementById("lang").value;
+	var email_from_addr = document.getElementById("email_from_addr").value;
+	var unsubscribe = document.getElementById("unsubscribe").value;
+
+	// check if settings are defined
+	if (
+		email_from_name == "" ||
+		lang == "" ||
+		email_from_addr == "" ||
+		unsubscribe == "" ||
+		(el_infomaniak_secret.value == "" && !settings.secrets[0])
+	) {
+		openDialog("undefined_settings");
+		return;
+	}
+
+
+	// save settings
+	else if (action != "cancel") {
+		var new_settings = [], setting;
+
+		(setting = validateSettings("email_from_name", email_from_name)) != undefined && new_settings.push(setting);
+		(setting = validateSettings("lang", lang)) != undefined && new_settings.push(setting);
+		(setting = validateSettings("email_from_addr", email_from_addr)) != undefined && new_settings.push(setting);
+		(setting = validateSettings("unsubscribe", unsubscribe)) != undefined && new_settings.push(setting);
+
+		if (el_infomaniak_secret.value != "") new_settings.push({property:"infomaniak_secret", value:el_infomaniak_secret.value});
+		if (el_ftp_user.value != "") new_settings.push({property:"ftp_user", value:el_ftp_user.value});
+		if (el_ftp_password.value != "") new_settings.push({property:"ftp_password", value:el_ftp_password.value});
+
+		if (new_settings.length != 0) var had_error = await invoke("change_config", {data:JSON.stringify(new_settings)});
+
+		if (had_error != "false") {
+			openDialog("backend_error", had_error);
+			return;
+		}
+	}
+
+	if (action != "apply") closeSettings(action);
+	document.getElementById("settings_cancel").disabled = false;
+	// reload backend if infomaniak_secret changed
+	if (el_infomaniak_secret.value != "") {
+		getCampaigns(true);
+		getCredits();
+		getMailinglists();
+	}
+}
+
+function closeSettings(action) {
+	if (action == "cancel" && document.getElementById("settings_cancel").getAttribute("disabled") == "") return
+
+	document.getElementsByTagName("settings")[0].style.display = "none";
+	el_infomaniak_secret.style.display = "none";
+	el_ftp_user.parentElement.style.display = "none";
+	el_infomaniak_secret.previousElementSibling.style.display = "block";
+	el_ftp_user.parentElement.previousElementSibling.style.display = "block";
+	el_infomaniak_secret.value = "";
+	el_ftp_user.value = "";
+	el_ftp_password.value = "";
+}
+
+function validateSettings(property, value) {
+	if (settings[property] != value && value != "") {
+		settings[property] = value;
+		return {property:property, value:value};
+	}
+	else return undefined;
+}
 
 // #####################################################################################
 function createCampaignHtml(campaign_object) {
@@ -171,7 +280,7 @@ async function getCampaign(id) {
 
 		active_campaign = id;
 	}
-	else openDialog("newsletter_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+	else openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
 }
 
 async function saveCampaign(wants_sending) {
@@ -190,7 +299,7 @@ async function saveCampaign(wants_sending) {
 
 		if (json.result == "success") campaign_status = json.data.status.id; // 1 Sent, 2 Draft, 3 Programmed, 4 Sending in progress
 		else {
-			openDialog("newsletter_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+			openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
 			return false;
 		}
 	}
@@ -214,11 +323,13 @@ async function saveCampaign(wants_sending) {
 	var html_content = quill.getSemanticHTML();
 	var content = `<style>p {margin: 0;} * {font-size: ${standard_text_size}; font-family: ${standard_font}}</style>` + html_content.replaceAll('"', '\\"').replaceAll("<p></p>", "<br>");
 
+	var email_from_addr = settings.email_from_addr.split("@");
+
 	var data = `{
 		"subject":"${subject.value}",
 		"email_from_name":"${settings.email_from_name}",
 		"lang":"${settings.lang}",
-		"email_from_addr":"${settings.email_from_addr}",
+		"email_from_addr":"${email_from_addr[0]}",
 		"content":"${content}",
 		"mailinglistIds":[${newsletter_group.value}]
 	}`;
@@ -242,7 +353,7 @@ async function saveCampaign(wants_sending) {
 			return true;
 		}
 		else {
-			openDialog("newsletter_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+			openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
 			return false;
 		}
 	}
@@ -259,7 +370,7 @@ async function saveCampaign(wants_sending) {
 			return true;
 		}
 		else {
-			openDialog("newsletter_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+			openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
 			return false;
 		}
 	}
@@ -272,20 +383,30 @@ async function sendCampaign(is_test) {
 
 	// send test mail
 	if (is_test) {
-		if (test_email.value == "") {
+		if (el_test_email.value == "") {
 			openDialog("no_test_mail");
 			return false;
 		}
 
-		var response = await invoke("test_campaign", {id:active_campaign, data:`{"email":"${test_email.value}"}`});
+		var response = await invoke("test_campaign", {id:active_campaign, data:`{"email":"${el_test_email.value}"}`});
 		var json = JSON.parse(response);
 
-		if (json.result == "success") openDialog("sent_test_mail");
-		else openDialog("newsletter_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+		if (json.result != "success") {
+			openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+			return;
+		}
+
+		openDialog("sent_test_mail");
+
+		if (el_test_email.value != settings.test_email) {
+			settings.test_email = el_test_email.value;
+			var had_error = await invoke("change_config", {data:JSON.stringify([{property:"test_email", value:el_test_email.value}])});
+			if (had_error != "false") openDialog("backend_error", had_error);
+		}
 	}
 	else {
 		// send campaign to mailinglist
-		// var response = await invoke("send_campaign", {id:active_campaign});
+		var response = await invoke("send_campaign", {id:active_campaign});
 		var json = JSON.parse(response);
 
 		if (json.result == "success") {
@@ -294,7 +415,7 @@ async function sendCampaign(is_test) {
 			openDialog("sent_campaign", date.slice(11,16));
 			setTimeout(getCredits, 500);
 		}
-		else openDialog("newsletter_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+		else openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
 	}
 }
 
@@ -312,7 +433,7 @@ async function startCampaign() {
 	editor_el.firstChild.innerHTML = "";
 	subject.value = "";
 	newsletter_group.value = "";
-	initSettings();
+	initEditor();
 
 	active_campaign = 0;
 }
@@ -334,7 +455,7 @@ async function deleteCampaign(id, user) {
 		return false;
 	}
 	else if (json.result != "success") {
-		openDialog("newsletter_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+		openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
 		return false;
 	}
 
@@ -343,7 +464,7 @@ async function deleteCampaign(id, user) {
 		document.getElementById(id).remove();
 		var response = await invoke("delete_campaign", {id:id});
 		var json = JSON.parse(response);
-		if (json.result != "success") openDialog("newsletter_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+		if (json.result != "success") openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
 	}
 
 	if (user) getCampaign(parseInt(campaign_list.firstElementChild.id));
@@ -381,5 +502,7 @@ async function getMailinglists() {
 		}
 		newsletter_group.innerHTML = html;
 	}
-	else openDialog("newsletter_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+	else openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
 }
+
+function openMailinglists() {}
