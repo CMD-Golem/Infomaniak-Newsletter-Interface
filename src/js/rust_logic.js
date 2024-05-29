@@ -1,62 +1,11 @@
-var invoke = window.__TAURI__.invoke;
 var unsaved_campaign = false;
 var active_campaign = null;
-var active_error_dialog, defined_secrets;
+var defined_secrets;
 var settings = {test_email:undefined};
-
-// error and info box
-var error_msg = [
-	{id:"backend_error", title:"Error", msg:"Folgender Fehler ist bei der Synchronisierung mit dem Newsletter Server aufgetreten:<br><br>${additional_info}", buttons:["dialog_ok"]},
-	{id:"unsaved_changes", title:"Die Änderungen wurden nicht gespeichert", msg:"Möchten Sie diese speichern?", buttons:["dialog_yes", "dialog_no", "dialog_cancel"]},
-	{id:"no_selection", title:"Es ist kein Newsletter ausgewählt", msg:"Wählen Sie einen Newsletter zur Bearbeitung aus", buttons:["dialog_ok"]},
-	{id:"no_mailinglist", msg:"Es muss eine Kontaktgruppe vor dem Speichern ausgewählt werden", buttons:["dialog_ok"]},
-	{id:"no_subject", msg:"Es muss ein Betreff vor dem Speichern definiert werden", buttons:["dialog_ok"]},
-	{id:"no_test_mail", msg:"Für das Senden eines Tests muss eine Test E-Mail Adresse definiert sein", buttons:["dialog_ok"]},
-	{id:"sent_test_mail", msg:"Das Testmail wurde erfolgreich versendet", buttons:["dialog_ok"]},
-	{id:"sent_campaign", msg:"Der Newsletter wird um ${additional_info} versendet", buttons:["dialog_ok"]},
-	{id:"delete_campaign", title:"Der Newsletter wird unwiederruflich gelöscht", msg:"Möchten Sie fortfahren?", buttons:["dialog_yes", "dialog_cancel"]},
-	{id:"no_file_upload_auth", msg:"Der API Key vom FTP Server muss definiert sein, wenn sie Dateien hochladen möchten.", buttons:["dialog_ok"]},
-	{id:"undefined_settings", msg:"Der API Key vom Infomaniak Newsletter und alle Einstellungen müssen definiert sein, um das Programm nutzen zu können.", buttons:["dialog_ok"]},
-	{id:"newsletter_programmed", title:"Speichern nicht möglich", msg:"Dieser Newsletter wird momentan versandt. Das Editieren ist erst möglich, sobald der Newsletter an alle Empfänger versendet wurde.", buttons:["dialog_ok"]},
-	{id:"delete_forbidden", title:"Löschen nicht möglich", msg:"Dieser Newsletter wird momentan versandt. Das Löschen ist erst möglich, sobald der Newsletter an alle Empfänger versendet wurde.", buttons:["dialog_ok"]},
-	{id:"already_sent", title:"Senden nicht möglich", msg:"Dieser Newsletter wird momentan versandt. Das erneute Senden ist erst möglich, sobald der Newsletter an alle Empfänger versendet wurde.", buttons:["dialog_ok"]}
-]
-
-function openDialog(id, additional_info) {
-	var dialog = document.getElementsByTagName("dialog")[0];
-	return new Promise((resolve) => {
-		dialog.open = true;
-
-		active_error_dialog = error_msg.find(function(item) { return item.id == id; });
-
-		if (active_error_dialog.title != undefined) dialog.children[0].innerHTML = active_error_dialog.title;
-		else dialog.children[0].style.display = "none";
-
-		var msg = active_error_dialog.msg.replace("${additional_info}", additional_info);
-		dialog.children[1].innerHTML = msg;
-
-		for (var i = 0; i < active_error_dialog.buttons.length; i++) {
-			var button = document.getElementById(active_error_dialog.buttons[i]);
-			button.style.display = "inline-block";
-
-			button.addEventListener("click", (e) => {
-				resolve(e.target.id);
-
-				dialog.open = false;
-				dialog.children[0].style.display = "block";
-
-				var buttons = dialog.getElementsByTagName("button");
-				for (var i = 0; i < buttons.length; i++) {
-					buttons[i].style.display = "none";
-				}
-			});
-		}
-	});
-}
 
 
 // initalize and load everything after document loaded
-var campaign_list = document.getElementsByTagName("campaigns")[0];
+var campaign_list = document.getElementsByTagName("list")[0];
 var el_test_email = document.getElementById("test_email");
 var newsletter_group = document.getElementById("newsletter_group");
 var subject = document.getElementById("subject");
@@ -73,7 +22,7 @@ window.onload = async () => {
 	var response = await invoke("init_config", {init:true});
 	var json = JSON.parse(response);
 
-	if (json.result == "error") {
+	if (json.result != "success") {
 		openDialog("backend_error", json.error);
 	}
 	else if (
@@ -102,7 +51,6 @@ async function getCredits() {
 	var json = JSON.parse(response);
 	if (json.result == "success") document.getElementById("credits").innerHTML = json.data.credits;
 	else openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
-
 }
 
 function initEditor() {
@@ -215,7 +163,7 @@ function validateSettings(property, value) {
 // #####################################################################################
 function createCampaignHtml(campaign_object) {
 	var html = `
-	<campaign id="${campaign_object.id}" onclick="getCampaign(${campaign_object.id})">
+	<listitem id="${campaign_object.id}" onclick="getCampaign(${campaign_object.id})">
 		<p>${campaign_object.subject}</p>
 		<button onclick="duplicateCampaign(${campaign_object.id})">
 			<svg width="24" height="24" viewBox="0 0 24 24"><path d="M5.503 4.627 5.5 6.75v10.504a3.25 3.25 0 0 0 3.25 3.25h8.616a2.251 2.251 0 0 1-2.122 1.5H8.75A4.75 4.75 0 0 1 4 17.254V6.75c0-.98.627-1.815 1.503-2.123ZM17.75 2A2.25 2.25 0 0 1 20 4.25v13a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-13A2.25 2.25 0 0 1 8.75 2h9Z"/></svg>
@@ -225,7 +173,7 @@ function createCampaignHtml(campaign_object) {
 			<svg width="24" height="24" viewBox="0 0 24 24"><path d="M21.5 6a1 1 0 0 1-.883.993L20.5 7h-.845l-1.231 12.52A2.75 2.75 0 0 1 15.687 22H8.313a2.75 2.75 0 0 1-2.737-2.48L4.345 7H3.5a1 1 0 0 1 0-2h5a3.5 3.5 0 1 1 7 0h5a1 1 0 0 1 1 1Zm-7.25 3.25a.75.75 0 0 0-.743.648L13.5 10v7l.007.102a.75.75 0 0 0 1.486 0L15 17v-7l-.007-.102a.75.75 0 0 0-.743-.648Zm-4.5 0a.75.75 0 0 0-.743.648L9 10v7l.007.102a.75.75 0 0 0 1.486 0L10.5 17v-7l-.007-.102a.75.75 0 0 0-.743-.648ZM12 3.5A1.5 1.5 0 0 0 10.5 5h3A1.5 1.5 0 0 0 12 3.5Z"/></svg>
 			<div>Newsletter löschen</div>
 		</button>
-	</campaign>`
+	</listitem>`
 
 	return html;
 }
@@ -234,6 +182,11 @@ function createCampaignHtml(campaign_object) {
 async function getCampaigns(first_load) {
 	var response = await invoke("get_campaigns");
 	var json = JSON.parse(response);
+
+	if (json.result != "success") {
+		openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+		return false;
+	}
 
 	var html = "";
 	var first_id = null;
@@ -461,13 +414,15 @@ async function deleteCampaign(id, user) {
 
 	// delete campaign and select new from top
 	if (user_action == "dialog_yes") {
-		document.getElementById(id).remove();
 		var response = await invoke("delete_campaign", {id:id});
 		var json = JSON.parse(response);
-		if (json.result != "success") openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
-	}
 
-	if (user) getCampaign(parseInt(campaign_list.firstElementChild.id));
+		if (json.result == "success") {
+			document.getElementById(id).remove();
+			if (user) getCampaign(parseInt(campaign_list.firstElementChild.id));
+		}
+		else openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+	}
 }
 
 async function duplicateCampaign(id) {
@@ -505,4 +460,22 @@ async function getMailinglists() {
 	else openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
 }
 
-function openMailinglists() {}
+function openMailinglists() {
+	const webview = new window.__TAURI__.window.WebviewWindow("mailinglists", {
+		"title": "Manage Mailingslists",
+		"url": "mailinglists.html",
+		"width": 1100,
+		"height": 380,
+		"minWidth": null,
+		"minHeight": null,
+		"maximizable": false,
+		"minimizable": false
+	});
+
+	webview.once('tauri://error', function (e) {
+		if (e.payload == "a window with label `mailinglists` already exists") {
+			webview.setFocus();
+		}
+		console.log(e)
+	});
+}

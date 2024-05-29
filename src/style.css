@@ -27,6 +27,7 @@ select, select:focus {
 input {
 	font-size: inherit;
 	font-family: inherit;
+	background-color: transparent;
 	border: none;
 }
 
@@ -79,21 +80,21 @@ navigation button svg {
 	margin-top: 5px;
 }
 
-campaigns {
+list {
 	padding: 0 10px;
 	display: block;
 	height: calc(100% - 61px);
 	overflow-y: auto;
 }
 
-campaign {
+listitem {
 	display: flex;
 	align-items: center;
 	height: 60px;
 	border-bottom: 1px #c7c7c7 solid;
 }
 
-campaign p {
+listitem p, listitem input {
 	margin: 0;
 	margin-left: 15px;
 	margin-right: 10px;
@@ -104,25 +105,30 @@ campaign p {
 	overflow: hidden;
 }
 
-campaign button {
+listitem button {
 	padding: 5px;
 }
 
-campaign svg {
+listitem svg {
 	width: 20px;
 	height: 20px;
 }
 
-campaign button:hover svg {
+listitem button:hover svg {
 	fill: #2b88d8;
 }
 
-campaign button:hover svg.fill_red {
+listitem button:hover svg.fill_red {
 	fill: #e60000;
 }
 
-campaign div {
+listitem div {
 	display: none;
+}
+
+/* mailinglist */
+.mailinglist input {
+	width: calc(100% - 95px);
 }
 
 /* Editor */
@@ -166,7 +172,7 @@ button {
 	border: none;
 }
 
-button:hover, .credits_button:hover, campaign:hover {
+button:hover, .credits_button:hover, listitem:hover {
 	background-color: #eff6fc;
 }
 
@@ -370,7 +376,7 @@ header select, header select:focus {
 }
 
 /* Dialog */
-dialog, settingsbox {
+dialog, dialogbox {
 	top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -404,13 +410,13 @@ settings button:disabled, settings button:disabled:hover {
 
 
 /* Settings */
-settings {
+settings, mailinglists {
 	position: absolute;
 	width: 100vw;
 	height: 100vh;
 }
 
-settingsbox {
+dialogbox {
 	display: block;
 	position: relative;
 	text-align: left;
@@ -459,7 +465,7 @@ buttonbox {
 }
 
 @media screen and (max-width: 1280px) {
-	settingsbox {
+	dialogbox {
 		margin: 0;
 		width: calc(100% - 80px);
 	}

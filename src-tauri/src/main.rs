@@ -334,7 +334,6 @@ fn get_mailinglists() -> String {
 
 #[tauri::command]
 fn create_mailinglist(data: &str) -> String {
-	// let data = "{\"name\":\"My first mailinglist\"}"
 	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
 
 	let output = Command::new("curl")
@@ -351,7 +350,6 @@ fn create_mailinglist(data: &str) -> String {
 
 #[tauri::command]
 fn update_mailinglist(id: i32, data: &str) -> String {
-	// let data = "{\"name\":\"My first mailinglist\"}"
 	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
 	let url: String = format!("https://newsletter.infomaniak.com/api/v1/public/mailinglist/{}", id);
 
@@ -401,7 +399,6 @@ fn mailinglist_get_contacts(id: i32) -> String {
 
 #[tauri::command]
 fn mailinglist_add_contact(id: i32, data: &str) -> String {
-    // let data = "{\"contacts\": [ {\"email\":\"test1@mydomain.com\"}, {\"email\":\"test2@mydomain.com\"} ]}"
 	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
 	let url: String = format!("https://newsletter.infomaniak.com/api/v1/public/mailinglist/{}/importcontact", id);
 
@@ -419,7 +416,6 @@ fn mailinglist_add_contact(id: i32, data: &str) -> String {
 
 #[tauri::command]
 fn mailinglist_remove_contact(id: i32, data: &str) -> String {
-    // let data = "{\"email\":\"test1@mydomain.com\", \"status\":\"delete\"}"
 	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
 	let url: String = format!("https://newsletter.infomaniak.com/api/v1/public/mailinglist/{}/managecontact", id);
 

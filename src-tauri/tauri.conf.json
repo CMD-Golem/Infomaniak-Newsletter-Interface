@@ -13,7 +13,11 @@
       "all": false,
       "clipboard": {
         "readText": true
-      }
+      },
+	  "window": {
+		"create": true,
+		"setFocus": true
+	  }
     },
     "windows": [
       {
@@ -29,7 +33,7 @@
     },
     "bundle": {
       "active": true,
-      "targets": "all",
+      "targets": "msi",
       "identifier": "com.cmd-golem.infomaniak-newsletter-interface",
       "icon": [
         "icons/icon.ico"
