@@ -36,7 +36,8 @@
       "targets": "msi",
       "identifier": "com.cmd-golem.infomaniak-newsletter-interface",
       "icon": [
-        "icons/icon.ico"
+        "icons/icon.ico",
+		"icons/icon.png"
       ]
     }
   }

@@ -1,6 +1,6 @@
 var invoke = window.__TAURI__.invoke;
 var active_error_dialog;
-var dialog = document.getElementsByTagName("dialog")[0];
+var dialog = document.querySelector("dialog");
 
 // error and info box
 var error_msg = [
@@ -19,6 +19,7 @@ var error_msg = [
 	{id:"delete_forbidden", title:"Löschen nicht möglich", msg:"Dieser Newsletter wird momentan versandt. Das Löschen ist erst möglich, sobald der Newsletter an alle Empfänger versendet wurde.", buttons:["dialog_ok"]},
 	{id:"already_sent", title:"Senden nicht möglich", msg:"Dieser Newsletter wird momentan versandt. Das erneute Senden ist erst möglich, sobald der Newsletter an alle Empfänger versendet wurde.", buttons:["dialog_ok"]},
 	{id:"delete_mailinglist", title:"Die Kontaktgruppe wird unwiederruflich gelöscht", msg:"Möchten Sie fortfahren?", buttons:["dialog_yes", "dialog_cancel"]},
+	{id:"delete_contact", title:"Der Kontakt wird unwiederruflich gelöscht", msg:"Möchten Sie fortfahren?", buttons:["dialog_yes", "dialog_cancel"]},
 ]
 
 function openDialog(id, additional_info) {

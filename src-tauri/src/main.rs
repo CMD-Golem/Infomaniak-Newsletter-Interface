@@ -7,14 +7,18 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::io::{self, Write};
 use serde::{Deserialize, Serialize};
+use std::os::windows::process::CommandExt;
 
 
 #[tauri::command]
-fn open_link(url: &str) {
-	Command::new("cmd")
-        .args(&["/C", "start", url])
-        .output()
-        .expect("Failed to open URL");
+fn open_link(url: &str) -> String {
+	let output = Command::new("cmd")
+		.args(&["/C", "start", url])
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Failed to open URL");
+
+	String::from_utf8_lossy(&output.stdout).into()
 }
 
 // #########################################################################
@@ -50,8 +54,8 @@ struct NewsletterConfig {
 
 #[derive(Debug, Deserialize)]
 struct ChangeConfigObj {
-    property: String,
-    value: String,
+	property: String,
+	value: String,
 }
 
 impl Config {
@@ -74,11 +78,11 @@ impl Config {
 	}
 
 	fn load() -> io::Result<Self> {
-        let encrypted_content = fs::read_to_string(Config::path())?;
+		let encrypted_content = fs::read_to_string(Config::path())?;
 		let decrypted_content = Config::encrypt(&encrypted_content);
-        let config: Config = serde_json::from_str(&decrypted_content)?;
-        Ok(config)
-    }
+		let config: Config = serde_json::from_str(&decrypted_content)?;
+		Ok(config)
+	}
 
 	fn save(&self) -> io::Result<()> {
 		let config_content = serde_json::to_string_pretty(self)?;
@@ -209,12 +213,13 @@ fn get_campaigns() -> String {
 	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
 
 	let output = Command::new("curl")
-        .arg("-u").arg(&config.infomaniak_secret)
-        .arg("-X").arg("GET")
+		.arg("-u").arg(&config.infomaniak_secret)
+		.arg("-X").arg("GET")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg("https://newsletter.infomaniak.com/api/v1/public/campaign")
-        .output()
-        .expect("Error");
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Error");
 
 	String::from_utf8_lossy(&output.stdout).into()
 }
@@ -225,12 +230,13 @@ fn get_campaign(id: i32) -> String {
 	let url: String = format!("https://newsletter.infomaniak.com/api/v1/public/campaign/{}", id);
 
 	let output = Command::new("curl")
-        .arg("-u").arg(&config.infomaniak_secret)
-        .arg("-X").arg("GET")
+		.arg("-u").arg(&config.infomaniak_secret)
+		.arg("-X").arg("GET")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg(&url)
-        .output()
-        .expect("Error");
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Error");
 
 	String::from_utf8_lossy(&output.stdout).into()
 }
@@ -240,13 +246,14 @@ fn create_campaign(data: &str) -> String {
 	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
 
 	let output = Command::new("curl")
-        .arg("-u").arg(&config.infomaniak_secret)
-        .arg("-X").arg("POST")
+		.arg("-u").arg(&config.infomaniak_secret)
+		.arg("-X").arg("POST")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg("-d").arg(data)
 		.arg("https://newsletter.infomaniak.com/api/v1/public/campaign")
-        .output()
-        .expect("Error");
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Error");
 
 	String::from_utf8_lossy(&output.stdout).into()
 }
@@ -257,13 +264,14 @@ fn update_campaign(id: i32, data: &str) -> String {
 	let url: String = format!("https://newsletter.infomaniak.com/api/v1/public/campaign/{}", id);
 
 	let output = Command::new("curl")
-        .arg("-u").arg(&config.infomaniak_secret)
-        .arg("-X").arg("PUT")
+		.arg("-u").arg(&config.infomaniak_secret)
+		.arg("-X").arg("PUT")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg("-d").arg(data)
 		.arg(&url)
-        .output()
-        .expect("Error");
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Error");
 
 	String::from_utf8_lossy(&output.stdout).into()
 }
@@ -274,12 +282,13 @@ fn delete_campaign(id: i32) -> String {
 	let url: String = format!("https://newsletter.infomaniak.com/api/v1/public/campaign/{}", id);
 
 	let output = Command::new("curl")
-        .arg("-u").arg(&config.infomaniak_secret)
-        .arg("-X").arg("DELETE")
+		.arg("-u").arg(&config.infomaniak_secret)
+		.arg("-X").arg("DELETE")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg(&url)
-        .output()
-        .expect("Error");
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Error");
 
 	String::from_utf8_lossy(&output.stdout).into()
 }
@@ -290,13 +299,14 @@ fn test_campaign(id: i32, data: &str) -> String {
 	let url: String = format!("https://newsletter.infomaniak.com/api/v1/public/campaign/{}/test", id);
 
 	let output = Command::new("curl")
-        .arg("-u").arg(&config.infomaniak_secret)
-        .arg("-X").arg("POST")
+		.arg("-u").arg(&config.infomaniak_secret)
+		.arg("-X").arg("POST")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg("-d").arg(data)
 		.arg(&url)
-        .output()
-        .expect("Error");
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Error");
 
 	String::from_utf8_lossy(&output.stdout).into()
 }
@@ -307,12 +317,13 @@ fn send_campaign(id: i32) -> String {
 	let url: String = format!("https://newsletter.infomaniak.com/api/v1/public/campaign/{}/send", id);
 
 	let output = Command::new("curl")
-        .arg("-u").arg(&config.infomaniak_secret)
-        .arg("-X").arg("POST")
+		.arg("-u").arg(&config.infomaniak_secret)
+		.arg("-X").arg("POST")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg(&url)
-        .output()
-        .expect("Error");
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Error");
 
 	String::from_utf8_lossy(&output.stdout).into()
 }
@@ -322,12 +333,13 @@ fn get_mailinglists() -> String {
 	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
 
 	let output = Command::new("curl")
-        .arg("-u").arg(&config.infomaniak_secret)
-        .arg("-X").arg("GET")
+		.arg("-u").arg(&config.infomaniak_secret)
+		.arg("-X").arg("GET")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg("https://newsletter.infomaniak.com/api/v1/public/mailinglist")
-        .output()
-        .expect("Error");
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Error");
 
 	String::from_utf8_lossy(&output.stdout).into()
 }
@@ -337,13 +349,14 @@ fn create_mailinglist(data: &str) -> String {
 	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
 
 	let output = Command::new("curl")
-        .arg("-u").arg(&config.infomaniak_secret)
-        .arg("-X").arg("POST")
+		.arg("-u").arg(&config.infomaniak_secret)
+		.arg("-X").arg("POST")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg("-d").arg(data)
 		.arg("https://newsletter.infomaniak.com/api/v1/public/mailinglist")
-        .output()
-        .expect("Error");
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Error");
 
 	String::from_utf8_lossy(&output.stdout).into()
 }
@@ -354,13 +367,14 @@ fn update_mailinglist(id: i32, data: &str) -> String {
 	let url: String = format!("https://newsletter.infomaniak.com/api/v1/public/mailinglist/{}", id);
 
 	let output = Command::new("curl")
-        .arg("-u").arg(&config.infomaniak_secret)
-        .arg("-X").arg("PUT")
+		.arg("-u").arg(&config.infomaniak_secret)
+		.arg("-X").arg("PUT")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg("-d").arg(data)
 		.arg(&url)
-        .output()
-        .expect("Error");
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Error");
 
 	String::from_utf8_lossy(&output.stdout).into()
 }
@@ -371,12 +385,13 @@ fn delete_mailinglist(id: i32) -> String {
 	let url: String = format!("https://newsletter.infomaniak.com/api/v1/public/mailinglist/{}", id);
 
 	let output = Command::new("curl")
-        .arg("-u").arg(&config.infomaniak_secret)
-        .arg("-X").arg("DELETE")
+		.arg("-u").arg(&config.infomaniak_secret)
+		.arg("-X").arg("DELETE")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg(&url)
-        .output()
-        .expect("Error");
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Error");
 
 	String::from_utf8_lossy(&output.stdout).into()
 }
@@ -387,12 +402,13 @@ fn mailinglist_get_contacts(id: i32) -> String {
 	let url: String = format!("https://newsletter.infomaniak.com/api/v1/public/mailinglist/{}/contact", id);
 
 	let output = Command::new("curl")
-        .arg("-u").arg(&config.infomaniak_secret)
-        .arg("-X").arg("GET")
+		.arg("-u").arg(&config.infomaniak_secret)
+		.arg("-X").arg("GET")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg(&url)
-        .output()
-        .expect("Error");
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Error");
 
 	String::from_utf8_lossy(&output.stdout).into()
 }
@@ -403,13 +419,14 @@ fn mailinglist_add_contact(id: i32, data: &str) -> String {
 	let url: String = format!("https://newsletter.infomaniak.com/api/v1/public/mailinglist/{}/importcontact", id);
 
 	let output = Command::new("curl")
-        .arg("-u").arg(&config.infomaniak_secret)
-        .arg("-X").arg("POST")
+		.arg("-u").arg(&config.infomaniak_secret)
+		.arg("-X").arg("POST")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg("-d").arg(data)
 		.arg(&url)
-        .output()
-        .expect("Error");
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Error");
 
 	String::from_utf8_lossy(&output.stdout).into()
 }
@@ -420,13 +437,48 @@ fn mailinglist_remove_contact(id: i32, data: &str) -> String {
 	let url: String = format!("https://newsletter.infomaniak.com/api/v1/public/mailinglist/{}/managecontact", id);
 
 	let output = Command::new("curl")
-        .arg("-u").arg(&config.infomaniak_secret)
-        .arg("-X").arg("POST")
+		.arg("-u").arg(&config.infomaniak_secret)
+		.arg("-X").arg("POST")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg("-d").arg(data)
 		.arg(&url)
-        .output()
-        .expect("Error");
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Error");
+
+	String::from_utf8_lossy(&output.stdout).into()
+}
+
+#[tauri::command]
+fn get_contact(id: i32) -> String {
+	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
+	let url: String = format!("https://newsletter.infomaniak.com/api/v1/public/contact/{}", id);
+
+	let output = Command::new("curl")
+		.arg("-u").arg(&config.infomaniak_secret)
+		.arg("-X").arg("GET")
+		.arg("-H").arg("Content-Type: application/json")
+		.arg(&url)
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Error");
+
+	String::from_utf8_lossy(&output.stdout).into()
+}
+
+#[tauri::command]
+fn delete_contact(id: i32) -> String {
+	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
+	let url: String = format!("https://newsletter.infomaniak.com/api/v1/public/contact/{}", id);
+
+	let output = Command::new("curl")
+		.arg("-u").arg(&config.infomaniak_secret)
+		.arg("-X").arg("DELETE")
+		.arg("-H").arg("Content-Type: application/json")
+		.arg(&url)
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Error");
 
 	String::from_utf8_lossy(&output.stdout).into()
 }
@@ -436,12 +488,13 @@ fn get_credits() -> String {
 	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
 
 	let output = Command::new("curl")
-        .arg("-u").arg(&config.infomaniak_secret)
-        .arg("-X").arg("GET")
+		.arg("-u").arg(&config.infomaniak_secret)
+		.arg("-X").arg("GET")
 		.arg("-H").arg("Content-Type: application/json")
 		.arg("https://newsletter.infomaniak.com/api/v1/public/credit")
-        .output()
-        .expect("Error");
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Error");
 
 	String::from_utf8_lossy(&output.stdout).into()
 }
@@ -449,8 +502,8 @@ fn get_credits() -> String {
 // #########################################################################
 // main function
 fn main() {
-    tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![open_link, change_config, init_config, get_campaigns, get_campaign, create_campaign, update_campaign, delete_campaign, test_campaign, send_campaign, get_mailinglists, create_mailinglist, update_mailinglist, delete_mailinglist, mailinglist_get_contacts, mailinglist_add_contact, mailinglist_remove_contact, get_credits])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+	tauri::Builder::default()
+		.invoke_handler(tauri::generate_handler![open_link, change_config, init_config, get_campaigns, get_campaign, create_campaign, update_campaign, delete_campaign, test_campaign, send_campaign, get_mailinglists, create_mailinglist, update_mailinglist, delete_mailinglist, mailinglist_get_contacts, mailinglist_add_contact, mailinglist_remove_contact, get_contact, delete_contact, get_credits])
+		.run(tauri::generate_context!())
+		.expect("error while running tauri application");
 }

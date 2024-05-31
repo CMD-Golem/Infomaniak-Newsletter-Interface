@@ -131,6 +131,32 @@ listitem div {
 	width: calc(100% - 95px);
 }
 
+contacts {
+	width: calc(100% - 250px);
+	height: 100vh;
+	overflow-y: auto;
+}
+
+contact {
+	padding: 0 15px;
+	height: 40px;
+	display: grid;
+	grid-template-columns: 60% auto 40px;
+}
+
+contact p {
+	margin: 0;
+	line-height: 40px;
+}
+
+contact svg {
+	width: 18px;
+	height: 18px;
+}
+
+contact div {
+	display: none;
+}
 /* Editor */
 editor {
 	width: calc(100% - 251.5px);
@@ -172,7 +198,7 @@ button {
 	border: none;
 }
 
-button:hover, .credits_button:hover, listitem:hover {
+button:hover, .credits_button:hover, listitem:hover, .mailinglist .selected {
 	background-color: #eff6fc;
 }
 

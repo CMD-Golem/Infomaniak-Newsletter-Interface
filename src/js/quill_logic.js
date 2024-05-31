@@ -11,6 +11,7 @@ var Font = Quill.import('formats/font');
 Font.whitelist = ['arial', 'calibri', "times"];
 Quill.register(Font, true);
 
+
 Quill.register("modules/resize", window.QuillResizeModule);
 
 // register editor
@@ -83,7 +84,7 @@ function removeFormat() {
 // open color selection box
 body.addEventListener("mousedown", hideColorSelection);
 
-var picker = document.getElementsByTagName("picker")[0];
+var picker = document.querySelector("picker");
 var colors = picker.getElementsByTagName("td");
 for (var i = 0; i < colors.length; i++) {
 	colors[i].addEventListener("click", quillSetColor);
@@ -198,8 +199,8 @@ document.addEventListener("keydown", e => { if (e.key) formatPainterEnd(); });
 
 
 // context and selection menu
-var context_menu = document.getElementsByTagName("contextmenu")[0];
-var selection_menu = document.getElementsByTagName("selectionmenu")[0];
+var context_menu = document.querySelector("contextmenu");
+var selection_menu = document.querySelector("selectionmenu");
 
 var normalizePozition = (mouseX, mouseY, menu, outOfBoundsCorrectionY) => {
 	// compute what is the mouse position relative to the container element (body)
@@ -230,7 +231,7 @@ var normalizePozition = (mouseX, mouseY, menu, outOfBoundsCorrectionY) => {
 
 body.addEventListener("contextmenu", (event) => {
 	event.preventDefault();
-	if (event.target.isContentEditable || event.target.nodeName == "INPUT") {
+	if (event.target.isContentEditable) {
 
 		var { clientX: mouseX, clientY: mouseY } = event;
 		var { normalizedX, normalizedY } = normalizePozition(mouseX, mouseY, context_menu, 0);
@@ -268,6 +269,11 @@ body.addEventListener("click", (e) => {
 	selection_menu.classList.remove("visible");
 
 	if (e.target.nodeName == "A" && e.target.classList.contains("ql-preview")) {
-		invoke('open_link', {url: e.target.href});
+		var href = e.target.href;
+		href = href.replace("https://tauri.localhost", "https:/").replace("http://127.0.0.1:1430", "http:/");
+
+		if (href == "http://*%7CUNSUBSCRIBED%7C*") return;
+
+		invoke('open_link', {url: href});
 	}
 });

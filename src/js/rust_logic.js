@@ -5,7 +5,7 @@ var settings = {test_email:undefined};
 
 
 // initalize and load everything after document loaded
-var campaign_list = document.getElementsByTagName("list")[0];
+var campaign_list = document.querySelector("list");
 var el_test_email = document.getElementById("test_email");
 var newsletter_group = document.getElementById("newsletter_group");
 var subject = document.getElementById("subject");
@@ -46,6 +46,13 @@ window.onload = async () => {
 	}
 }
 
+ 
+window.__TAURI__.event.listen("changed_mailinglists", async (e) => {
+	var set_value = newsletter_group.value;
+	await getMailinglists();
+	newsletter_group.value = set_value;
+})
+
 async function getCredits() {
 	var response = await invoke("get_credits");
 	var json = JSON.parse(response);
@@ -66,7 +73,7 @@ function initEditor() {
 
 // settings panel
 async function openSettings(json, disable_cancel) {
-	document.getElementsByTagName("settings")[0].style.display = "block";
+	document.querySelector("settings").style.display = "block";
 
 	if (json == undefined) {
 		var response = await invoke("init_config", {init:false});
@@ -142,7 +149,7 @@ async function saveSettings(action) {
 function closeSettings(action) {
 	if (action == "cancel" && document.getElementById("settings_cancel").getAttribute("disabled") == "") return
 
-	document.getElementsByTagName("settings")[0].style.display = "none";
+	document.querySelector("settings").style.display = "none";
 	el_infomaniak_secret.style.display = "none";
 	el_ftp_user.parentElement.style.display = "none";
 	el_infomaniak_secret.previousElementSibling.style.display = "block";
@@ -274,6 +281,7 @@ async function saveCampaign(wants_sending) {
 
 	// create data string if a campaign is active
 	var html_content = quill.getSemanticHTML();
+	if (!html_content.includes('<a href="*|UNSUBSCRIBED|*"')) html_content += '<template><a href="*|UNSUBSCRIBED|*" target="_blank"></a></template>';
 	var content = `<style>p {margin: 0;} * {font-size: ${standard_text_size}; font-family: ${standard_font}}</style>` + html_content.replaceAll('"', '\\"').replaceAll("<p></p>", "<br>");
 
 	var email_from_addr = settings.email_from_addr.split("@");
@@ -464,18 +472,18 @@ function openMailinglists() {
 	const webview = new window.__TAURI__.window.WebviewWindow("mailinglists", {
 		"title": "Manage Mailingslists",
 		"url": "mailinglists.html",
-		"width": 1100,
+		"width": 680,
 		"height": 380,
-		"minWidth": null,
-		"minHeight": null,
+		"minWidth": 600,
+		"minHeight": 280,
 		"maximizable": false,
-		"minimizable": false
+		"minimizable": false,
+		"skipTaskbar": true
 	});
 
 	webview.once('tauri://error', function (e) {
 		if (e.payload == "a window with label `mailinglists` already exists") {
 			webview.setFocus();
 		}
-		console.log(e)
 	});
 }
