@@ -24,14 +24,15 @@ select, select:focus {
 	background-color: #c7c7c7;
 }
 
-input {
+input, textarea {
 	font-size: inherit;
 	font-family: inherit;
 	background-color: transparent;
 	border: none;
+	resize: none;
 }
 
-input:focus, input:focus:hover {
+input:focus, input:focus:hover, textarea:focus, textarea:focus:hover {
 	outline: none;
 }
 
@@ -131,22 +132,61 @@ listitem div {
 	width: calc(100% - 95px);
 }
 
-contacts {
+main {
 	width: calc(100% - 250px);
+}
+
+sort {
+	border-bottom: 1.5px #3a3a3a solid;
+}
+
+sort div {
+	display: flex;
+}
+
+sort button {
+	width: 40px;
+	height: 40px;
+}
+
+sort select {
+	height: 40px;
+	border: none;
+	padding: 0 8px;
+}
+
+sort svg {
+	margin-top: 2px;
+	width: 22px;
+	height: 22px;
+}
+
+textarea {
+	width: calc(100% - 40px);
+	height: 40px;
+	line-height: 40px;
+	overflow: hidden;
+	padding: 0;
+	white-space: nowarp;
+}
+
+contacts {
 	height: 100vh;
 	overflow-y: auto;
 }
 
-contact {
+contact, sort {
 	padding: 0 15px;
 	height: 40px;
 	display: grid;
-	grid-template-columns: 60% auto 40px;
+	grid-template-columns: 65% auto 40px;
 }
 
 contact p {
 	margin: 0;
 	line-height: 40px;
+	user-select:text;
+	white-space: nowarp;
 }
 
 contact svg {
@@ -154,7 +194,7 @@ contact svg {
 	height: 18px;
 }
 
-contact div {
+contact div, sort button div {
 	display: none;
 }
 /* Editor */
@@ -198,7 +238,7 @@ button {
 	border: none;
 }
 
-button:hover, .credits_button:hover, listitem:hover, .mailinglist .selected {
+button:hover, .credits_button:hover, listitem:hover, .mailinglist .selected, sort select:hover {
 	background-color: #eff6fc;
 }
 

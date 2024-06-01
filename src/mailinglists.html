@@ -17,23 +17,29 @@
 			</button>
 		</navigation>
 	</aside>
-	<contacts></contacts>
-	<selectionmenu></selectionmenu>
-
-	<contextmenu>
-		<button class="long" onclick="copySelection(true)">
-			<svg width="24" height="24" viewBox="0 0 24 24"><path d="M7.83 2.44a1 1 0 0 0-1.66 1.117l4.793 7.114-2.326 3.678a4 4 0 1 0 1.57 1.26l1.977-3.126 1.884 2.796a4 4 0 1 0 1.683-1.08l-3.62-5.375v.001L7.83 2.44ZM5 18a2 2 0 1 1 4 0 2 2 0 0 1-4 0Zm10 0a2 2 0 1 1 4 0 2 2 0 0 1-4 0ZM14.52 8.79l3.325-5.256a1 1 0 0 0-1.69-1.07L13.3 6.979l1.22 1.812Z"/></svg>
-			<div>Ausschneiden</div>
-		</button>
-		<button class="long" onclick="copySelection()">
-			<svg width="24" height="24" viewBox="0 0 24 24"><path d="M5.503 4.627 5.5 6.75v10.504a3.25 3.25 0 0 0 3.25 3.25h8.616a2.251 2.251 0 0 1-2.122 1.5H8.75A4.75 4.75 0 0 1 4 17.254V6.75c0-.98.627-1.815 1.503-2.123ZM17.75 2A2.25 2.25 0 0 1 20 4.25v13a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-13A2.25 2.25 0 0 1 8.75 2h9Z"/></svg>
-			<div>Kopieren</div>
-		</button>
-		<button class="long" onclick="paste()">
-			<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12.753 2c1.158 0 2.111.875 2.234 2h1.763a2.25 2.25 0 0 1 2.245 2.096L19 6.25a.75.75 0 0 1-.647.742L18.249 7a.75.75 0 0 1-.742-.647L17.5 6.25a.75.75 0 0 0-.648-.743L16.75 5.5h-2.132a2.244 2.244 0 0 1-1.865.993H9.247c-.777 0-1.461-.393-1.865-.992L5.25 5.5a.75.75 0 0 0-.743.648L4.5 6.25v13.505c0 .38.282.693.648.743l.102.007h3a.75.75 0 0 1 .743.647l.007.102a.75.75 0 0 1-.75.75h-3a2.25 2.25 0 0 1-2.245-2.095L3 19.755V6.25a2.25 2.25 0 0 1 2.096-2.245L5.25 4h1.763a2.247 2.247 0 0 1 2.234-2h3.506Zm5.997 6a2.25 2.25 0 0 1 2.245 2.096l.005.154v9.5a2.25 2.25 0 0 1-2.096 2.245L18.75 22h-6.5a2.25 2.25 0 0 1-2.245-2.096L10 19.75v-9.5a2.25 2.25 0 0 1 2.096-2.245L12.25 8h6.5Zm-5.997-4.5H9.247a.747.747 0 0 0 0 1.493h3.506a.747.747 0 1 0 0-1.493Z"/></svg>
-			<div>Einfügen</div>
-		</button>
-	</contextmenu>
+	<main>
+		<sort>
+			<div>
+				<textarea placeholder="Neuer Kontakt hinzufügen" onkeyup="checkContact(event)" rows="1" cols="9999"></textarea>
+				<button style="border-right: 1.5px #3a3a3a solid;">
+					<svg width="24" height="24" viewBox="0 0 24 24"><path d="M11.883 3.007 12 3a1 1 0 0 1 .993.883L13 4v7h7a1 1 0 0 1 .993.883L21 12a1 1 0 0 1-.883.993L20 13h-7v7a1 1 0 0 1-.883.993L12 21a1 1 0 0 1-.993-.883L11 20v-7H4a1 1 0 0 1-.993-.883L3 12a1 1 0 0 1 .883-.993L4 11h7V4a1 1 0 0 1 .883-.993L12 3l-.117.007Z"></svg>
+					<div>Bestätigen</div>
+				</button>
+			</div>
+			<div>
+				<select onchange="reloadMailingList(this.value)">
+					<option value="0">A-Z</option>
+					<option value="1">Z-A</option>
+					<option value="2">Info</option>
+				</select>
+			</div>
+			<button onclick="reloadMailingList()">
+				<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 4.75a7.25 7.25 0 1 1-7.201 6.406C4.867 10.568 4.44 10 3.849 10c-.515 0-.968.358-1.03.87A9.25 9.25 0 1 0 6.25 4.754V4.25a1 1 0 0 0-2.001 0v2.698A9.322 9.322 0 0 0 4.216 7h.034v.25a1 1 0 0 0 1 1h3a1 1 0 0 0 0-2h-.666A7.219 7.219 0 0 1 12 4.75Z"></svg>
+				<div>Aktualisieren</div>
+			</button>
+		</sort>
+		<contacts></contacts>
+	</main>
 
 	<dialog>
 		<div>title</div>

@@ -1,5 +1,7 @@
 var el_mailinglists = document.querySelector("list");
 var el_contacts = document.querySelector("contacts");
+var el_add_contact = document.querySelector("textarea");
+var email_validation = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 window.onload = () => {
 	getMailinglists(true);
@@ -8,7 +10,7 @@ window.onload = () => {
 
 function createMailinglistHtml(mailinglist, select_class) {
 	var html = `
-		<listitem id="${mailinglist.id}" onclick="getMailinglist(this.id)" class="${select_class ?? ""}">
+		<listitem id="${mailinglist.id}" onclick="getMailinglist(this.id, true)" class="${select_class ?? ""}">
 			<input disabled value="${mailinglist.name}">
 			<button onclick="startRenamingMailinglist(this)">
 				<svg width="24" height="24" viewBox="0 0 24 24"><path d="M9.75 2h3.998a.75.75 0 0 1 .102 1.493l-.102.007H12.5v17h1.246a.75.75 0 0 1 .743.648l.007.102a.75.75 0 0 1-.648.743l-.102.007H9.75a.75.75 0 0 1-.102-1.493l.102-.007h1.249v-17H9.75a.75.75 0 0 1-.743-.648L9 2.75a.75.75 0 0 1 .648-.743L9.75 2Zm8.496 2.997a3.253 3.253 0 0 1 3.25 3.25l.004 7.504a3.249 3.249 0 0 1-3.064 3.246l-.186.005h-4.745V4.996h4.74Zm-8.249 0L9.992 19H5.25A3.25 3.25 0 0 1 2 15.751V8.247a3.25 3.25 0 0 1 3.25-3.25h4.747Z"/></svg>
@@ -47,7 +49,7 @@ async function getMailinglists(first_load) {
 		html += createMailinglistHtml(mailinglist, "");
 	}
 
-	if (first_load) getMailinglist(first_id);
+	if (first_load) getMailinglist(first_id, false);
 	el_mailinglists.innerHTML = html;
 }
 
@@ -62,7 +64,7 @@ async function deleteMailinglist(id) {
 	if (json.result == "success") {
 		document.getElementById(id).remove();
 		await window.__TAURI__.event.emit('changed_mailinglists');
-		getMailinglist(el_mailinglists.firstElementChild.id);
+		getMailinglist(el_mailinglists.firstElementChild?.id, false);
 	}
 	else openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
 }
@@ -116,7 +118,7 @@ async function duplicateMailinglist(id) {
 
 function startCreatingMailinglist() {
 	// create html
-	document.querySelector(".selected").classList.remove("selected");
+	document.querySelector(".selected")?.classList.remove("selected");
 	var html = createMailinglistHtml({id:0, name:"Neue Kontaktgruppe"}, "selected");
 	el_mailinglists.insertAdjacentHTML('beforeend', html);
 
@@ -215,7 +217,9 @@ function createContactHtml(contact) {
 }
 
 // get specific mailing list and show it
-async function getMailinglist(id) {
+async function getMailinglist(id, check_already_selected, sort) {
+	if (check_already_selected && document.getElementById(id).classList.contains("selected")) return
+
 	var response = await invoke("mailinglist_get_contacts", {id:parseInt(id)});
 	var json = JSON.parse(response);
 
@@ -223,23 +227,49 @@ async function getMailinglist(id) {
 		openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
 		return;
 	}
-	if (document.getElementById(id).classList.contains("selected")) return
 	
 	var html = "";
 	var data = json.data.data;
 
-	data.sort((a, b) => {
-		if (a.email < b.email) return 1;
-		if (a.email > b.email) return -1;
-		return 0;
-	});
+	if (sort == "1") { // Z-A
+		data.sort((a, b) => {
+			if (a.email < b.email) return 1;
+			if (a.email > b.email) return -1;
+			return 0;
+		});
+	}
+	else if (sort == "2") { // info
+		data.sort((a, b) => {
+			// Handle special case for status 1
+			if (a.status === 1 && b.status !== 1) return 1;
+			if (b.status === 1 && a.status !== 1) return -1;
+			
+			// Sort by status in descending order
+			if (a.status !== b.status) return b.status - a.status;
+			
+			// Sort by name in ascending order if statuses are equal
+			return a.email.localeCompare(b.email);
+		});
+	}
+	else { // A-Z
+		data.sort((a, b) => {
+			if (a.email < b.email) return -1;
+			if (a.email > b.email) return 1;
+			return 0;
+		});
+	}
 
-	for (var i = data.length - 1; i >= 0; i--) html += createContactHtml(data[i]);
+	for (var i = 0; i < data.length; i++) html += createContactHtml(data[i]);
 
 	document.querySelector(".selected")?.classList.remove("selected");
 	document.getElementById(id).classList.add("selected");
 
 	el_contacts.innerHTML = html;
+}
+
+function reloadMailingList(sort) {
+	var id = document.querySelector('.selected').id;
+	getMailinglist(id, false, sort);
 }
 
 async function deleteContact(email, button) {
@@ -264,7 +294,7 @@ async function deleteContact(email, button) {
 	}
 	// only remove contact from mailinglist since it is used elsewhere
 	else {
-		var mailinglist_id = +document.querySelector(".selected").id;
+		var mailinglist_id = document.querySelector(".selected").id;
 		var response = await invoke("mailinglist_remove_contact", {id: parseInt(mailinglist_id), data:`{\"email\":\"${email}\", \"status\":\"delete\"}`});
 		var json = JSON.parse(response);
 	}
@@ -272,3 +302,40 @@ async function deleteContact(email, button) {
 	if (json.result == "success") button.parentElement.remove();
 	else openDialog("backend_error", Array.isArray(json_get.error) ? json_get.error.join(" | ") : (json_get.error ?? ""));
 }
+
+function checkContact() {
+	if (el_add_contact.value.includes("\n")) newContact();
+}
+
+async function newContact() {
+	var input_value = el_add_contact.value;
+	var new_contacts = input_value.split(/\s*,\s*|\s+|\n/);
+	console.log(new_contacts)
+	if (
+		(new_contacts.length == 1 && new_contacts[0] == "") || 
+		(new_contacts.length == 2 && new_contacts[0] == "" && new_contacts[1] == "")
+	) {
+		el_add_contact.value = "";
+		return;
+	}
+
+	var upload_array = [];
+	var id = document.querySelector(".selected").id;
+
+	for (var i = 0; i < new_contacts.length; i++) {
+		if (email_validation.test(new_contacts[i])) upload_array.push({email: new_contacts[i]});
+	}
+
+	el_add_contact.value = "";
+	el_add_contact.value = upload_array[upload_array.length - 1].email;
+	console.log(upload_array)
+}
+// 	var response = await invoke("mailinglist_add_contact", {id: parseInt(id), data: JSON.stringify({contacts:upload_array})});
+// 	var json = JSON.parse(response);
+
+// 	if (json.result == "success") {
+// 		el_add_contact.value = "";
+// 		setTimeout(getMailinglist, 500, id, false);
+// 	}
+// 	else openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+// }
