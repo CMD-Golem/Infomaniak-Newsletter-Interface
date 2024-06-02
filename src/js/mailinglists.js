@@ -310,7 +310,6 @@ function checkContact() {
 async function newContact() {
 	var input_value = el_add_contact.value;
 	var new_contacts = input_value.split(/\s*,\s*|\s+|\n/);
-	console.log(new_contacts)
 	if (
 		(new_contacts.length == 1 && new_contacts[0] == "") || 
 		(new_contacts.length == 2 && new_contacts[0] == "" && new_contacts[1] == "")
@@ -326,16 +325,17 @@ async function newContact() {
 		if (email_validation.test(new_contacts[i])) upload_array.push({email: new_contacts[i]});
 	}
 
-	el_add_contact.value = "";
-	el_add_contact.value = upload_array[upload_array.length - 1].email;
 	console.log(upload_array)
-}
-// 	var response = await invoke("mailinglist_add_contact", {id: parseInt(id), data: JSON.stringify({contacts:upload_array})});
-// 	var json = JSON.parse(response);
 
-// 	if (json.result == "success") {
-// 		el_add_contact.value = "";
-// 		setTimeout(getMailinglist, 500, id, false);
-// 	}
-// 	else openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
-// }
+	if (upload_array.length >= 2) {
+		el_add_contact.value = upload_array[upload_array.length - 1].email;
+		upload_array.pop();
+	}
+	else el_add_contact.value = "";
+
+	var response = await invoke("mailinglist_add_contact", {id: parseInt(id), data: JSON.stringify({contacts:upload_array})});
+	var json = JSON.parse(response);
+
+	if (json.result == "success") setTimeout(getMailinglist, 500, id, false);
+	else openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+}
