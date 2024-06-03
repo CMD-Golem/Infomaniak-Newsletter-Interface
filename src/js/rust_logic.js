@@ -205,7 +205,7 @@ async function getCampaigns(first_load) {
 		html += createCampaignHtml(campaign);
 	}
 
-	if (first_load) {
+	if (first_load && json.data.data.length != 0) {
 		getCampaign(first_id);
 		active_campaign = first_id;
 	}
@@ -271,7 +271,7 @@ async function saveCampaign(wants_sending) {
 
 	// check if subject etc. is filled in
 	else if (newsletter_group.value == "") {
-		openDialog("no_mailinglist");
+		openDialog("no_selected_mailinglist");
 		return false;
 	}
 	else if (subject.value == "") {

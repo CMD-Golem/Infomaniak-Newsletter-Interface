@@ -2,6 +2,7 @@ var el_mailinglists = document.querySelector("list");
 var el_contacts = document.querySelector("contacts");
 var el_add_contact = document.querySelector("textarea");
 var email_validation = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+var contact_sorting = "0";
 
 window.onload = () => {
 	getMailinglists(true);
@@ -49,7 +50,7 @@ async function getMailinglists(first_load) {
 		html += createMailinglistHtml(mailinglist, "");
 	}
 
-	if (first_load) getMailinglist(first_id, false);
+	if (first_load && json.data.data.length != 0) getMailinglist(first_id, false);
 	el_mailinglists.innerHTML = html;
 }
 
@@ -217,7 +218,7 @@ function createContactHtml(contact) {
 }
 
 // get specific mailing list and show it
-async function getMailinglist(id, check_already_selected, sort) {
+async function getMailinglist(id, check_already_selected) {
 	if (check_already_selected && document.getElementById(id).classList.contains("selected")) return
 
 	var response = await invoke("mailinglist_get_contacts", {id:parseInt(id)});
@@ -231,14 +232,14 @@ async function getMailinglist(id, check_already_selected, sort) {
 	var html = "";
 	var data = json.data.data;
 
-	if (sort == "1") { // Z-A
+	if (contact_sorting == "1") { // Z-A
 		data.sort((a, b) => {
 			if (a.email < b.email) return 1;
 			if (a.email > b.email) return -1;
 			return 0;
 		});
 	}
-	else if (sort == "2") { // info
+	else if (contact_sorting == "2") { // info
 		data.sort((a, b) => {
 			// Handle special case for status 1
 			if (a.status === 1 && b.status !== 1) return 1;
@@ -267,9 +268,10 @@ async function getMailinglist(id, check_already_selected, sort) {
 	el_contacts.innerHTML = html;
 }
 
-function reloadMailingList(sort) {
-	var id = document.querySelector('.selected').id;
-	getMailinglist(id, false, sort);
+function reloadMailingList(new_sort) {
+	var id = document.querySelector('.selected')?.id;
+	if (new_sort != undefined) contact_sorting = new_sort;
+	if (id != undefined) getMailinglist(id, false);
 }
 
 async function deleteContact(email, button) {
@@ -319,13 +321,17 @@ async function newContact() {
 	}
 
 	var upload_array = [];
-	var id = document.querySelector(".selected").id;
+	var id = document.querySelector(".selected")?.id;
+
+	if (id == undefined) {
+		openDialog("no_mailinglist");
+		el_add_contact.value = "";
+		return;
+	}
 
 	for (var i = 0; i < new_contacts.length; i++) {
 		if (email_validation.test(new_contacts[i])) upload_array.push({email: new_contacts[i]});
 	}
-
-	console.log(upload_array)
 
 	if (upload_array.length >= 2) {
 		el_add_contact.value = upload_array[upload_array.length - 1].email;
@@ -336,6 +342,6 @@ async function newContact() {
 	var response = await invoke("mailinglist_add_contact", {id: parseInt(id), data: JSON.stringify({contacts:upload_array})});
 	var json = JSON.parse(response);
 
-	if (json.result == "success") setTimeout(getMailinglist, 500, id, false);
+	if (json.result == "success") setTimeout(getMailinglist, 800, id, false);
 	else openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
 }

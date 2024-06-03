@@ -6,8 +6,8 @@ var dialog = document.querySelector("dialog");
 var error_msg = [
 	{id:"backend_error", title:"Error", msg:"Folgender Fehler ist bei der Synchronisierung mit dem Newsletter Server aufgetreten:<br><br>${additional_info}", buttons:["dialog_ok"]},
 	{id:"unsaved_changes", title:"Die Änderungen wurden nicht gespeichert", msg:"Möchten Sie diese speichern?", buttons:["dialog_yes", "dialog_no", "dialog_cancel"]},
-	{id:"no_selection", title:"Es ist kein Newsletter ausgewählt", msg:"Wählen Sie einen Newsletter zur Bearbeitung aus", buttons:["dialog_ok"]},
-	{id:"no_mailinglist", msg:"Es muss eine Kontaktgruppe vor dem Speichern ausgewählt werden", buttons:["dialog_ok"]},
+	{id:"no_selection", msg:"Erstelle zuerst ein neuer Newsletter.", buttons:["dialog_ok"]},
+	{id:"no_selected_mailinglist", msg:"Es muss eine Kontaktgruppe vor dem Speichern ausgewählt werden", buttons:["dialog_ok"]},
 	{id:"no_subject", msg:"Es muss ein Betreff vor dem Speichern definiert werden", buttons:["dialog_ok"]},
 	{id:"no_test_mail", msg:"Für das Senden eines Tests muss eine Test E-Mail Adresse definiert sein", buttons:["dialog_ok"]},
 	{id:"sent_test_mail", msg:"Das Testmail wurde erfolgreich versendet", buttons:["dialog_ok"]},
@@ -20,6 +20,8 @@ var error_msg = [
 	{id:"already_sent", title:"Senden nicht möglich", msg:"Dieser Newsletter wird momentan versandt. Das erneute Senden ist erst möglich, sobald der Newsletter an alle Empfänger versendet wurde.", buttons:["dialog_ok"]},
 	{id:"delete_mailinglist", title:"Die Kontaktgruppe wird unwiederruflich gelöscht", msg:"Möchten Sie fortfahren?", buttons:["dialog_yes", "dialog_cancel"]},
 	{id:"delete_contact", title:"Der Kontakt wird unwiederruflich gelöscht", msg:"Möchten Sie fortfahren?", buttons:["dialog_yes", "dialog_cancel"]},
+	{id:"no_mailinglist", msg:"Erstelle zuerst eine neue Kontaktgruppe.", buttons:["dialog_ok"]},
+	
 ]
 
 function openDialog(id, additional_info) {
