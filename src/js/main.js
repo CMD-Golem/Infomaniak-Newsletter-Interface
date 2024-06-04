@@ -54,3 +54,19 @@ function openDialog(id, additional_info) {
 		}
 	});
 }
+
+// tooltip
+function showTooltip(e, pos, tip) {
+	var waiting = true;
+	
+	var timout_id = setTimeout(() => {
+		waiting = false;
+	}, 800);
+
+	e.target.addEventListener("mouseleave", () => {
+		if (waiting == true) clearTimeout(timout_id);
+		else {
+
+		}
+	}, {once: true});
+}
