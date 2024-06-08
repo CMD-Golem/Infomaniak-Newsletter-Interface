@@ -5,6 +5,8 @@ var email_validation = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 var contact_sorting = "0";
 
 window.onload = () => {
+	if (invoke == undefined) return;
+
 	getMailinglists(true);
 	document.querySelector("body").addEventListener("contextmenu", (e) => e.preventDefault());
 }
@@ -13,17 +15,14 @@ function createMailinglistHtml(mailinglist, select_class) {
 	var html = `
 		<listitem id="${mailinglist.id}" onclick="getMailinglist(this.id, true)" class="${select_class ?? ""}">
 			<input disabled value="${mailinglist.name}">
-			<button onclick="startRenamingMailinglist(this)">
+			<button onclick="startRenamingMailinglist(this)" onmouseenter="showTooltip(this, 2, 'Kontaktgruppe umbenennen')">
 				<svg width="24" height="24" viewBox="0 0 24 24"><path d="M9.75 2h3.998a.75.75 0 0 1 .102 1.493l-.102.007H12.5v17h1.246a.75.75 0 0 1 .743.648l.007.102a.75.75 0 0 1-.648.743l-.102.007H9.75a.75.75 0 0 1-.102-1.493l.102-.007h1.249v-17H9.75a.75.75 0 0 1-.743-.648L9 2.75a.75.75 0 0 1 .648-.743L9.75 2Zm8.496 2.997a3.253 3.253 0 0 1 3.25 3.25l.004 7.504a3.249 3.249 0 0 1-3.064 3.246l-.186.005h-4.745V4.996h4.74Zm-8.249 0L9.992 19H5.25A3.25 3.25 0 0 1 2 15.751V8.247a3.25 3.25 0 0 1 3.25-3.25h4.747Z"/></svg>
-				<div class="tooltip bottom">Kontaktgruppe umbenennen</div>
 			</button>
-			<button onclick="duplicateMailinglist(this.parentElement.id)">
+			<button onclick="duplicateMailinglist(this.parentElement.id)" onmouseenter="showTooltip(this, 2, 'Kontaktgruppe duplizieren')">
 				<svg width="24" height="24" viewBox="0 0 24 24"><path d="M5.503 4.627 5.5 6.75v10.504a3.25 3.25 0 0 0 3.25 3.25h8.616a2.251 2.251 0 0 1-2.122 1.5H8.75A4.75 4.75 0 0 1 4 17.254V6.75c0-.98.627-1.815 1.503-2.123ZM17.75 2A2.25 2.25 0 0 1 20 4.25v13a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-13A2.25 2.25 0 0 1 8.75 2h9Z"/></svg>
-				<div class="tooltip bottom">Kontaktgruppe duplizieren</div>
 			</button>
-			<button onclick="deleteMailinglist(this.parentElement.id)">
+			<button onclick="deleteMailinglist(this.parentElement.id)" onmouseenter="showTooltip(this, 2, 'Kontaktgruppe löschen')">
 				<svg width="24" height="24" viewBox="0 0 24 24"><path d="M21.5 6a1 1 0 0 1-.883.993L20.5 7h-.845l-1.231 12.52A2.75 2.75 0 0 1 15.687 22H8.313a2.75 2.75 0 0 1-2.737-2.48L4.345 7H3.5a1 1 0 0 1 0-2h5a3.5 3.5 0 1 1 7 0h5a1 1 0 0 1 1 1Zm-7.25 3.25a.75.75 0 0 0-.743.648L13.5 10v7l.007.102a.75.75 0 0 0 1.486 0L15 17v-7l-.007-.102a.75.75 0 0 0-.743-.648Zm-4.5 0a.75.75 0 0 0-.743.648L9 10v7l.007.102a.75.75 0 0 0 1.486 0L10.5 17v-7l-.007-.102a.75.75 0 0 0-.743-.648ZM12 3.5A1.5 1.5 0 0 0 10.5 5h3A1.5 1.5 0 0 0 12 3.5Z"/></svg>
-				<div class="tooltip bottom">Kontaktgruppe löschen</div>
 			</button>
 		</listitem>
 	`;
@@ -208,9 +207,8 @@ function createContactHtml(contact) {
 		<contact id="${contact.id}">
 			<p>${contact.email}</p>
 			<p>${status}</p>
-			<button onclick="deleteContact('${contact.email}', this)">
+			<button onclick="deleteContact('${contact.email}', this)" onmouseenter="showTooltip(this, 3, 'Aus Kontaktgruppe entfernen')">
 				<svg width="24" height="24" viewBox="0 0 24 24"><path d="M21.5 6a1 1 0 0 1-.883.993L20.5 7h-.845l-1.231 12.52A2.75 2.75 0 0 1 15.687 22H8.313a2.75 2.75 0 0 1-2.737-2.48L4.345 7H3.5a1 1 0 0 1 0-2h5a3.5 3.5 0 1 1 7 0h5a1 1 0 0 1 1 1Zm-7.25 3.25a.75.75 0 0 0-.743.648L13.5 10v7l.007.102a.75.75 0 0 0 1.486 0L15 17v-7l-.007-.102a.75.75 0 0 0-.743-.648Zm-4.5 0a.75.75 0 0 0-.743.648L9 10v7l.007.102a.75.75 0 0 0 1.486 0L10.5 17v-7l-.007-.102a.75.75 0 0 0-.743-.648ZM12 3.5A1.5 1.5 0 0 0 10.5 5h3A1.5 1.5 0 0 0 12 3.5Z"/></svg>
-				<div class="tooltip left">Aus Kontaktgruppe entfernen</div>
 			</button>
 		</contact>
 	`;

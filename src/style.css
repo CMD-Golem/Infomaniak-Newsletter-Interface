@@ -2,6 +2,7 @@ body {
 	display: flex;
 	margin: 0;
 	user-select: none;
+	overflow: hidden;
 }
 
 body, button {
@@ -37,13 +38,6 @@ input:focus, input:focus:hover, textarea:focus, textarea:focus:hover {
 }
 
 /* Tooltip */
-@keyframes tooltip {
-	0% { display: none; }
-	99.99% { display: none; }
-	100% { display: block; }
-}
-
-
 button {
 	position: relative;
 	display: block;
@@ -61,45 +55,16 @@ button:hover, .credits_button:hover, listitem:hover, .mailinglist .selected, sor
 	background-color: #eff6fc;
 }
 
-
-.tooltip, button.small div, button.narrow div {
+tooltip {
 	display: none;
-}
-/* 	position: absolute;
+	position: absolute;
 	z-index: 99;
 	border-radius: 8px;
 	background-color: white;
-	box-shadow: 0 0 15px 0 rgba(0,0,0,0.3);
+	box-shadow: 0 0 15px 0 rgba(0,0,0,0.4);
 	padding: 8px;
 	white-space: nowrap;
 }
-
-.top {
-
-}
-
-.bottom {
-	transform: translate(-50%, 0);
-	left: 50%;
-}
-
-.left {
-	transform: translate(0, -50%);
-	top: 50%;
-	right: 100%;
-}
-
-.right {
-	transform: translate(0, -50%);
-	top: 50%;
-	left: 100%;
-}
-
-button:hover .tooltip:not(:hover), button.small:hover div:not(:hover), button.narrow:hover div:not(:hover) {
-	display: block;
-	animation-name: tooltip;
-	animation-duration: 1s;
-} */
 
 
 /* Aside */

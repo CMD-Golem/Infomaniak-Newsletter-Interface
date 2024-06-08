@@ -1,6 +1,7 @@
-var invoke = window.__TAURI__.invoke;
+var invoke = window.__TAURI__?.invoke;
 var active_error_dialog;
 var dialog = document.querySelector("dialog");
+var tooltip = document.querySelector("tooltip");
 
 // error and info box
 var error_msg = [
@@ -56,17 +57,51 @@ function openDialog(id, additional_info) {
 }
 
 // tooltip
-function showTooltip(e, pos, tip) {
+function showTooltip(el, pos, tip) {
 	var waiting = true;
-	
+	var el_pos = el.getBoundingClientRect();
+
+	if (pos == 0) { // tooltip above el
+		var correction_top = -10;
+		var correction_left = el_pos.width /2;
+		var transform = "-50%, -100%";
+	}
+	else if (pos == 1) { // tooltip right of el
+		var correction_top = el_pos.height /2;
+		var correction_left = el_pos.width +5;
+		var transform = "0, -50%";
+	}
+	else if (pos == 2) { // tooltip underneath el
+		var correction_top = el_pos.height +5;
+		var correction_left = el_pos.width /2;
+		var transform = "-50%, 0";
+	}
+	else if (pos == 3) { // tooltip left of el
+		var correction_top = el_pos.height /2;
+		var correction_left = -5;
+		var transform = "-100%, -50%";
+	}
+
 	var timout_id = setTimeout(() => {
 		waiting = false;
-	}, 800);
 
-	e.target.addEventListener("mouseleave", () => {
+		tooltip.setAttribute("style", `display: block; top: ${el_pos.top + correction_top}px; left: ${el_pos.left + correction_left}px; transform: translate(${transform});`);
+		tooltip.innerHTML = tip;
+	}, 1000);
+
+	el.addEventListener("mouseleave", () => {
 		if (waiting == true) clearTimeout(timout_id);
-		else {
-
-		}
+		else tooltip.removeAttribute("style");
 	}, {once: true});
 }
+
+// {
+//     "x": 120,
+//     "y": 984,
+//     "width": 60,
+//     "height": 60,
+//     "top": 984,
+//     "right": 180,
+//     "bottom": 1044,
+//     "left": 120
+// }

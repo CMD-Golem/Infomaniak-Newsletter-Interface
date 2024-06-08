@@ -19,6 +19,8 @@ quill.on('text-change', () => { unsaved_campaign = true });
 window.onload = async () => {
 	quill.focus();
 
+	if (invoke == undefined) return;
+
 	var response = await invoke("init_config", {init:true});
 	var json = JSON.parse(response);
 
@@ -46,12 +48,13 @@ window.onload = async () => {
 	}
 }
 
- 
-window.__TAURI__.event.listen("changed_mailinglists", async (e) => {
-	var set_value = newsletter_group.value;
-	await getMailinglists();
-	newsletter_group.value = set_value;
-})
+if (invoke != undefined) {
+	window.__TAURI__.event.listen("changed_mailinglists", async (e) => {
+		var set_value = newsletter_group.value;
+		await getMailinglists();
+		newsletter_group.value = set_value;
+	});
+}
 
 async function getCredits() {
 	var response = await invoke("get_credits");
@@ -172,13 +175,11 @@ function createCampaignHtml(campaign_object) {
 	var html = `
 	<listitem id="${campaign_object.id}" onclick="getCampaign(${campaign_object.id})">
 		<p>${campaign_object.subject}</p>
-		<button onclick="duplicateCampaign(${campaign_object.id})">
+		<button onclick="duplicateCampaign(${campaign_object.id})" onmouseenter="showTooltip(this, 2, 'Newsletter duplizieren')">
 			<svg width="24" height="24" viewBox="0 0 24 24"><path d="M5.503 4.627 5.5 6.75v10.504a3.25 3.25 0 0 0 3.25 3.25h8.616a2.251 2.251 0 0 1-2.122 1.5H8.75A4.75 4.75 0 0 1 4 17.254V6.75c0-.98.627-1.815 1.503-2.123ZM17.75 2A2.25 2.25 0 0 1 20 4.25v13a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-13A2.25 2.25 0 0 1 8.75 2h9Z"/></svg>
-			<div class="tooltip right">Newsletter duplizieren</div>
 		</button>
-		<button onclick="deleteCampaign(${campaign_object.id}, true)">
+		<button onclick="deleteCampaign(${campaign_object.id}, true)" onmouseenter="showTooltip(this, 2, 'Newsletter löschen')">
 			<svg width="24" height="24" viewBox="0 0 24 24"><path d="M21.5 6a1 1 0 0 1-.883.993L20.5 7h-.845l-1.231 12.52A2.75 2.75 0 0 1 15.687 22H8.313a2.75 2.75 0 0 1-2.737-2.48L4.345 7H3.5a1 1 0 0 1 0-2h5a3.5 3.5 0 1 1 7 0h5a1 1 0 0 1 1 1Zm-7.25 3.25a.75.75 0 0 0-.743.648L13.5 10v7l.007.102a.75.75 0 0 0 1.486 0L15 17v-7l-.007-.102a.75.75 0 0 0-.743-.648Zm-4.5 0a.75.75 0 0 0-.743.648L9 10v7l.007.102a.75.75 0 0 0 1.486 0L10.5 17v-7l-.007-.102a.75.75 0 0 0-.743-.648ZM12 3.5A1.5 1.5 0 0 0 10.5 5h3A1.5 1.5 0 0 0 12 3.5Z"/></svg>
-			<div class="tooltip right">Newsletter löschen</div>
 		</button>
 	</listitem>`
 
