@@ -265,12 +265,12 @@ async function saveCampaign(wants_sending) {
 		}
 	}
 
-	if (wants_sending && campaign_status != 2) {
+	if (wants_sending && campaign_status >= 3) {
 		openDialog("already_sent");
 		return false;
 	}
 
-	// check if subject etc. is filled in
+	// check if subject and newsletter_group is filled in
 	else if (newsletter_group.value == "") {
 		openDialog("no_selected_mailinglist");
 		return false;

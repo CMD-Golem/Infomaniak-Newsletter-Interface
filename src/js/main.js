@@ -94,14 +94,3 @@ function showTooltip(el, pos, tip) {
 		else tooltip.removeAttribute("style");
 	}, {once: true});
 }
-
-// {
-//     "x": 120,
-//     "y": 984,
-//     "width": 60,
-//     "height": 60,
-//     "top": 984,
-//     "right": 180,
-//     "bottom": 1044,
-//     "left": 120
-// }

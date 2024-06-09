@@ -40,7 +40,6 @@ input:focus, input:focus:hover, textarea:focus, textarea:focus:hover {
 /* Tooltip */
 button {
 	position: relative;
-	display: block;
 	appearance: none;
 	overflow: visible;
 	padding: 1px;
@@ -130,6 +129,10 @@ listitem p, listitem input {
 	width: calc(100% - 65px);
 	max-height: 35px;
 	overflow: hidden;
+}
+
+listitem input[disabled] {
+	pointer-events: none;
 }
 
 listitem button {
