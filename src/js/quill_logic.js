@@ -3,19 +3,19 @@
 // https://github.com/scrapooo/quill-resize-module in use
 
 // add custom text sizes and fonts
-var Size = Quill.import('attributors/style/size');
+var Size = Quill.import("attributors/style/size");
 Size.whitelist = ["8px", "9px", "10px", "11px", "12px", "13px", "14px", "15px", "16px", "17px", "18px", "19px", "20px", "21px", "22px", "23px", "24px", "25px", "26px", "27px", "28px", "29px", "30px"];
 Quill.register(Size, true);
 
-var Font = Quill.import('formats/font');
-Font.whitelist = ['arial', 'calibri', "times"];
+var Font = Quill.import("formats/font");
+Font.whitelist = ["arial", "calibri", "times"];
 Quill.register(Font, true);
 
 
 Quill.register("modules/resize", window.QuillResizeModule);
 
 // register editor
-var quill = new Quill('#editor', 
+var quill = new Quill("#editor", 
 	{
 		modules: {
 			toolbar: true,
@@ -25,7 +25,7 @@ var quill = new Quill('#editor',
 				}
 			}
 		},
-		theme: 'snow',
+		theme: "snow",
 	}
 );
 
@@ -158,7 +158,7 @@ function copySelection(cut) {
 }
 
 // change size and font dropdowns dynamically and format painter functions
-quill.on('selection-change', (e) => {
+quill.on("selection-change", (e) => {
 	if (e != null) {
 		var format_object = quill.getFormat();
 		if ("size" in format_object) size_selection.value = format_object.size;
@@ -274,6 +274,29 @@ body.addEventListener("click", (e) => {
 
 		if (href == "http://*%7CUNSUBSCRIBED%7C*") return;
 
-		invoke('open_link', {url: href});
+		invoke("open_link", {url: href});
 	}
 });
+
+
+// #####################################################################################
+// Attachments
+async function uploadFile(insert_attachments) {
+	if (settings.secrets[1] != true || github_path == "") {
+		openDialog("no_file_upload_auth");
+		return;
+	}
+
+	var response = await invoke("get_campaign", {id:id, insertAttachment:insert_attachments});
+	var json = JSON.parse(response);
+
+	console.log(json)
+
+	// if (json.result == "success" && json.data.status.id >= 3) {
+		
+	// }
+	// else if (json.result != "success") {
+	// 	openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+	// 	return false;
+	// }
+}

@@ -17,6 +17,9 @@
 	  "window": {
 		"create": true,
 		"setFocus": true
+	  },
+	  "dialog":{
+		"open": true
 	  }
     },
     "windows": [

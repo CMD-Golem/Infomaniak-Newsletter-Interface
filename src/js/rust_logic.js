@@ -10,6 +10,7 @@ var el_test_email = document.getElementById("test_email");
 var newsletter_group = document.getElementById("newsletter_group");
 var subject = document.getElementById("subject");
 var el_infomaniak_secret = document.getElementById("infomaniak_secret");
+var el_github_secret = document.getElementById("github_secret");
 var el_ftp_user = document.getElementById("ftp_user");
 var el_ftp_password = document.getElementById("ftp_password");
 
@@ -36,7 +37,7 @@ window.onload = async () => {
 	) {
 		settings = json.newsletter;
 		el_test_email.value = settings.test_email ?? "";
-		settings.secrets = [json.infomaniak_secret, json.ftp_user, json.ftp_password];
+		settings.secrets = [json.infomaniak_secret, json.github_secret, json.ftp_user, json.ftp_password];
 
 		getMailinglists();
 		initEditor();
@@ -90,13 +91,14 @@ async function openSettings(json, disable_cancel) {
 
 	if (disable_cancel) document.getElementById("settings_cancel").disabled = true;
 
-	settings.secrets = [json.infomaniak_secret, json.ftp_user, json.ftp_password];
+	settings.secrets = [json.infomaniak_secret, json.github_secret, json.ftp_user, json.ftp_password];
 
 	// show current settings on page
 	document.getElementById("email_from_name").value = json.newsletter.email_from_name;
 	document.getElementById("lang").value = json.newsletter.lang;
 	document.getElementById("email_from_addr").value = json.newsletter.email_from_addr;
 	document.getElementById("unsubscribe").value = json.newsletter.unsubscribe;
+	document.getElementById("github_path").value = json.newsletter.github_path;
 }
 
 async function saveSettings(action) {
@@ -104,6 +106,7 @@ async function saveSettings(action) {
 	var lang = document.getElementById("lang").value;
 	var email_from_addr = document.getElementById("email_from_addr").value;
 	var unsubscribe = document.getElementById("unsubscribe").value;
+	var github_path = document.getElementById("github_path").value;
 
 	// check if settings are defined
 	if (
@@ -126,8 +129,10 @@ async function saveSettings(action) {
 		(setting = validateSettings("lang", lang)) != undefined && new_settings.push(setting);
 		(setting = validateSettings("email_from_addr", email_from_addr)) != undefined && new_settings.push(setting);
 		(setting = validateSettings("unsubscribe", unsubscribe)) != undefined && new_settings.push(setting);
+		(setting = validateSettings("github_path", github_path)) != undefined && new_settings.push(setting);
 
 		if (el_infomaniak_secret.value != "") new_settings.push({property:"infomaniak_secret", value:el_infomaniak_secret.value});
+		if (el_github_secret.value != "") new_settings.push({property:"github_secret", value:el_github_secret.value});
 		if (el_ftp_user.value != "") new_settings.push({property:"ftp_user", value:el_ftp_user.value});
 		if (el_ftp_password.value != "") new_settings.push({property:"ftp_password", value:el_ftp_password.value});
 
@@ -154,10 +159,15 @@ function closeSettings(action) {
 
 	document.querySelector("settings").style.display = "none";
 	el_infomaniak_secret.style.display = "none";
+	el_github_secret.style.display = "none";
 	el_ftp_user.parentElement.style.display = "none";
+
 	el_infomaniak_secret.previousElementSibling.style.display = "block";
+	el_github_secret.previousElementSibling.style.display = "block";
 	el_ftp_user.parentElement.previousElementSibling.style.display = "block";
+
 	el_infomaniak_secret.value = "";
+	el_github_secret.value = "";
 	el_ftp_user.value = "";
 	el_ftp_password.value = "";
 }
