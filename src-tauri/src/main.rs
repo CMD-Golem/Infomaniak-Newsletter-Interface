@@ -4,7 +4,6 @@
 use std::env;
 use std::fs;
 use std::path::PathBuf;
-use tauri::api::dialog;
 use std::process::Command;
 use std::io::{self, Write};
 use serde::{Deserialize, Serialize};
@@ -508,47 +507,119 @@ fn get_credits() -> String {
 
 // #########################################################################
 // upload to github
+#[tauri::command]
+fn github_create(id: String, file_path: String, file_name: String) {
+	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
+	let secret: String = format!("Authorization: Bearer {}", config.github_secret);
+	let github = &config.newsletter.github_path;
+	
+	let url: String = format!("https://uploads.github.com/repos/{github}/releases/{id}/assets?name={file_name}");
+	
+	let output = Command::new("curl")
+		.arg("-X").arg("POST")
+		.arg("-H").arg("Accept: application/vnd.github+json")
+		.arg("-H").arg(&secret)
+		.arg("-H").arg("Content-Type: application/octet-stream")
+		.arg(url)
+		.arg("--data-binary").arg(format!("@{}", file_path))
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Error");
+
+	println!("{:?}", String::from_utf8_lossy(&output.stdout));
+}
 
 #[tauri::command]
-fn github_upload(id: String, insert_attachment: bool) {
-	let filter: Vec<&str> =  if insert_attachment { ["avif", "bmp", "gif", "jfif", "jpeg", "jpg", "png", "svg", "tiff", "webp"].to_vec() }
-	else { ["*"].to_vec() };
+fn github_temp_file(id: String, data_url: String) {
+	// name image1, image2, ...
+}
 
-	dialog::FileDialogBuilder::new()
-	.add_filter("Alle Dateien", &filter)
-	.pick_files(move |file_paths| {
-		let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
-		let secret: String = format!("Authorization: Bearer {}", config.github_secret);
-		// let mut return_value = "".to_string();
+#[tauri::command]
+fn github_upload_file(id: String, file_path: String, file_name: String) {
+	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
+	let secret: String = format!("Authorization: Bearer {}", config.github_secret);
+	let github = &config.newsletter.github_path;
 
-		match file_paths {
-			Some(paths) => {
-				for path in paths {
-					let file_path = path.to_string_lossy();
-					println!("{:?}", file_path);
-					let github = &config.newsletter.github_path;
-					let name = "Test.jpg";
-					let url: String = format!("https://uploads.github.com/repos/{github}/releases/{id}/assets?name={name}");
-					
-					let output = Command::new("curl")
-						.arg("-X").arg("POST")
-						.arg("-H").arg("Accept: application/vnd.github+json")
-						.arg("-H").arg(&secret)
-						.arg("-H").arg("Content-Type: application/octet-stream")
-						.arg(url)
-						.arg("--data-binary").arg(format!("@{}", file_path))
-						.creation_flags(0x08000000)
-						.output()
-						.expect("Error");
+	let url: String = format!("https://uploads.github.com/repos/{github}/releases/{id}/assets?name={file_name}");
+	
+	let output = Command::new("curl")
+		.arg("-X").arg("POST")
+		.arg("-H").arg("Accept: application/vnd.github+json")
+		.arg("-H").arg(&secret)
+		.arg("-H").arg("Content-Type: application/octet-stream")
+		.arg(url)
+		.arg("--data-binary").arg(format!("@{}", file_path))
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Error");
 
-					println!("{:?}", String::from_utf8_lossy(&output.stdout));
-				}
-			}
-			None => {
-				println!("No files uploaded");
-			}
-		}
-	});
+	println!("{:?}", String::from_utf8_lossy(&output.stdout));
+}
+
+#[tauri::command]
+fn github_get_file(id: String, file_path: String, file_name: String) {
+	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
+	let secret: String = format!("Authorization: Bearer {}", config.github_secret);
+	let github = &config.newsletter.github_path;
+
+	let url: String = format!("https://uploads.github.com/repos/{github}/releases/{id}/assets?name={file_name}");
+	
+	let output = Command::new("curl")
+		.arg("-X").arg("POST")
+		.arg("-H").arg("Accept: application/vnd.github+json")
+		.arg("-H").arg(&secret)
+		.arg("-H").arg("Content-Type: application/octet-stream")
+		.arg(url)
+		.arg("--data-binary").arg(format!("@{}", file_path))
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Error");
+
+	println!("{:?}", String::from_utf8_lossy(&output.stdout));
+}
+
+#[tauri::command]
+fn github_remove_file(id: String, file_path: String, file_name: String) {
+	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
+	let secret: String = format!("Authorization: Bearer {}", config.github_secret);
+	let github = &config.newsletter.github_path;
+	
+	let url: String = format!("https://uploads.github.com/repos/{github}/releases/{id}/assets?name={file_name}");
+	
+	let output = Command::new("curl")
+		.arg("-X").arg("POST")
+		.arg("-H").arg("Accept: application/vnd.github+json")
+		.arg("-H").arg(&secret)
+		.arg("-H").arg("Content-Type: application/octet-stream")
+		.arg(url)
+		.arg("--data-binary").arg(format!("@{}", file_path))
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Error");
+
+	println!("{:?}", String::from_utf8_lossy(&output.stdout));
+}
+
+#[tauri::command]
+fn github_delete(id: String, file_path: String, file_name: String) {
+	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
+	let secret: String = format!("Authorization: Bearer {}", config.github_secret);
+	let github = &config.newsletter.github_path;
+	
+	let url: String = format!("https://uploads.github.com/repos/{github}/releases/{id}/assets?name={file_name}");
+	
+	let output = Command::new("curl")
+		.arg("-X").arg("POST")
+		.arg("-H").arg("Accept: application/vnd.github+json")
+		.arg("-H").arg(&secret)
+		.arg("-H").arg("Content-Type: application/octet-stream")
+		.arg(url)
+		.arg("--data-binary").arg(format!("@{}", file_path))
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Error");
+
+	println!("{:?}", String::from_utf8_lossy(&output.stdout));
 }
 
 
@@ -557,7 +628,7 @@ fn github_upload(id: String, insert_attachment: bool) {
 // main function
 fn main() {
 	tauri::Builder::default()
-		.invoke_handler(tauri::generate_handler![open_link, change_config, init_config, get_campaigns, get_campaign, create_campaign, update_campaign, delete_campaign, test_campaign, send_campaign, get_mailinglists, create_mailinglist, update_mailinglist, delete_mailinglist, mailinglist_get_contacts, mailinglist_add_contact, mailinglist_remove_contact, get_contact, delete_contact, get_credits, github_upload])
+		.invoke_handler(tauri::generate_handler![open_link, change_config, init_config, get_campaigns, get_campaign, create_campaign, update_campaign, delete_campaign, test_campaign, send_campaign, get_mailinglists, create_mailinglist, update_mailinglist, delete_mailinglist, mailinglist_get_contacts, mailinglist_add_contact, mailinglist_remove_contact, get_contact, delete_contact, get_credits, github_create, github_temp_file, github_upload_file, github_get_file, github_remove_file, github_delete])
 		.run(tauri::generate_context!())
 		.expect("error while running tauri application");
 }

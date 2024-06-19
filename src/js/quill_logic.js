@@ -29,6 +29,7 @@ var quill = new Quill("#editor",
 	}
 );
 
+
 // set standard font/ font size
 var standard_text_size = "14px";
 var standard_font = "calibri";
@@ -281,22 +282,73 @@ body.addEventListener("click", (e) => {
 
 // #####################################################################################
 // Attachments
+
+Quill.clipboard.addMatcher("IMG", function (node, delta) {
+	// var src = node.getAttribute("src");
+	// if (!src.includes("https:")) {
+	// 	var blob = dataURLtoBlob(src);
+	// 	// save file with rust
+	// }
+
+	console.log(node, delta)
+
+	return new Delta().insert({
+		image: {
+		  src: src,
+		}
+	}); 
+
+	// var pos = quill.getSelection();
+	// quill.insertEmbed(pos.index, "image", src);
+
+	
+	// var delta = new Delta();
+	
+	// quill.updateContents(
+	// 	new Delta().retain(quill.getSelection()?.index ?? 0).insert({
+	// 		image: src,
+	// 		id: node.getAttribute("id")
+	// 	})
+	// );
+
+	// return delta
+});
+
 async function uploadFile(insert_attachments) {
 	if (settings.secrets[1] != true || github_path == "") {
 		openDialog("no_file_upload_auth");
 		return;
 	}
 
-	var response = await invoke("get_campaign", {id:id, insertAttachment:insert_attachments});
-	var json = JSON.parse(response);
+	if (insert_attachments) var filters = ["avif", "bmp", "gif", "jfif", "jpeg", "jpg", "png", "svg", "tiff", "webp"];
+	else var filters = ["*"]
 
-	console.log(json)
+	var files = await window.__TAURI__.dialog.open({
+		multiple: true,
+		filters: [{
+			name: "Alle Dateien",
+			extensions: filters
+		}]
+	});
 
-	// if (json.result == "success" && json.data.status.id >= 3) {
-		
-	// }
-	// else if (json.result != "success") {
-	// 	openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
-	// 	return false;
-	// }
+	if (files == null) return;
+
+	for (var i = 0; i < files.length; i++) {
+		var file = files[i];
+
+		console.log(file)
+
+		// var response = await invoke("github_upload_file", {id:id, insertAttachment:insert_attachments});
+		// var json = JSON.parse(response);
+
+		// console.log(json)
+
+		// if (json.result == "success" && json.data.status.id >= 3) {
+			
+		// }
+		// else if (json.result != "success") {
+		// 	openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+		// 	return false;
+		// }
+	}
 }

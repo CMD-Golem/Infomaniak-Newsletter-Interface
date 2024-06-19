@@ -402,6 +402,39 @@ contextmenu button:last-child {
 	border-bottom-right-radius: 3px;
 }
 
+/* define File name */
+upload {
+	display: none;
+	position: absolute;
+	font-family: Arial, Helvetica, sans-serif;
+	background-color: white;
+	border: 1px solid #cccccc;
+	box-shadow: 0 0 5px #dddddd;
+	padding: 5px 12px;
+	margin-right: 8px;
+	font-size: 13px;
+	white-space: nowrap;
+}
+
+upload input[type=text] {
+	display: inline-block;
+	box-sizing: border-box;
+	border: 1px solid #cccccc;
+	width: 170px;
+	height: 26px;
+	padding: 0 5px;
+}
+
+upload button {
+	box-sizing: border-box;
+	color: #06c;
+	margin-left: 12px;
+	cursor: pointer;
+}
+
+upload button:hover {
+	background-color: unset;
+}
 
 /* Header */
 header {
@@ -448,8 +481,8 @@ header select, header select:focus {
 /* Dialog */
 dialog, dialogbox {
 	top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+	left: 50%;
+	transform: translate(-50%, -50%);
 	border: none;
 	margin: 20px 0;
 	border-radius: 8px;
