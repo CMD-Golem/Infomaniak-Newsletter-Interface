@@ -11,6 +11,34 @@ var Font = Quill.import("formats/font");
 Font.whitelist = ["arial", "calibri", "times"];
 Quill.register(Font, true);
 
+var BlockEmbed = Quill.import("blots/block/embed");
+class ImageBlot extends BlockEmbed {
+	static blotName = "image";
+	static tagName = "IMG";
+
+	static create(value) {
+		let node = super.create();
+		node.setAttribute("id", value.id);
+		node.setAttribute("src", value.url);
+		node.setAttribute("style", value.style);
+
+		if (typeof value === "string") {
+			// value needs to be uploaded and link needs to be defined as url
+			node.setAttribute("src", value);
+		}
+		return node;
+	}
+
+	static value(node) {
+		return {
+			id: node.getAttribute("id"),
+			url: node.getAttribute("src"),
+			style: node.getAttribute("style")
+		};
+	}
+}
+Quill.register(ImageBlot);
+
 
 Quill.register("modules/resize", window.QuillResizeModule);
 
@@ -282,38 +310,6 @@ body.addEventListener("click", (e) => {
 
 // #####################################################################################
 // Attachments
-
-Quill.clipboard.addMatcher("IMG", function (node, delta) {
-	// var src = node.getAttribute("src");
-	// if (!src.includes("https:")) {
-	// 	var blob = dataURLtoBlob(src);
-	// 	// save file with rust
-	// }
-
-	console.log(node, delta)
-
-	return new Delta().insert({
-		image: {
-		  src: src,
-		}
-	}); 
-
-	// var pos = quill.getSelection();
-	// quill.insertEmbed(pos.index, "image", src);
-
-	
-	// var delta = new Delta();
-	
-	// quill.updateContents(
-	// 	new Delta().retain(quill.getSelection()?.index ?? 0).insert({
-	// 		image: src,
-	// 		id: node.getAttribute("id")
-	// 	})
-	// );
-
-	// return delta
-});
-
 async function uploadFile(insert_attachments) {
 	if (settings.secrets[1] != true || github_path == "") {
 		openDialog("no_file_upload_auth");

@@ -17,10 +17,15 @@
 }
 
 #editor {
+	display: block;
 	font-family: var(--font);
 	user-select: auto;
 	border: none;
 	color: black;
+	height: calc(100vh - 232px);
+	padding: 15px;
+	padding-top: 10px;
+	overflow-y: auto;
 }
 
 .ql-toolbar, #editor-resizer .toolbar {
@@ -56,10 +61,7 @@
 }
 
 .ql-editor {
-	padding: 15px;
-	padding-top: 10px;
-	height: calc(100vh - 232px);
-	overflow-y: auto;
+	overflow: visible;
 }
 
 .ql-editor > * {

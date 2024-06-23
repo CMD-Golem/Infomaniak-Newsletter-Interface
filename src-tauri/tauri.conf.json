@@ -20,7 +20,10 @@
 	  },
 	  "dialog":{
 		"open": true
-	  }
+	  },
+	  "http": {
+        "scope": ["https://github.com/CMD-Golem/PR-Files/releases/download/*"]
+      }
     },
     "windows": [
       {
