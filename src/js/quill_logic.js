@@ -11,20 +11,19 @@ var Font = Quill.import("formats/font");
 Font.whitelist = ["arial", "calibri", "times"];
 Quill.register(Font, true);
 
-var BlockEmbed = Quill.import("blots/block/embed");
-class ImageBlot extends BlockEmbed {
-	static blotName = "image";
-	static tagName = "IMG";
-
+var ImageBlot = Quill.import("formats/image");
+class StyleImageBlot extends ImageBlot {
 	static create(value) {
 		let node = super.create();
-		node.setAttribute("id", value.id);
-		node.setAttribute("src", value.url);
-		node.setAttribute("style", value.style);
-
 		if (typeof value === "string") {
-			// value needs to be uploaded and link needs to be defined as url
+			node.setAttribute("id", "no_file");
+			// uploadAttachment(value, "data-url", true);
 			node.setAttribute("src", value);
+		}
+		else {
+			node.setAttribute("id", value.id);
+			node.setAttribute("src", value.url);
+			node.setAttribute("style", value.style);
 		}
 		return node;
 	}
@@ -37,8 +36,29 @@ class ImageBlot extends BlockEmbed {
 		};
 	}
 }
-Quill.register(ImageBlot);
+Quill.register(StyleImageBlot);
 
+var Inline = Quill.import("blots/inline");
+class Meta extends Inline {
+	static blotName = 'meta';
+	static tagName = 'META';
+
+	static create(value) {
+		console.log("etst")
+		const node = super.create(value);
+		node.setAttribute("name", value.name);
+		node.setAttribute("content", value.content);
+		return node;
+	}
+
+	static value(node) {
+		return {
+			name: node.getAttribute("name"),
+			content: node.getAttribute("content")
+		};
+	}
+}
+Quill.register(Meta);
 
 Quill.register("modules/resize", window.QuillResizeModule);
 
@@ -47,9 +67,10 @@ var quill = new Quill("#editor",
 	{
 		modules: {
 			toolbar: true,
+			table: true,
 			resize: {
 				locale: {
-				  center: "center",
+					center: "center",
 				}
 			}
 		},
@@ -310,7 +331,7 @@ body.addEventListener("click", (e) => {
 
 // #####################################################################################
 // Attachments
-async function uploadFile(insert_attachments) {
+async function selectFile(insert_attachments) {
 	if (settings.secrets[1] != true || github_path == "") {
 		openDialog("no_file_upload_auth");
 		return;
@@ -330,21 +351,38 @@ async function uploadFile(insert_attachments) {
 	if (files == null) return;
 
 	for (var i = 0; i < files.length; i++) {
-		var file = files[i];
+		var response = await uploadAttachment(files[i], "path", insert_attachments)
+		console.log(response)
+	}
+}
 
-		console.log(file)
+async function uploadAttachment(file, type, embedable) {
+	// Concept
+	if ((file.size + current_size <= max_size) && embedable) var user_action = await openDialog("embed");
+	else user_action = "dialog_no";
 
-		// var response = await invoke("github_upload_file", {id:id, insertAttachment:insert_attachments});
-		// var json = JSON.parse(response);
+	if (user_action == "dialog_yes") return file;
+	else if (user_action == "dialog_no") ;
+		// ask for file name
+		// check if release tag (newsletter id) exists [github_get]
+			// create new release [github_create]
+		// if type == data-url [github_temp_file]
+		// upload file [github_upload_file]
+	else if (user_action == "dialog_cancel") return false;
 
-		// console.log(json)
 
-		// if (json.result == "success" && json.data.status.id >= 3) {
-			
-		// }
-		// else if (json.result != "success") {
-		// 	openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
-		// 	return false;
-		// }
+
+	// code
+	var response = await invoke("github_upload_file", {id:id, insertAttachment:insert_attachments});
+	var json = JSON.parse(response);
+
+	console.log(json)
+
+	if (json.result == "success" && json.data.status.id >= 3) {
+		
+	}
+	else if (json.result != "success") {
+		openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+		return false;
 	}
 }

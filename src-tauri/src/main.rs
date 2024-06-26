@@ -508,14 +508,57 @@ fn get_credits() -> String {
 // #########################################################################
 // upload to github
 #[tauri::command]
-fn github_create(id: String, file_path: String, file_name: String) {
+fn github_get(id: String) -> String {
 	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
 	let secret: String = format!("Authorization: Bearer {}", config.github_secret);
 	let github = &config.newsletter.github_path;
 	
+	let url: String = format!("https://uploads.github.com/repos/{github}/releases/tags/{id}");
+	
+	let output = Command::new("curl")
+		.arg("-L")
+		.arg("-H").arg("Accept: application/vnd.github+json")
+		.arg("-H").arg(&secret)
+		.arg(url)
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Error");
+
+	String::from_utf8_lossy(&output.stdout).into()
+}
+
+#[tauri::command]
+fn github_create(data: String) -> String {
+	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
+	let secret: String = format!("Authorization: Bearer {}", config.github_secret);
+	let github = &config.newsletter.github_path;
+	
+	let url: String = format!("https://uploads.github.com/repos/{github}/releases/");
+	
+	let output = Command::new("curl")
+		.arg("-L")
+		.arg("-X").arg("POST")
+		.arg("-H").arg("Accept: application/vnd.github+json")
+		.arg("-H").arg(&secret)
+		.arg(url)
+		.arg("-d").arg(data)
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Error");
+
+	String::from_utf8_lossy(&output.stdout).into()
+}
+
+#[tauri::command]
+fn github_upload_file(id: String, file_path: String, file_name: String) -> String {
+	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
+	let secret: String = format!("Authorization: Bearer {}", config.github_secret);
+	let github = &config.newsletter.github_path;
+
 	let url: String = format!("https://uploads.github.com/repos/{github}/releases/{id}/assets?name={file_name}");
 	
 	let output = Command::new("curl")
+		.arg("-L")
 		.arg("-X").arg("POST")
 		.arg("-H").arg("Accept: application/vnd.github+json")
 		.arg("-H").arg(&secret)
@@ -526,100 +569,49 @@ fn github_create(id: String, file_path: String, file_name: String) {
 		.output()
 		.expect("Error");
 
-	println!("{:?}", String::from_utf8_lossy(&output.stdout));
+	String::from_utf8_lossy(&output.stdout).into()
 }
 
 #[tauri::command]
-fn github_temp_file(id: String, data_url: String) {
-	// name image1, image2, ...
-}
-
-#[tauri::command]
-fn github_upload_file(id: String, file_path: String, file_name: String) {
-	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
-	let secret: String = format!("Authorization: Bearer {}", config.github_secret);
-	let github = &config.newsletter.github_path;
-
-	let url: String = format!("https://uploads.github.com/repos/{github}/releases/{id}/assets?name={file_name}");
-	
-	let output = Command::new("curl")
-		.arg("-X").arg("POST")
-		.arg("-H").arg("Accept: application/vnd.github+json")
-		.arg("-H").arg(&secret)
-		.arg("-H").arg("Content-Type: application/octet-stream")
-		.arg(url)
-		.arg("--data-binary").arg(format!("@{}", file_path))
-		.creation_flags(0x08000000)
-		.output()
-		.expect("Error");
-
-	println!("{:?}", String::from_utf8_lossy(&output.stdout));
-}
-
-#[tauri::command]
-fn github_get_file(id: String, file_path: String, file_name: String) {
-	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
-	let secret: String = format!("Authorization: Bearer {}", config.github_secret);
-	let github = &config.newsletter.github_path;
-
-	let url: String = format!("https://uploads.github.com/repos/{github}/releases/{id}/assets?name={file_name}");
-	
-	let output = Command::new("curl")
-		.arg("-X").arg("POST")
-		.arg("-H").arg("Accept: application/vnd.github+json")
-		.arg("-H").arg(&secret)
-		.arg("-H").arg("Content-Type: application/octet-stream")
-		.arg(url)
-		.arg("--data-binary").arg(format!("@{}", file_path))
-		.creation_flags(0x08000000)
-		.output()
-		.expect("Error");
-
-	println!("{:?}", String::from_utf8_lossy(&output.stdout));
-}
-
-#[tauri::command]
-fn github_remove_file(id: String, file_path: String, file_name: String) {
+fn github_remove_file(id: String) -> String {
 	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
 	let secret: String = format!("Authorization: Bearer {}", config.github_secret);
 	let github = &config.newsletter.github_path;
 	
-	let url: String = format!("https://uploads.github.com/repos/{github}/releases/{id}/assets?name={file_name}");
+	let url: String = format!("https://uploads.github.com/repos/{github}/releases/assets/{id}");
 	
 	let output = Command::new("curl")
-		.arg("-X").arg("POST")
+		.arg("-L")
+		.arg("-X").arg("DELETE")
 		.arg("-H").arg("Accept: application/vnd.github+json")
 		.arg("-H").arg(&secret)
-		.arg("-H").arg("Content-Type: application/octet-stream")
 		.arg(url)
-		.arg("--data-binary").arg(format!("@{}", file_path))
 		.creation_flags(0x08000000)
 		.output()
 		.expect("Error");
 
-	println!("{:?}", String::from_utf8_lossy(&output.stdout));
+	String::from_utf8_lossy(&output.stdout).into()
 }
 
 #[tauri::command]
-fn github_delete(id: String, file_path: String, file_name: String) {
+fn github_delete(id: String) -> String {
 	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
 	let secret: String = format!("Authorization: Bearer {}", config.github_secret);
 	let github = &config.newsletter.github_path;
 	
-	let url: String = format!("https://uploads.github.com/repos/{github}/releases/{id}/assets?name={file_name}");
+	let url: String = format!("https://uploads.github.com/repos/{github}/releases/{id}");
 	
 	let output = Command::new("curl")
-		.arg("-X").arg("POST")
+		.arg("-L")
+		.arg("-X").arg("DELETE")
 		.arg("-H").arg("Accept: application/vnd.github+json")
 		.arg("-H").arg(&secret)
-		.arg("-H").arg("Content-Type: application/octet-stream")
 		.arg(url)
-		.arg("--data-binary").arg(format!("@{}", file_path))
 		.creation_flags(0x08000000)
 		.output()
 		.expect("Error");
 
-	println!("{:?}", String::from_utf8_lossy(&output.stdout));
+	String::from_utf8_lossy(&output.stdout).into()
 }
 
 
@@ -628,7 +620,7 @@ fn github_delete(id: String, file_path: String, file_name: String) {
 // main function
 fn main() {
 	tauri::Builder::default()
-		.invoke_handler(tauri::generate_handler![open_link, change_config, init_config, get_campaigns, get_campaign, create_campaign, update_campaign, delete_campaign, test_campaign, send_campaign, get_mailinglists, create_mailinglist, update_mailinglist, delete_mailinglist, mailinglist_get_contacts, mailinglist_add_contact, mailinglist_remove_contact, get_contact, delete_contact, get_credits, github_create, github_temp_file, github_upload_file, github_get_file, github_remove_file, github_delete])
+		.invoke_handler(tauri::generate_handler![open_link, change_config, init_config, get_campaigns, get_campaign, create_campaign, update_campaign, delete_campaign, test_campaign, send_campaign, get_mailinglists, create_mailinglist, update_mailinglist, delete_mailinglist, mailinglist_get_contacts, mailinglist_add_contact, mailinglist_remove_contact, get_contact, delete_contact, get_credits, github_get, github_create, github_upload_file, github_remove_file, github_delete])
 		.run(tauri::generate_context!())
 		.expect("error while running tauri application");
 }
