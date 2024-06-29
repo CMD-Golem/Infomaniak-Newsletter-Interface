@@ -279,6 +279,7 @@ fn update_campaign(id: i32, data: &str) -> String {
 		.output()
 		.expect("Error");
 
+	println!("status: {}", output.status);
 	String::from_utf8_lossy(&output.stdout).into()
 }
 
@@ -508,12 +509,18 @@ fn get_credits() -> String {
 // #########################################################################
 // upload to github
 #[tauri::command]
-fn github_get(id: String) -> String {
+fn github_get(id: String, temp_path: bool) -> String {
+	let temp = env::var("TEMP").expect("Failed to get configuration file path");
+	let folder_path = format!("{temp}/com.cmd-golem.infomaniak-newsletter-interface");
+
+	// create temp folder
+	if temp_path { let _ = fs::create_dir(folder_path); }
+
 	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
 	let secret: String = format!("Authorization: Bearer {}", config.github_secret);
 	let github = &config.newsletter.github_path;
 	
-	let url: String = format!("https://uploads.github.com/repos/{github}/releases/tags/{id}");
+	let url: String = format!("https://api.github.com/repos/{github}/releases/tags/{id}");
 	
 	let output = Command::new("curl")
 		.arg("-L")
@@ -532,8 +539,8 @@ fn github_create(data: String) -> String {
 	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
 	let secret: String = format!("Authorization: Bearer {}", config.github_secret);
 	let github = &config.newsletter.github_path;
-	
-	let url: String = format!("https://uploads.github.com/repos/{github}/releases/");
+
+	let url: String = format!("https://api.github.com/repos/{github}/releases");
 	
 	let output = Command::new("curl")
 		.arg("-L")
@@ -550,12 +557,18 @@ fn github_create(data: String) -> String {
 }
 
 #[tauri::command]
-fn github_upload_file(id: String, file_path: String, file_name: String) -> String {
+fn github_upload_file(id: String, file_path: String, temp_path: bool, file_name: String) -> String {
 	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
 	let secret: String = format!("Authorization: Bearer {}", config.github_secret);
 	let github = &config.newsletter.github_path;
 
 	let url: String = format!("https://uploads.github.com/repos/{github}/releases/{id}/assets?name={file_name}");
+
+	// prepare path
+	let binary_path;
+	let temp = env::var("TEMP").expect("Failed to get configuration file path");
+	if temp_path { binary_path = format!("@{temp}/{file_path}"); }
+	else { binary_path = format!("@{file_path}"); }
 	
 	let output = Command::new("curl")
 		.arg("-L")
@@ -564,10 +577,13 @@ fn github_upload_file(id: String, file_path: String, file_name: String) -> Strin
 		.arg("-H").arg(&secret)
 		.arg("-H").arg("Content-Type: application/octet-stream")
 		.arg(url)
-		.arg("--data-binary").arg(format!("@{}", file_path))
+		.arg("--data-binary").arg(binary_path)
 		.creation_flags(0x08000000)
 		.output()
 		.expect("Error");
+
+	// delete temp file
+	if temp_path { let _ = fs::remove_file(format!("{temp}/{file_path}")); }
 
 	String::from_utf8_lossy(&output.stdout).into()
 }
@@ -578,7 +594,7 @@ fn github_remove_file(id: String) -> String {
 	let secret: String = format!("Authorization: Bearer {}", config.github_secret);
 	let github = &config.newsletter.github_path;
 	
-	let url: String = format!("https://uploads.github.com/repos/{github}/releases/assets/{id}");
+	let url: String = format!("https://api.github.com/repos/{github}/releases/assets/{id}");
 	
 	let output = Command::new("curl")
 		.arg("-L")
@@ -594,24 +610,36 @@ fn github_remove_file(id: String) -> String {
 }
 
 #[tauri::command]
-fn github_delete(id: String) -> String {
+fn github_delete(release: String, tag: String) -> String {
 	let config = unsafe { CONFIG.as_ref() }.expect("Config not loaded");
 	let secret: String = format!("Authorization: Bearer {}", config.github_secret);
 	let github = &config.newsletter.github_path;
 	
-	let url: String = format!("https://uploads.github.com/repos/{github}/releases/{id}");
+	let url_release: String = format!("https://api.github.com/repos/{github}/releases/{release}");
 	
-	let output = Command::new("curl")
+	let output_release = Command::new("curl")
 		.arg("-L")
 		.arg("-X").arg("DELETE")
 		.arg("-H").arg("Accept: application/vnd.github+json")
 		.arg("-H").arg(&secret)
-		.arg(url)
+		.arg(url_release)
 		.creation_flags(0x08000000)
 		.output()
 		.expect("Error");
 
-	String::from_utf8_lossy(&output.stdout).into()
+	let url_tag: String = format!("https://api.github.com/repos/{github}/git/refs/tags/{tag}");
+
+	let output_tag = Command::new("curl")
+		.arg("-L")
+		.arg("-X").arg("DELETE")
+		.arg("-H").arg("Accept: application/vnd.github+json")
+		.arg("-H").arg(&secret)
+		.arg(url_tag)
+		.creation_flags(0x08000000)
+		.output()
+		.expect("Error");
+
+	String::from_utf8_lossy(&output_release.stdout).into()
 }
 
 

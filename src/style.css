@@ -464,7 +464,7 @@ header label {
 	padding-top: 7px;
 }
 
-header input, header select, settings input {
+header input, header select, settings input, enter input {
 	border-bottom: 1.5px #3a3a3a solid;
 	margin-left: 5px;
 	height: 29px;
@@ -479,7 +479,8 @@ header select, header select:focus {
 }
 
 /* Dialog */
-dialog, dialogbox {
+dialog, dialogbox, enter {
+	position: absolute;
 	top: 50%;
 	left: 50%;
 	transform: translate(-50%, -50%);
@@ -492,15 +493,21 @@ dialog, dialogbox {
 	text-align: center;
 }
 
-dialog div, settings p {
+dialog div, settings p, enter div {
 	font-size: 15px;
 	font-weight: bold;
 }
 
-dialog button, settings button {
+dialog button, settings button, enter button {
 	padding: 5px 15px;
 	border: #2b88d8 1px solid;
 	margin: 0 10px;
+}
+
+enter input {
+	display: block;
+	width: calc(100% - 20px);
+	margin-bottom: 20px;
 }
 
 

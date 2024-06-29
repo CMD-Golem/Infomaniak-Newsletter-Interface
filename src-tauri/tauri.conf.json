@@ -23,7 +23,12 @@
 	  },
 	  "http": {
         "scope": ["https://github.com/CMD-Golem/PR-Files/releases/download/*"]
-      }
+      },
+	  "fs": {
+		"scope": ["$TEMP/com.cmd-golem.infomaniak-newsletter-interface/*"],
+		"readFile": true,
+		"writeFile": true
+	  }
     },
     "windows": [
       {

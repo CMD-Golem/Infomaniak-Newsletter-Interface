@@ -17,7 +17,6 @@ class StyleImageBlot extends ImageBlot {
 		let node = super.create();
 		if (typeof value === "string") {
 			node.setAttribute("id", "no_file");
-			// uploadAttachment(value, "data-url", true);
 			node.setAttribute("src", value);
 		}
 		else {
@@ -38,27 +37,27 @@ class StyleImageBlot extends ImageBlot {
 }
 Quill.register(StyleImageBlot);
 
-var Inline = Quill.import("blots/inline");
-class Meta extends Inline {
-	static blotName = 'meta';
-	static tagName = 'META';
+// var Inline = Quill.import("blots/inline");
+// class Meta extends Inline {
+// 	static blotName = 'meta';
+// 	static tagName = 'META';
 
-	static create(value) {
-		console.log("etst")
-		const node = super.create(value);
-		node.setAttribute("name", value.name);
-		node.setAttribute("content", value.content);
-		return node;
-	}
+// 	static create(value) {
+// 		console.log("etst")
+// 		const node = super.create(value);
+// 		node.setAttribute("name", value.name);
+// 		node.setAttribute("content", value.content);
+// 		return node;
+// 	}
 
-	static value(node) {
-		return {
-			name: node.getAttribute("name"),
-			content: node.getAttribute("content")
-		};
-	}
-}
-Quill.register(Meta);
+// 	static value(node) {
+// 		return {
+// 			name: node.getAttribute("name"),
+// 			content: node.getAttribute("content")
+// 		};
+// 	}
+// }
+// Quill.register(Meta);
 
 Quill.register("modules/resize", window.QuillResizeModule);
 
@@ -228,6 +227,25 @@ quill.on("selection-change", (e) => {
 	}
 });
 
+// import copied images
+quill.on("text-change", async (e) => {
+	var new_img = document.getElementById("no_file");
+	if (new_img != null) {
+		quill.enable(false);
+		var {src, id} = await createGithubUrl(new_img.src, "data-url");
+
+		quill.enable(true);
+
+		if (id == undefined) {
+			quill.history.undo();
+		}
+		else {
+			new_img.src = src;
+			new_img.id = id;
+		}
+	}
+});
+
 // format painter
 var selected_formats = false;
 var editor_el = document.getElementById("editor");
@@ -332,11 +350,6 @@ body.addEventListener("click", (e) => {
 // #####################################################################################
 // Attachments
 async function selectFile(insert_attachments) {
-	if (settings.secrets[1] != true || github_path == "") {
-		openDialog("no_file_upload_auth");
-		return;
-	}
-
 	if (insert_attachments) var filters = ["avif", "bmp", "gif", "jfif", "jpeg", "jpg", "png", "svg", "tiff", "webp"];
 	else var filters = ["*"]
 
@@ -356,33 +369,168 @@ async function selectFile(insert_attachments) {
 	}
 }
 
-async function uploadAttachment(file, type, embedable) {
-	// Concept
-	if ((file.size + current_size <= max_size) && embedable) var user_action = await openDialog("embed");
-	else user_action = "dialog_no";
-
-	if (user_action == "dialog_yes") return file;
-	else if (user_action == "dialog_no") ;
-		// ask for file name
-		// check if release tag (newsletter id) exists [github_get]
-			// create new release [github_create]
-		// if type == data-url [github_temp_file]
-		// upload file [github_upload_file]
-	else if (user_action == "dialog_cancel") return false;
-
-
-
-	// code
-	var response = await invoke("github_upload_file", {id:id, insertAttachment:insert_attachments});
-	var json = JSON.parse(response);
-
-	console.log(json)
-
-	if (json.result == "success" && json.data.status.id >= 3) {
+var enter = document.querySelector("enter");
+var enter_input = enter.querySelector("input");
+function openEnter(suggestion_name) {
+	return new Promise((resolve) => {
+		enter.style.display = "block";
 		
+		enter_input.focus();
+		enter_input.value = suggestion_name;
+		enter_input.setSelectionRange(0, suggestion_name.lastIndexOf("."));
+
+		document.getElementById("enter_ok").addEventListener("click", (e) => {
+			resolve(enter_input.value);
+			enter.style.display = "none";
+		});
+		document.getElementById("enter_cancel").addEventListener("click", (e) => {
+			resolve(false);
+			enter.style.display = "none";
+		});
+	});
+}
+
+async function createGithubUrl(data, type) {
+	// ask for file name
+	if (type == "path") {
+		var suggestion_name = data.split("\\").pop();
+		var temp_path = false;
+		var local_path = data;
 	}
-	else if (json.result != "success") {
-		openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+	else if (type == "data-url") {
+		var file_type = data.split(";")[0].split("/")[1];
+		var suggestion_name = "Neue Datei." + file_type;
+		var temp_path = true;
+	}
+	else return false;
+
+	var file_name = await openEnter(suggestion_name);
+	if (file_name == false) return false;
+
+	// get release of campaign or create one if it doesnt exist
+	var get_response = await invoke("github_get", {id:active_campaign.toString(), tempPath:temp_path});
+	var release_return = JSON.parse(get_response);
+
+	if (release_return.status == "404") {
+		var release_data = `{"tag_name":"${active_campaign}","name":"${document.getElementById("subject").value || "New Campaign"}"}`
+		var create_response = await invoke("github_create", {data:release_data});
+		release_return = JSON.parse(create_response);
+	}
+
+	// create temp file from data-url
+	if (type == "data-url") {
+		var local_path = "com.cmd-golem.infomaniak-newsletter-interface/" + new Date().toISOString().replaceAll(":", ".") + "." + file_type;
+
+		var url_index = data.indexOf(";base64,") + 8;
+		var base64 = data.substring(url_index);
+		var raw = window.atob(base64);
+		var file_array = new Uint8Array(new ArrayBuffer(raw.length));
+
+		for (var i = 0; i < raw.length; i++) file_array[i] = raw.charCodeAt(i);
+		await window.__TAURI__.fs.writeBinaryFile(local_path, file_array, { dir: window.__TAURI__.fs.BaseDirectory.Temp });
+	}
+
+	var upload_response = await invoke("github_upload_file", {id:release_return.id.toString(), filePath:local_path, tempPath:temp_path, fileName:file_name});
+	var file_data = JSON.parse(upload_response);
+
+	if (file_data.browser_download_url != undefined) return {src: file_data.browser_download_url, id: file_data.id};
+	else {
+		openDialog("backend_error", JSON.parse(file_data.errors));
 		return false;
 	}
+}
+
+async function deleteGithubUrl() {
+	var response = await invoke("github_get", {id:active_campaign.toString(), tempPath:false});
+	var release = JSON.parse(response);
+
+	if (release.status == "404") return;
+	else if (release.assets.length == 1) {
+		var delete_response = invoke("github_delete", {release:release.id, tag:release.tag_name});
+		console.log(delete_response);
+	}
+	else {
+		// handle individual files
+	} 
+}
+
+// unused uploadAttachment()
+async function uploadAttachment(data, type, embedable) {
+	// get file from path and size
+	if (type == "path") {
+		var file_array = await window.__TAURI__.fs.readBinaryFile(data);
+		var file_size = file_array.length / 1_048_576;
+		var file_type = data.split(".").pop();
+		var suggestion_name = data.split("\\").pop();
+	}
+	else if (type == "data-url") {
+		var file_size = Math.round(data.length * 3 / 4);
+		var file_type = data.split(";")[0].split("/")[1];
+		var suggestion_name = "Neue Datei." + file_type;
+	}
+	else return false;
+
+	var under_size_limit = true; // file_size + current_size <= max_size;
+	
+	// ask wheter to embed or upload img
+	if (under_size_limit && embedable && settings.secrets[1] == true) var user_action = await openDialog("embed");
+	// embed img when upload credentials arent defined 
+	if (under_size_limit && embedable && settings.secrets[1] != true) var user_action = "dialog_yes";
+	// upload file when campaign size limit is reached or file isnt embedable
+	else if ((!under_size_limit || !embedable) && settings.secrets[1] == true) var user_action = "dialog_no";
+	else {
+		openDialog("no_file_upload_auth");
+		return false;
+	}
+	
+	// return embedable data-url
+	if (user_action == "dialog_yes") {
+		if (type == "data-url") return data;
+		else if (type == "path") return URL.createObjectURL(file_array);
+	}
+	// upload file and return url
+	else if (user_action == "dialog_no") {
+		// ask for file name
+		var file_name = await openEnter(suggestion_name);
+		if (file_name == false) return false;
+
+		// get release of campaign or create one if it doesnt exist
+		var get_response = await invoke("github_get", {id:active_campaign.toString()});
+		var release_return = JSON.parse(get_response);
+
+		if (release_return.status == "404") {
+			var release_data = `{"tag_name":"${active_campaign}","name":"${document.getElementById("subject").value || "New Campaign"}"}`
+			var create_response = await invoke("github_create", {data:release_data});
+			release_return = JSON.parse(create_response);
+		}
+
+		// create temp file from data-url
+		if (type == "data-url") {
+			var local_path = "/com.cmd-golem.infomaniak-newsletter-interface/" + new Date().toISOString();
+
+			var url_index = data.indexOf(";base64,") + 8;
+			var base64 = data.substring(url_index);
+			var raw = window.atob(base64);
+			var file_array = new Uint8Array(new ArrayBuffer(raw.length));
+
+			for (var i = 0; i < raw.length; i++) {
+				file_array[i] = raw.charCodeAt(i);
+			}
+
+			var write_response = await window.__TAURI__.fs.writeBinaryFile(local_path, file_array, { dir: BaseDirectory.Temp });
+		}
+		else var local_path = data;
+
+		var upload_response = await invoke("github_upload_file", {id:release_return.id.toString(), filePath:local_path, fileName:file_name});
+		var file_data = JSON.parse(upload_response);
+
+		console.log(upload_response);
+
+		if (file_data.browser_download_url != undefined) return file_data.browser_download_url;
+		else {
+			openDialog("backend_error", JSON.parse(file_data.errors));
+			return false;
+		}
+	}
+	else return false;
 }

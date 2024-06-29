@@ -22,7 +22,7 @@ var error_msg = [
 	{id:"delete_mailinglist", title:"Die Kontaktgruppe wird unwiederruflich gelöscht", msg:"Möchten Sie fortfahren?", buttons:["dialog_yes", "dialog_cancel"]},
 	{id:"delete_contact", title:"Der Kontakt wird unwiederruflich gelöscht", msg:"Möchten Sie fortfahren?", buttons:["dialog_yes", "dialog_cancel"]},
 	{id:"no_mailinglist", msg:"Erstelle zuerst eine neue Kontaktgruppe.", buttons:["dialog_ok"]},
-	
+	{id:"embed", msg:"Soll das Bild eingebettet werden?", buttons:["dialog_yes", "dialog_no", "dialog_cancel"]},	
 ]
 
 function openDialog(id, additional_info) {
