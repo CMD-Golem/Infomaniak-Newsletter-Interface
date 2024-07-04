@@ -15,14 +15,20 @@ var ImageBlot = Quill.import("formats/image");
 class StyleImageBlot extends ImageBlot {
 	static create(value) {
 		let node = super.create();
-		if (typeof value === "string") {
+		console.log(value)
+		if (typeof value === "string" && value.includes(";base64,")) {
 			node.setAttribute("id", "no_file");
+			node.setAttribute("src", value);
+			node.setAttribute("class", "computed");
+		}
+		else if (typeof value === "string") {
 			node.setAttribute("src", value);
 		}
 		else {
 			node.setAttribute("id", value.id);
 			node.setAttribute("src", value.url);
 			node.setAttribute("style", value.style);
+			node.setAttribute("class", "computed");
 		}
 		return node;
 	}
@@ -232,6 +238,7 @@ quill.on("text-change", async (e) => {
 	var new_img = document.getElementById("no_file");
 	if (new_img != null) {
 		quill.enable(false);
+		console.log("text change")
 		var {src, id} = await createGithubUrl(new_img.src, "data-url");
 
 		quill.enable(true);
@@ -242,6 +249,7 @@ quill.on("text-change", async (e) => {
 		else {
 			new_img.src = src;
 			new_img.id = id;
+			new_img.classList.add("computed");
 		}
 	}
 });
@@ -361,11 +369,22 @@ async function selectFile(insert_attachments) {
 		}]
 	});
 
+	var index = quill.getSelection().index;
+
 	if (files == null) return;
 
 	for (var i = 0; i < files.length; i++) {
-		var response = await uploadAttachment(files[i], "path", insert_attachments)
-		console.log(response)
+		var {src, id} = await createGithubUrl(files[i], "path", insert_attachments);
+
+		if (insert_attachments) {
+			quill.insertEmbed(index, "image", src);
+			var new_img = editor_el.querySelector("img:not(.computed)");
+			new_img.id = id;
+			new_img.classList.add("computed");
+
+			console.log(src, id)
+		}
+		
 	}
 }
 
@@ -406,6 +425,7 @@ async function createGithubUrl(data, type) {
 
 	var file_name = await openEnter(suggestion_name);
 	if (file_name == false) return false;
+	file_name = file_name.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9._-]/g, "");
 
 	// get release of campaign or create one if it doesnt exist
 	var get_response = await invoke("github_get", {id:active_campaign.toString(), tempPath:temp_path});
@@ -430,12 +450,13 @@ async function createGithubUrl(data, type) {
 		await window.__TAURI__.fs.writeBinaryFile(local_path, file_array, { dir: window.__TAURI__.fs.BaseDirectory.Temp });
 	}
 
-	var upload_response = await invoke("github_upload_file", {id:release_return.id.toString(), filePath:local_path, tempPath:temp_path, fileName:file_name});
+	var upload_response = await invoke("github_upload_file", {id:release_return.id.toString(), filePath:local_path, tempPath:temp_path, fileName:file_name}) || '{"errors":"An unknown error occured"}';
+	console.log(upload_response)
 	var file_data = JSON.parse(upload_response);
 
 	if (file_data.browser_download_url != undefined) return {src: file_data.browser_download_url, id: file_data.id};
 	else {
-		openDialog("backend_error", JSON.parse(file_data.errors));
+		openDialog("backend_error", file_data.errors);
 		return false;
 	}
 }
