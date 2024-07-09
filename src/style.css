@@ -222,6 +222,15 @@ contact svg {
 /* Editor */
 editor {
 	width: calc(100% - 251.5px);
+	display: flex;
+	flex-direction: column;
+	height: 100vh;
+}
+
+text {
+	padding: 15px;
+	padding-top: 10px;
+	overflow-y: auto;
 }
 
 menu {
@@ -309,6 +318,32 @@ menu select {
 
 menu select:hover {
 	border-color: #2b88d8;
+}
+
+/* Attachments */
+attachments {
+	display: flex;
+	flex-grow: 1;
+	flex-wrap: wrap;
+	gap: 8px 15px;
+	max-height: 65px;
+	padding: 8px 30px;
+	overflow-y: auto;
+	border-bottom: 1px #c7c7c7 solid;
+}
+
+attachments:empty {
+	display: none;
+}
+
+attachments div {
+	padding: 5px 10px;
+	border-radius: 8px;
+	border: 1.5px #3a3a3a solid;
+}
+
+attachments div:hover {
+	background-color: #e60000;
 }
 
 /* Color Picker */

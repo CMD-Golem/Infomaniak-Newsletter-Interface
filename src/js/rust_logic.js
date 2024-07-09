@@ -18,6 +18,7 @@ quill.on('text-change', () => { unsaved_campaign = true });
 
 
 window.onload = async () => {
+	// async function noStart() {
 	quill.focus();
 
 	if (invoke == undefined) return;
@@ -38,6 +39,7 @@ window.onload = async () => {
 		settings = json.newsletter;
 		el_test_email.value = settings.test_email ?? "";
 		settings.secrets = [json.infomaniak_secret, json.github_secret, json.ftp_user, json.ftp_password];
+		settings.link_text = "Öffnen ${file_name}";
 
 		getMailinglists();
 		initEditor();

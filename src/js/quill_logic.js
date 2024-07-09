@@ -357,9 +357,12 @@ body.addEventListener("click", (e) => {
 
 // #####################################################################################
 // Attachments
+var attachments = document.querySelector("attachments");
 async function selectFile(insert_attachments) {
 	if (insert_attachments) var filters = ["avif", "bmp", "gif", "jfif", "jpeg", "jpg", "png", "svg", "tiff", "webp"];
-	else var filters = ["*"]
+	else var filters = ["*"];
+
+	var index = quill.getSelection().index;
 
 	var files = await window.__TAURI__.dialog.open({
 		multiple: true,
@@ -369,22 +372,51 @@ async function selectFile(insert_attachments) {
 		}]
 	});
 
-	var index = quill.getSelection().index;
-
 	if (files == null) return;
 
 	for (var i = 0; i < files.length; i++) {
 		var {src, id} = await createGithubUrl(files[i], "path", insert_attachments);
 
+		if (src == false) return;
+		var link_text = src.split("/").pop();
+
+		// show file in attachment list
+		var attachment = document.createElement("div");
+		attachment.innerHTML = link_text;
+		attachment.id = id;
+
+		attachment.setAttribute("onmouseenter", "showTooltip(this, 2, 'Löschen')");
+		attachment.addEventListener("click", e => {
+			e.target.remove();
+			if (tooltip_timeout != undefined) clearTimeout(tooltip_timeout);
+			tooltip.removeAttribute("style");
+			tooltip_timeout = undefined;
+
+			var links = editor_el.querySelectorAll(`a[href="${src}"]`);
+			for (var i = 0; i < links.length; i++) {
+				var link = Quill.find(links[i]);
+				var link_index = quill.getIndex(link);
+				var link_length = quill.getLeaf(link_index)[0].text.length;
+				quill.formatText(link_index, link_length, "link", false);
+
+				// deleteGithubUrl(id)
+			}
+		});
+
+		attachments.appendChild(attachment);
+
+		// show file in newsletter text
 		if (insert_attachments) {
 			quill.insertEmbed(index, "image", src);
 			var new_img = editor_el.querySelector("img:not(.computed)");
-			new_img.id = id;
 			new_img.classList.add("computed");
-
-			console.log(src, id)
+			new_img.id = id;
 		}
-		
+		else {
+			var showing_text = settings.link_text.replace("${file_name}", link_text)
+			quill.insertText(index, showing_text, {link:src});
+			quill.setSelection(index, showing_text.length);
+		}
 	}
 }
 
@@ -456,7 +488,7 @@ async function createGithubUrl(data, type) {
 
 	if (file_data.browser_download_url != undefined) return {src: file_data.browser_download_url, id: file_data.id};
 	else {
-		openDialog("backend_error", file_data.errors);
+		openDialog("backend_error", file_data.message + ": " + JSON.stringify(file_data.errors));
 		return false;
 	}
 }

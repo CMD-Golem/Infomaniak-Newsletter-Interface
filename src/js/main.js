@@ -1,5 +1,5 @@
 var invoke = window.__TAURI__?.invoke;
-var active_error_dialog;
+var active_error_dialog, tooltip_timeout;
 var dialog = document.querySelector("dialog");
 var tooltip = document.querySelector("tooltip");
 
@@ -58,7 +58,6 @@ function openDialog(id, additional_info) {
 
 // tooltip
 function showTooltip(el, pos, tip) {
-	var waiting = true;
 	var el_pos = el.getBoundingClientRect();
 
 	if (pos == 0) { // tooltip above el
@@ -82,15 +81,14 @@ function showTooltip(el, pos, tip) {
 		var transform = "-100%, -50%";
 	}
 
-	var timout_id = setTimeout(() => {
-		waiting = false;
-
+	tooltip_timeout = setTimeout(() => {
 		tooltip.setAttribute("style", `display: block; top: ${el_pos.top + correction_top}px; left: ${el_pos.left + correction_left}px; transform: translate(${transform});`);
 		tooltip.innerHTML = tip;
 	}, 1000);
 
 	el.addEventListener("mouseleave", () => {
-		if (waiting == true) clearTimeout(timout_id);
-		else tooltip.removeAttribute("style");
+		if (tooltip_timeout != undefined) clearTimeout(tooltip_timeout);
+		tooltip.removeAttribute("style");
+		tooltip_timeout = undefined;
 	}, {once: true});
 }
