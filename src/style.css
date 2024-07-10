@@ -326,6 +326,7 @@ attachments {
 	flex-grow: 1;
 	flex-wrap: wrap;
 	gap: 8px 15px;
+	min-height: 30px;
 	max-height: 65px;
 	padding: 8px 30px;
 	overflow-y: auto;

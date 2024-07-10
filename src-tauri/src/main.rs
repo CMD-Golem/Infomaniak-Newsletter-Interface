@@ -639,6 +639,8 @@ fn github_delete(release: String, tag: String) -> String {
 		.output()
 		.expect("Error");
 
+	println!("{:?}", String::from_utf8_lossy(&output_tag.stdout));
+
 	String::from_utf8_lossy(&output_release.stdout).into()
 }
 

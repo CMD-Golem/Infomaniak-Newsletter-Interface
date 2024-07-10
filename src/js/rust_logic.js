@@ -240,6 +240,7 @@ async function getCampaign(id) {
 	var json = JSON.parse(response);
 
 	if (json.result == "success") {
+		attachments.innerHTML = "";
 		quill.clipboard.dangerouslyPasteHTML(json.data.content)
 		subject.value = json.data.subject;
 		unsaved_campaign = false;
