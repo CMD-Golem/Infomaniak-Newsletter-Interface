@@ -504,6 +504,7 @@ async function deleteGithubUrl() {
 	}
 	else {
 		// handle individual files
+		// https://docs.github.com/de/rest/releases/assets?apiVersion=2022-11-28#upload-a-release-asset--parameters
 	} 
 }
 
