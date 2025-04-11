@@ -1,55 +1,43 @@
 {
-  "build": {
-    "devPath": "../src",
-    "distDir": "../src",
-    "withGlobalTauri": true
-  },
-  "package": {
-    "productName": "infomaniak-newsletter-interface",
-    "version": "0.0.0"
-  },
-  "tauri": {
-    "allowlist": {
-      "all": false,
-      "clipboard": {
-        "readText": true
-      },
-	  "window": {
-		"create": true,
-		"setFocus": true
-	  },
-	  "dialog":{
-		"open": true
-	  },
-	  "http": {
-        "scope": ["https://github.com/CMD-Golem/PR-Files/releases/download/*"]
-      },
-	  "fs": {
-		"scope": ["$TEMP/com.cmd-golem.infomaniak-newsletter-interface/*"],
-		"readFile": true,
-		"writeFile": true
-	  }
-    },
-    "windows": [
-      {
-        "title": "Infomaniak Newsletter Interface",
-        "width": 1100,
-        "height": 700,
-		"minWidth": 980,
-		"minHeight": 330
-      }
-    ],
-    "security": {
-      "csp": null
-    },
-    "bundle": {
-      "active": true,
-      "targets": "msi",
-      "identifier": "com.cmd-golem.infomaniak-newsletter-interface",
-      "icon": [
-        "icons/icon.ico",
-		"icons/icon.png"
-      ]
-    }
-  }
+	"$schema": "https://schema.tauri.app/config/2",
+	"productName": "Infomaniak-Newsletter-Interface",
+	"version": "1.0.0",
+	"identifier": "com.cmd-golem.infomaniak-newsletter-interface",
+	"build": {
+		"frontendDist": "../dist"
+	},
+	"app": {
+		"windows": [
+			{
+				"title": "Infomaniak Newsletter Interface",
+				"width": 1100,
+				"height": 700,
+				"minWidth": 980,
+				"minHeight": 330,
+				"resizable": true
+			}
+		],
+		"security": {
+			"csp": null
+		}
+	},
+	"bundle": {
+		"active": true,
+		"targets": "msi",
+		"icon": [
+			"icons/icon.png",
+			"icons/icon.ico"
+		]
+	},
+	"plugins": {
+		"updater": {
+			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IHJzaWduIGVuY3J5cHRlZCBzZWNyZXQga2V5ClJXUlRZMEl5ajRobjVLUUZmbWRScUh6d3EvWDJ5YWZzQVcycnlqMU12RjRjMEJqL1J4Z0FBQkFBQUFBQUFBQUFBQUlBQUFBQTJ4eHNtOVRRNlhkTkJIZ2VUbUNVaHVIbjFEWm1mQ3poU0Rqay9hRlZ3b0FjSy9haERtZm9BY1g3Z2ZGQXhaM0sxeXlPSEloQXJnblNzUlA4OTZLbjFVdXJxaTJvSTBGSUNhUlNlQ0JWLzh5ODJlOXVQRjZyYy9vZHZsZUhJOXVZY0xTWGhuUnpHZEE9Cg==",
+			"endpoints": [
+				"https://github.com/CMD-Golem/Infomaniak-Newsletter-Interface/releases/latest/download/latest.json"
+			],
+			"windows": {
+				"installMode": "passive"
+			}
+		}
+	}
 }

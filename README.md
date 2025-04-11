@@ -7,5 +7,7 @@ Built with [Tauri](https://tauri.app/) and [Quill](https://quilljs.com/) and pow
 	* [Typo.js by Christopher Finke](https://github.com/cfinke/Typo.js)
 	* [Better tables by soccerloway](https://github.com/soccerloway/quill-better-table)
 
-## API keys safety
-In the current state of the programm, the API keys are only poorly secured. All settings are “encrypted” via XOR and stored in this form. The key for the encryption always remains the same. If anyone would like to improve this, pull request are welcome.
+Plugins:
+	Window State
+	Stronghold
+	Store

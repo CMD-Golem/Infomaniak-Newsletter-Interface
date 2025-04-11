@@ -206,21 +206,17 @@
 			<input autocomplete="one-time-code" type="text" placeholder="info@domain.com" id="email_from_addr">
 			<label onmouseenter="showTooltip(this, 1, 'Text wird immer am Ende des Newsletter angezeigt')">Abmeldelink Text<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 1.999c5.524 0 10.002 4.478 10.002 10.002 0 5.523-4.478 10.001-10.002 10.001-5.524 0-10.002-4.478-10.002-10.001C1.998 6.477 6.476 1.999 12 1.999Zm0 1.5a8.502 8.502 0 1 0 0 17.003A8.502 8.502 0 0 0 12 3.5Zm-.004 7a.75.75 0 0 1 .744.648l.007.102.003 5.502a.75.75 0 0 1-1.493.102l-.007-.101-.003-5.502a.75.75 0 0 1 .75-.75ZM12 7.003a.999.999 0 1 1 0 1.997.999.999 0 0 1 0-1.997Z"/></svg></label>
 			<input autocomplete="one-time-code" type="text" placeholder="Unsubscribe" id="unsubscribe">
-			<label>Owner und Repository für den Dateiupload</label>
-			<input autocomplete="one-time-code" type="text" placeholder="OWNER/REPO" id="github_path">
 
 			<p>API Keys</p>
 			<label>API Key vom Infomaniak Newsletter<br><small><span onclick="invoke('open_link', {url: 'https://manager.infomaniak.com/v3/ng/profile/user/token/add'});" class="link">(Unter diesem Link</span> Scope Newsletter wählen und <span onclick="invoke('open_link', {url: 'https://newsletter.infomaniak.com/accounts/access-token'});" class="link">unter diesem Link</span> den API-Schlüssel und der geheimer Schlüssel im Format API-Schlüssel:geheimer Schlüssel einfügen.)</small></label>
 			<button class="settings_show" onclick="this.nextElementSibling.style.display = 'block'; this.style.display = 'none';">Überschreiben</button>
 			<input autocomplete="one-time-code" type="text" placeholder="API_KEY:SECRET_KEY" id="infomaniak_secret" style="display: none;">
-			<label>API Key von GitHub<br><small><span onclick="invoke('open_link', {url: 'https://github.com/settings/tokens?type=beta'});" class="link">(Unter diesem Link</span> neues Token mit "read and write" Zugang zum "Content" des ausgewähltn Repository erstellen.)</small></label>
-			<button class="settings_show" onclick="this.nextElementSibling.style.display = 'block'; this.style.display = 'none';">Überschreiben</button>
-			<input autocomplete="one-time-code" type="text" placeholder="TOKEN" id="github_secret" style="display: none;">
-			<label>Login Daten vom FTP Server</label>
+			<label>WebDav Server</label>
 			<button class="settings_show" onclick="this.nextElementSibling.style.display = 'block'; this.style.display = 'none';">Überschreiben</button>
 			<div style="display: none;">
-				<input autocomplete="one-time-code" type="text" placeholder="username" id="ftp_user">
-				<input autocomplete="one-time-code" type="text" placeholder="password" id="ftp_password">
+				<input autocomplete="one-time-code" type="text" placeholder="url" id="webdav_url">
+				<input autocomplete="one-time-code" type="text" placeholder="username" id="webdav_user">
+				<input autocomplete="one-time-code" type="text" placeholder="password" id="webdav_password">
 			</div>
 			<buttonbox>
 				<button onclick="saveSettings('ok');">OK</button>
