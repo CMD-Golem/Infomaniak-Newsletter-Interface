@@ -330,7 +330,7 @@ body.addEventListener("contextmenu", (event) => {
 
 function selectionMenu() {
 	var { clientX: mouseX, clientY: mouseY } = event;
-	var { normalizedX, normalizedY } = normalizePozition(mouseX, mouseY - 50, selection_menu, context_menu.clientHeight + 12);
+	var { normalizedX, normalizedY } = normalizePozition(mouseX, mouseY - 50, selection_menu, 0);
 
 	selection_menu.classList.remove("visible");
 
@@ -353,6 +353,15 @@ body.addEventListener("click", (e) => {
 		invoke("open_link", {url: href});
 	}
 });
+
+
+// link
+function openLink() {
+	document.getElementsByClassName('ql-link')[0].click();
+	var link_tool = document.querySelector(".ql-tooltip.ql-editing[data-mode='link']");
+	
+	if (parseFloat(link_tool.style.left) < 0) link_tool.style.left = "0";
+}
 
 
 // #####################################################################################

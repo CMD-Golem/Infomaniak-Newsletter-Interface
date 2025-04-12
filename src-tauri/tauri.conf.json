@@ -1,20 +1,37 @@
 {
 	"$schema": "https://schema.tauri.app/config/2",
-	"productName": "Infomaniak-Newsletter-Interface",
+	"productName": "infomaniak-newsletter-interface",
 	"version": "1.0.0",
 	"identifier": "com.cmd-golem.infomaniak-newsletter-interface",
 	"build": {
-		"frontendDist": "../dist"
+		"frontendDist": "../src"
 	},
 	"app": {
+		"withGlobalTauri": true,
 		"windows": [
 			{
 				"title": "Infomaniak Newsletter Interface",
+				"url": "index.html",
+				"label": "main",
 				"width": 1100,
 				"height": 700,
 				"minWidth": 980,
 				"minHeight": 330,
 				"resizable": true
+			},
+			{
+				"title": "Manage Mailinglists",
+				"url": "mailinglists.html",
+				"label": "mailinglists",
+				"width": 680,
+				"height": 380,
+				"minWidth": 600,
+				"minHeight": 280,
+				"maximizable": false,
+				"minimizable": false,
+				"skipTaskbar": true,
+				"resizable": true,
+				"create": false
 			}
 		],
 		"security": {

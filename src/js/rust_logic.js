@@ -10,9 +10,9 @@ var el_test_email = document.getElementById("test_email");
 var newsletter_group = document.getElementById("newsletter_group");
 var subject = document.getElementById("subject");
 var el_infomaniak_secret = document.getElementById("infomaniak_secret");
-var el_github_secret = document.getElementById("github_secret");
-var el_ftp_user = document.getElementById("ftp_user");
-var el_ftp_password = document.getElementById("ftp_password");
+var el_webdav_url = document.getElementById("webdav_url");
+var el_webdav_user = document.getElementById("webdav_user");
+var el_webdav_password = document.getElementById("webdav_password");
 
 quill.on('text-change', () => { unsaved_campaign = true });
 

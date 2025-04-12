@@ -1,0 +1,20 @@
+{
+  "name": "infomaniak-newsletter-interface",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  },
+  "dependencies": {
+    "@tauri-apps/plugin-clipboard-manager": "^2.2.2",
+    "@tauri-apps/plugin-dialog": "^2.2.1",
+    "@tauri-apps/plugin-fs": "^2.2.1",
+    "@tauri-apps/plugin-stronghold": "^2.2.0",
+    "@tauri-apps/plugin-updater": "^2.7.0",
+    "@tauri-apps/plugin-window-state": "^2.2.2"
+  }
+}

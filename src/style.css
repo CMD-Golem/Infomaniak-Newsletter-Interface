@@ -75,13 +75,31 @@ aside {
 	border-right: 1.5px #3a3a3a solid;
 }
 
-navigation {
+status, navigation {
 	position: absolute;
 	display: flex;
-	border-top: 1.5px #3a3a3a solid;
+	width: 100%;
+}
+
+status {
+	top: 0;
+	height: 40px;
+	border-bottom: 1.5px #3a3a3a solid;
+}
+
+status button {
+	width: 50%;
+}
+
+status button.active {
+	font-weight: bold;
+	text-decoration: underline #2b88d8 solid 1.5px;
+}
+
+navigation {
 	bottom: 0;
 	height: 60px;
-	width: 100%;
+	border-top: 1.5px #3a3a3a solid;
 }
 
 navigation button {
@@ -259,7 +277,7 @@ section, button.divider {
 	margin-right: 1px;
 }
 
-button.active {
+section button.active {
 	padding: 0;
 	border: #2b88d8 1px solid;
 	background-color: #eff6fc;
