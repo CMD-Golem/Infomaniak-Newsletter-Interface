@@ -28,7 +28,7 @@
 			<button onclick="openSettings()" onmouseenter="showTooltip(this, 1, 'Einstellungen')">
 				<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12.012 2.25c.734.008 1.465.093 2.182.253a.75.75 0 0 1 .582.649l.17 1.527a1.384 1.384 0 0 0 1.927 1.116l1.401-.615a.75.75 0 0 1 .85.174 9.792 9.792 0 0 1 2.204 3.792.75.75 0 0 1-.271.825l-1.242.916a1.381 1.381 0 0 0 0 2.226l1.243.915a.75.75 0 0 1 .272.826 9.797 9.797 0 0 1-2.204 3.792.75.75 0 0 1-.848.175l-1.407-.617a1.38 1.38 0 0 0-1.926 1.114l-.169 1.526a.75.75 0 0 1-.572.647 9.518 9.518 0 0 1-4.406 0 .75.75 0 0 1-.572-.647l-.168-1.524a1.382 1.382 0 0 0-1.926-1.11l-1.406.616a.75.75 0 0 1-.849-.175 9.798 9.798 0 0 1-2.204-3.796.75.75 0 0 1 .272-.826l1.243-.916a1.38 1.38 0 0 0 0-2.226l-1.243-.914a.75.75 0 0 1-.271-.826 9.793 9.793 0 0 1 2.204-3.792.75.75 0 0 1 .85-.174l1.4.615a1.387 1.387 0 0 0 1.93-1.118l.17-1.526a.75.75 0 0 1 .583-.65c.717-.159 1.45-.243 2.201-.252ZM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/></svg>
 			</button>
-			<button class="credits_button" onclick="invoke('open_link', {url: 'https://newsletter.infomaniak.com/credits/billing-plan'});" style="cursor: pointer;" onmouseenter="showTooltip(this, 1, 'Credits aufladen')">
+			<button class="credits_button" onclick="t.opener.openUrl('https://newsletter.infomaniak.com/credits/billing-plan')" style="cursor: pointer;" onmouseenter="showTooltip(this, 1, 'Credits aufladen')">
 				<b>Credits</b>
 				<div id="credits"></div>
 			</button>
@@ -163,16 +163,6 @@
 					<svg width="24" height="24" viewBox="0 0 24 24"><path d="m11.475 13.718.083-.071a.75.75 0 0 1 .874-.007l.093.078 6.928 6.8A3.235 3.235 0 0 1 17.75 21H6.25a3.235 3.235 0 0 1-1.703-.481l6.928-6.801.083-.071-.083.07ZM17.75 3A3.25 3.25 0 0 1 21 6.25v11.5c0 .627-.178 1.213-.485 1.71l-6.939-6.813-.128-.116a2.25 2.25 0 0 0-2.889-.006l-.135.123-6.939 6.811A3.235 3.235 0 0 1 3 17.75V6.25A3.25 3.25 0 0 1 6.25 3h11.5Zm-1.998 3a2.252 2.252 0 1 0 0 4.504 2.252 2.252 0 0 0 0-4.504Zm0 1.5a.752.752 0 1 1 0 1.504.752.752 0 0 1 0-1.504Z"/></svg>
 					<div>Bilder</div>
 				</button>
-			</section>
-			<section style="flex-direction: row;">
-				<button class="big" onclick="selectFile(false)" onmouseenter="showTooltip(this, 2, 'Datei aus dem Web anfügen')">
-					<svg width="24" height="24" viewBox="0 0 24 24"><path d="M16 2a6 6 0 0 1 4.396 10.084l-.19.194-8.727 8.727-.053.05-.056.045a3.721 3.721 0 0 1-5.253-5.242l.149-.164.015-.011 7.29-7.304a1 1 0 0 1 1.416 1.413l-7.29 7.304-.012.008a1.721 1.721 0 0 0 2.289 2.553l.122-.1.001.001 8.702-8.7.159-.165a4 4 0 0 0-5.753-5.554l-.155.16-.018.012-9.326 9.33a1 1 0 0 1-1.414-1.415L11.6 3.913l.046-.043A5.985 5.985 0 0 1 16 2Z"/></svg>
-					<div>Online Datei</div>
-				</button>
-				<button class="big" onclick="selectFile(true)" onmouseenter="showTooltip(this, 2, 'Bild aus dem Web einfügen')">
-					<svg width="24" height="24" viewBox="0 0 24 24"><path d="m11.475 13.718.083-.071a.75.75 0 0 1 .874-.007l.093.078 6.928 6.8A3.235 3.235 0 0 1 17.75 21H6.25a3.235 3.235 0 0 1-1.703-.481l6.928-6.801.083-.071-.083.07ZM17.75 3A3.25 3.25 0 0 1 21 6.25v11.5c0 .627-.178 1.213-.485 1.71l-6.939-6.813-.128-.116a2.25 2.25 0 0 0-2.889-.006l-.135.123-6.939 6.811A3.235 3.235 0 0 1 3 17.75V6.25A3.25 3.25 0 0 1 6.25 3h11.5Zm-1.998 3a2.252 2.252 0 1 0 0 4.504 2.252 2.252 0 0 0 0-4.504Zm0 1.5a.752.752 0 1 1 0 1.504.752.752 0 0 1 0-1.504Z"/></svg>
-					<div>Online Bilder</div>
-				</button>
 				<button class="big" onclick="openLink()" onmouseenter="showTooltip(this, 2, 'Link')">
 					<svg width="24" height="24" viewBox="0 0 24 24"><path d="M9.25 7a.75.75 0 0 1 .11 1.492l-.11.008H7a3.5 3.5 0 0 0-.206 6.994L7 15.5h2.25a.75.75 0 0 1 .11 1.492L9.25 17H7a5 5 0 0 1-.25-9.994L7 7h2.25ZM17 7a5 5 0 0 1 .25 9.994L17 17h-2.25a.75.75 0 0 1-.11-1.492l.11-.008H17a3.5 3.5 0 0 0 .206-6.994L17 8.5h-2.25a.75.75 0 0 1-.11-1.492L14.75 7H17ZM7 11.25h10a.75.75 0 0 1 .102 1.493L17 12.75H7a.75.75 0 0 1-.102-1.493L7 11.25h10H7Z"/></svg>
 					<div>Link</div>
@@ -220,9 +210,11 @@
 			<input autocomplete="one-time-code" type="text" placeholder="info@domain.com" id="email_from_addr">
 			<label onmouseenter="showTooltip(this, 1, 'Wenn nicht leer: Text wird immer am Ende des Newsletter angezeigt')">Abmeldelink Text<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 1.999c5.524 0 10.002 4.478 10.002 10.002 0 5.523-4.478 10.001-10.002 10.001-5.524 0-10.002-4.478-10.002-10.001C1.998 6.477 6.476 1.999 12 1.999Zm0 1.5a8.502 8.502 0 1 0 0 17.003A8.502 8.502 0 0 0 12 3.5Zm-.004 7a.75.75 0 0 1 .744.648l.007.102.003 5.502a.75.75 0 0 1-1.493.102l-.007-.101-.003-5.502a.75.75 0 0 1 .75-.75ZM12 7.003a.999.999 0 1 1 0 1.997.999.999 0 0 1 0-1.997Z"/></svg></label>
 			<input autocomplete="one-time-code" type="text" placeholder="Unsubscribe" id="unsubscribe">
+			<label onmouseenter="showTooltip(this, 1, 'Anzeigetext für eingefügte Dateilinks<br>${file_name} wird mit dem Dateinamen ersetzt')">Link-Anzeigetext<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 1.999c5.524 0 10.002 4.478 10.002 10.002 0 5.523-4.478 10.001-10.002 10.001-5.524 0-10.002-4.478-10.002-10.001C1.998 6.477 6.476 1.999 12 1.999Zm0 1.5a8.502 8.502 0 1 0 0 17.003A8.502 8.502 0 0 0 12 3.5Zm-.004 7a.75.75 0 0 1 .744.648l.007.102.003 5.502a.75.75 0 0 1-1.493.102l-.007-.101-.003-5.502a.75.75 0 0 1 .75-.75ZM12 7.003a.999.999 0 1 1 0 1.997.999.999 0 0 1 0-1.997Z"/></svg></label>
+			<input autocomplete="one-time-code" type="text" placeholder="Öffne ${file_name}" id="link_text">
 
 			<p>API Keys</p>
-			<label>API Key vom Infomaniak Newsletter<br><small>(Unter <span onclick="invoke('open_link', {url: 'https://manager.infomaniak.com/v3/ng/profile/user/token/add'});" class="link">diesem Link</span> mit Scope Newsletter erstellen.)</small></label>
+			<label>API Key vom Infomaniak Newsletter<br><small>(Unter <span onclick="t.opener.openUrl('https://manager.infomaniak.com/v3/ng/profile/user/token/add')" class="link">diesem Link</span> mit Scope Newsletter erstellen.)</small></label>
 			<button class="settings_show" onclick="this.nextElementSibling.style.display = 'block'; this.style.display = 'none';">Überschreiben</button>
 			<input autocomplete="one-time-code" type="text" placeholder="TOKEN" id="infomaniak_secret" style="display: none;">
 			<label>WebDav Server</label>

@@ -63,7 +63,7 @@ async function deleteMailinglist(id) {
 
 	if (json.result == "success") {
 		document.getElementById(id).remove();
-		await window.__TAURI__.event.emit('changed_mailinglists');
+		await t.event.emit('changed_mailinglists');
 		getMailinglist(el_mailinglists.firstElementChild?.id, false);
 	}
 	else openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
@@ -84,7 +84,7 @@ async function duplicateMailinglist(id) {
 	document.querySelector(".selected").classList.remove("selected");
 	var html = createMailinglistHtml(json_list.data, "selected");
 	el_mailinglists.insertAdjacentHTML('afterbegin', html);
-	await window.__TAURI__.event.emit('changed_mailinglists');
+	await t.event.emit('changed_mailinglists');
 
 	// load contacts of selected mailinglist
 	var reponse_contact = await invoke("mailinglist_get_contacts", {id:parseInt(id)});
@@ -148,7 +148,7 @@ async function createMailinglist(e) {
 			e.target.parentElement.id = json.data.id;
 			e.target.value = json.data.name;
 			el_contacts.innerHTML = "";
-			await window.__TAURI__.event.emit('changed_mailinglists');
+			await t.event.emit('changed_mailinglists');
 			setTimeout(() => { e.target.disabled = true }, 100);
 		}
 	}
@@ -182,7 +182,7 @@ async function renameMailinglist(e) {
 			openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
 			e.target.value = e.target.getAttribute("data-old-value");
 		}
-		else await window.__TAURI__.event.emit('changed_mailinglists');
+		else await t.event.emit('changed_mailinglists');
 	}
 	else if (e.type == "keydown" && e.key == "Escape") e.target.value = e.target.getAttribute("data-old-value");
 	else return;

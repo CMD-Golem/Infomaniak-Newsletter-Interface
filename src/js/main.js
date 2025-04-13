@@ -1,7 +1,10 @@
-var invoke = window.__TAURI__?.invoke;
+const t = window.__TAURI__;
 var active_error_dialog, tooltip_timeout;
 var dialog = document.querySelector("dialog");
 var tooltip = document.querySelector("tooltip");
+
+var text_open_files = "Alle Dateien";
+var text_suggest_name = "Neue Datei.";
 
 // error and info box
 var error_msg = [

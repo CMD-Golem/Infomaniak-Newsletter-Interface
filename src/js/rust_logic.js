@@ -21,9 +21,9 @@ window.onload = async () => {
 	// async function noStart() {
 	quill.focus();
 
-	if (invoke == undefined) return;
+	if (t.invoke == undefined) return;
 
-	var response = await invoke("init_config", {init:true});
+	var response = await t.invoke("init_config", {init:true});
 	var json = JSON.parse(response);
 
 	if (json.result != "success") {
@@ -34,12 +34,12 @@ window.onload = async () => {
 		json.newsletter.email_from_name != "" &&
 		json.newsletter.lang != "" &&
 		json.newsletter.email_from_addr != "" &&
-		json.newsletter.unsubscribe != ""
+		json.newsletter.unsubscribe != "" &&
+		json.newsletter.link_text != ""
 	) {
 		settings = json.newsletter;
 		el_test_email.value = settings.test_email ?? "";
-		settings.secrets = [json.infomaniak_secret, json.github_secret, json.ftp_user, json.ftp_password];
-		settings.link_text = "Öffnen ${file_name}";
+		settings.secrets = [json.infomaniak_secret, json.webdav_url, json.webdav_user, json.webdav_password];
 
 		getMailinglists();
 		initEditor();
@@ -51,8 +51,8 @@ window.onload = async () => {
 	}
 }
 
-if (invoke != undefined) {
-	window.__TAURI__.event.listen("changed_mailinglists", async (e) => {
+if (t.invoke != undefined) {
+	t.event.listen("changed_mailinglists", async (e) => {
 		var set_value = newsletter_group.value;
 		await getMailinglists();
 		newsletter_group.value = set_value;
@@ -60,7 +60,7 @@ if (invoke != undefined) {
 }
 
 async function getCredits() {
-	var response = await invoke("get_credits");
+	var response = await t.invoke("get_credits");
 	var json = JSON.parse(response);
 	if (json.result == "success") document.getElementById("credits").innerHTML = json.data.credits;
 	else openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
@@ -69,10 +69,12 @@ async function getCredits() {
 function initEditor() {
 	var unsubscribe = settings.unsubscribe.replaceAll("\\n", "\n");
 
-	quill.insertText(0, unsubscribe, {
-		link: "*|UNSUBSCRIBED|*",
-		size: "9px"
-	});
+	if (unsubscribe != "") {
+		quill.insertText(0, unsubscribe, {
+			link: "*|UNSUBSCRIBED|*",
+			size: "9px"
+		});
+	}
 
 	unsaved_campaign = false;
 }
@@ -82,7 +84,7 @@ async function openSettings(json, disable_cancel) {
 	document.querySelector("settings").style.display = "block";
 
 	if (json == undefined) {
-		var response = await invoke("init_config", {init:false});
+		var response = await t.invoke("init_config", {init:false});
 		json = JSON.parse(response);
 
 		if (json.result == "error") {
@@ -93,14 +95,14 @@ async function openSettings(json, disable_cancel) {
 
 	if (disable_cancel) document.getElementById("settings_cancel").disabled = true;
 
-	settings.secrets = [json.infomaniak_secret, json.github_secret, json.ftp_user, json.ftp_password];
+	settings.secrets = [json.infomaniak_secret, json.webdav_url, json.webdav_user, json.webdav_password];
 
 	// show current settings on page
 	document.getElementById("email_from_name").value = json.newsletter.email_from_name;
 	document.getElementById("lang").value = json.newsletter.lang;
 	document.getElementById("email_from_addr").value = json.newsletter.email_from_addr;
 	document.getElementById("unsubscribe").value = json.newsletter.unsubscribe;
-	document.getElementById("github_path").value = json.newsletter.github_path;
+	document.getElementById("link_text").value = json.newsletter.link_text;
 }
 
 async function saveSettings(action) {
@@ -108,14 +110,13 @@ async function saveSettings(action) {
 	var lang = document.getElementById("lang").value;
 	var email_from_addr = document.getElementById("email_from_addr").value;
 	var unsubscribe = document.getElementById("unsubscribe").value;
-	var github_path = document.getElementById("github_path").value;
+	var link_text = document.getElementById("link_text").value;
 
 	// check if settings are defined
 	if (
 		email_from_name == "" ||
 		lang == "" ||
 		email_from_addr == "" ||
-		unsubscribe == "" ||
 		(el_infomaniak_secret.value == "" && !settings.secrets[0])
 	) {
 		openDialog("undefined_settings");
@@ -131,14 +132,14 @@ async function saveSettings(action) {
 		(setting = validateSettings("lang", lang)) != undefined && new_settings.push(setting);
 		(setting = validateSettings("email_from_addr", email_from_addr)) != undefined && new_settings.push(setting);
 		(setting = validateSettings("unsubscribe", unsubscribe)) != undefined && new_settings.push(setting);
-		(setting = validateSettings("github_path", github_path)) != undefined && new_settings.push(setting);
+		(setting = validateSettings("link_text", link_text)) != undefined && new_settings.push(setting);
 
 		if (el_infomaniak_secret.value != "") new_settings.push({property:"infomaniak_secret", value:el_infomaniak_secret.value});
-		if (el_github_secret.value != "") new_settings.push({property:"github_secret", value:el_github_secret.value});
-		if (el_ftp_user.value != "") new_settings.push({property:"ftp_user", value:el_ftp_user.value});
-		if (el_ftp_password.value != "") new_settings.push({property:"ftp_password", value:el_ftp_password.value});
+		if (el_webdav_url.value != "") new_settings.push({property:"webdav_url", value:el_webdav_url.value});
+		if (el_webdav_user.value != "") new_settings.push({property:"webdav_user", value:el_webdav_user.value});
+		if (el_webdav_password.value != "") new_settings.push({property:"webdav_password", value:el_webdav_password.value});
 
-		if (new_settings.length != 0) var had_error = await invoke("change_config", {data:JSON.stringify(new_settings)});
+		if (new_settings.length != 0) var had_error = await t.invoke("change_config", {data:JSON.stringify(new_settings)});
 
 		if (had_error != "false") {
 			openDialog("backend_error", had_error);
@@ -161,17 +162,15 @@ function closeSettings(action) {
 
 	document.querySelector("settings").style.display = "none";
 	el_infomaniak_secret.style.display = "none";
-	el_github_secret.style.display = "none";
-	el_ftp_user.parentElement.style.display = "none";
+	el_webdav_url.parentElement.style.display = "none";
 
 	el_infomaniak_secret.previousElementSibling.style.display = "block";
-	el_github_secret.previousElementSibling.style.display = "block";
-	el_ftp_user.parentElement.previousElementSibling.style.display = "block";
+	el_webdav_url.parentElement.previousElementSibling.style.display = "block";
 
 	el_infomaniak_secret.value = "";
-	el_github_secret.value = "";
-	el_ftp_user.value = "";
-	el_ftp_password.value = "";
+	el_webdav_url.value = "";
+	el_webdav_user.value = "";
+	el_webdav_password.value = "";
 }
 
 function validateSettings(property, value) {
@@ -200,7 +199,7 @@ function createCampaignHtml(campaign_object) {
 
 // load all campaings and show first campaign in editor
 async function getCampaigns(first_load) {
-	var response = await invoke("get_campaigns");
+	var response = await t.invoke("get_campaigns");
 	var json = JSON.parse(response);
 
 	if (json.result != "success") {
@@ -236,7 +235,7 @@ async function getCampaign(id) {
 	}
 	else if (active_campaign == id) return false;
 	
-	var response = await invoke("get_campaign", {id:id});
+	var response = await t.invoke("get_campaign", {id:id});
 	var json = JSON.parse(response);
 
 	if (json.result == "success") {
@@ -268,7 +267,7 @@ async function saveCampaign(wants_sending) {
 	var campaign_status = 2;
 
 	if (active_campaign != 0) {
-		var response = await invoke("get_campaign", {id:active_campaign});
+		var response = await t.invoke("get_campaign", {id:active_campaign});
 		var json = JSON.parse(response);
 
 		if (json.result == "success") campaign_status = json.data.status.id; // 1 Sent, 2 Draft, 3 Programmed, 4 Sending in progress
@@ -295,7 +294,7 @@ async function saveCampaign(wants_sending) {
 
 	// create data string if a campaign is active
 	var html_content = quill.getSemanticHTML();
-	if (!html_content.includes('<a href="*|UNSUBSCRIBED|*"')) html_content += '<template><a href="*|UNSUBSCRIBED|*" target="_blank"></a></template>';
+	// if (!html_content.includes('<a href="*|UNSUBSCRIBED|*"')) html_content += '<template><a href="*|UNSUBSCRIBED|*" target="_blank"></a></template>';
 	var content = `<style>p {margin: 0;} * {font-size: ${standard_text_size}; font-family: ${standard_font}}</style>` + html_content.replaceAll('"', '\\"').replaceAll("<p></p>", "<br>");
 
 	var email_from_addr = settings.email_from_addr.split("@");
@@ -313,11 +312,11 @@ async function saveCampaign(wants_sending) {
 
 	// create new campaign if it doesnt exist or was already sent
 	if (active_campaign == 0 || campaign_status == 1) {
-		var response = await invoke("create_campaign", {data:data});
+		var response = await t.invoke("create_campaign", {data:data});
 		var json = JSON.parse(response);
 
 		if (json.result == "success") {
-			if (campaign_status == 1) deleteCampaign(active_campaign, false); // delete sent campaign
+			// if (campaign_status == 1) deleteCampaign(active_campaign, false); // delete sent campaign
 			active_campaign = json.data.id;
 			unsaved_campaign = false;
 
@@ -336,7 +335,7 @@ async function saveCampaign(wants_sending) {
 	else if (campaign_status != 2) openDialog("newsletter_programmed");
 	// update existing campaign draft
 	else {
-		var response = await invoke("update_campaign", {id:active_campaign, data:data});
+		var response = await t.invoke("update_campaign", {id:active_campaign, data:data});
 		var json = JSON.parse(response);
 
 		if (json.result == "success") {
@@ -363,7 +362,7 @@ async function sendCampaign(is_test) {
 			return false;
 		}
 
-		var response = await invoke("test_campaign", {id:active_campaign, data:`{"email":"${el_test_email.value}"}`});
+		var response = await t.invoke("test_campaign", {id:active_campaign, data:`{"email":"${el_test_email.value}"}`});
 		var json = JSON.parse(response);
 
 		if (json.result != "success") {
@@ -375,13 +374,13 @@ async function sendCampaign(is_test) {
 
 		if (el_test_email.value != settings.test_email) {
 			settings.test_email = el_test_email.value;
-			var had_error = await invoke("change_config", {data:JSON.stringify([{property:"test_email", value:el_test_email.value}])});
+			var had_error = await t.invoke("change_config", {data:JSON.stringify([{property:"test_email", value:el_test_email.value}])});
 			if (had_error != "false") openDialog("backend_error", had_error);
 		}
 	}
 	else {
 		// send campaign to mailinglist
-		var response = await invoke("send_campaign", {id:active_campaign});
+		var response = await t.invoke("send_campaign", {id:active_campaign});
 		var json = JSON.parse(response);
 
 		if (json.result == "success") {
@@ -422,7 +421,7 @@ async function deleteCampaign(id, user) {
 	else var user_action = "dialog_yes";
 
 	// prevent deleting of newsletter which is currently being sent (id 3 & 4)
-	var response = await invoke("get_campaign", {id:id});
+	var response = await t.invoke("get_campaign", {id:id});
 	var json = JSON.parse(response);
 
 	if (json.result == "success" && json.data.status.id >= 3) {
@@ -436,7 +435,7 @@ async function deleteCampaign(id, user) {
 
 	// delete campaign and select new from top
 	if (user_action == "dialog_yes") {
-		var response = await invoke("delete_campaign", {id:id});
+		var response = await t.invoke("delete_campaign", {id:id});
 		var json = JSON.parse(response);
 
 		if (json.result == "success") {
@@ -467,7 +466,7 @@ async function duplicateCampaign(id) {
 // #####################################################################################
 // load all mailinglist and add them to selection
 async function getMailinglists() {
-	var response = await invoke("get_mailinglists");
+	var response = await t.invoke("get_mailinglists");
 	var json = JSON.parse(response);
 
 	if (json.result == "success") {
@@ -483,20 +482,20 @@ async function getMailinglists() {
 }
 
 function openMailinglists() {
-	const webview = new window.__TAURI__.window.WebviewWindow("mailinglists", {
-		"title": "Manage Mailingslists",
-		"url": "mailinglists.html",
-		"width": 680,
-		"height": 380,
-		"minWidth": 600,
-		"minHeight": 280,
-		"maximizable": false,
-		"minimizable": false,
-		"skipTaskbar": true
+	var webview = new t.webviewWindow.WebviewWindow("mailinglists", {
+		title: "Manage Mailingslists",
+		url: "mailinglists.html",
+		width: 680,
+		height: 380,
+		minWidth: 600,
+		minHeight: 280,
+		maximizable: false,
+		minimizable: false,
+		skipTaskbar: true
 	});
 
 	webview.once('tauri://error', function (e) {
-		if (e.payload == "a window with label `mailinglists` already exists") {
+		if (e.payload == "a webview with label `mailinglists` already exists") {
 			webview.setFocus();
 		}
 	});

@@ -7,12 +7,13 @@
   ],
   "permissions": [
     "core:default",
-	"core:webview:allow-webview-show",
-	"core:webview:allow-webview-hide",
-	"core:window:allow-create",
+	"core:webview:allow-create-webview-window",
+	"core:window:allow-set-focus",
     "opener:default",
-    "clipboard-manager:default",
-    "fs:default",
+    "clipboard-manager:allow-read-image",
+	"clipboard-manager:allow-read-text",
+	"fs:allow-temp-write-recursive",
+	"fs:allow-temp-read-recursive",
     "dialog:default"
   ]
 }

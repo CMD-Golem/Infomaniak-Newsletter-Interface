@@ -184,7 +184,7 @@ function hideColorSelection() {
 
 // paste, copy, cut Text functions
 async function paste() {
-	var clipboard_text = await window.__TAURI__.clipboard.readText();
+	var clipboard_text = await t.clipboardManager.readText();
 
 	var range = quill.getSelection();
 	if (range) {
@@ -207,9 +207,6 @@ function copySelection(cut) {
 			quill.deleteText(range.index, range.length);
 		}
 	}
-	
-
-	
 }
 
 // change size and font dropdowns dynamically and format painter functions
@@ -344,13 +341,16 @@ body.addEventListener("click", (e) => {
 	context_menu.classList.remove("visible");
 	selection_menu.classList.remove("visible");
 
+	e.preventDefault();
+
 	if (e.target.nodeName == "A" && e.target.classList.contains("ql-preview")) {
 		var href = e.target.href;
+		console.log(e)
 		href = href.replace("https://tauri.localhost", "https:/").replace("http://127.0.0.1:1430", "http:/");
 
 		if (href == "http://*%7CUNSUBSCRIBED%7C*") return;
 
-		invoke("open_link", {url: href});
+		t.opener.openUrl(href);
 	}
 });
 
@@ -373,10 +373,10 @@ async function selectFile(insert_attachments) {
 
 	var index = quill.getSelection().index;
 
-	var files = await window.__TAURI__.dialog.open({
+	var files = await t.dialog.open({
 		multiple: true,
 		filters: [{
-			name: "Alle Dateien",
+			name: text_open_files,
 			extensions: filters
 		}]
 	});
@@ -459,7 +459,7 @@ async function createGithubUrl(data, type) {
 	}
 	else if (type == "data-url") {
 		var file_type = data.split(";")[0].split("/")[1];
-		var suggestion_name = "Neue Datei." + file_type;
+		var suggestion_name = text_suggest_name + file_type;
 		var temp_path = true;
 	}
 	else return false;
@@ -469,18 +469,21 @@ async function createGithubUrl(data, type) {
 	file_name = file_name.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9._-]/g, "");
 
 	// get release of campaign or create one if it doesnt exist
-	var get_response = await invoke("github_get", {id:active_campaign.toString(), tempPath:temp_path});
+	var get_response = await t.invoke("github_get", {id:active_campaign.toString(), tempPath:temp_path});
 	var release_return = JSON.parse(get_response);
 
 	if (release_return.status == "404") {
 		var release_data = `{"tag_name":"${active_campaign}","name":"${document.getElementById("subject").value || "New Campaign"}"}`
-		var create_response = await invoke("github_create", {data:release_data});
+		var create_response = await t.invoke("github_create", {data:release_data});
 		release_return = JSON.parse(create_response);
 	}
 
 	// create temp file from data-url
 	if (type == "data-url") {
-		var local_path = "com.cmd-golem.infomaniak-newsletter-interface/" + new Date().toISOString().replaceAll(":", ".") + "." + file_type;
+		if (!(await t.fs.exists("com.cmd-golem.infomaniak-newsletter-interface", { baseDir: t.fs.BaseDirectory.Temp}))) {
+			await t.fs.mkdir("com.cmd-golem.infomaniak-newsletter-interface", { baseDir: t.fs.BaseDirectory.Temp });
+		}
+		var local_path = "com.cmd-golem.infomaniak-newsletter-interface/" + file_name;
 
 		var url_index = data.indexOf(";base64,") + 8;
 		var base64 = data.substring(url_index);
@@ -488,10 +491,10 @@ async function createGithubUrl(data, type) {
 		var file_array = new Uint8Array(new ArrayBuffer(raw.length));
 
 		for (var i = 0; i < raw.length; i++) file_array[i] = raw.charCodeAt(i);
-		await window.__TAURI__.fs.writeBinaryFile(local_path, file_array, { dir: window.__TAURI__.fs.BaseDirectory.Temp });
+		await t.fs.writeFile(local_path, file_array, { baseDir: t.fs.BaseDirectory.Temp });
 	}
 
-	var upload_response = await invoke("github_upload_file", {id:release_return.id.toString(), filePath:local_path, tempPath:temp_path, fileName:file_name}) || '{"errors":"An unknown error occured"}';
+	var upload_response = await t.invoke("github_upload_file", {id:release_return.id.toString(), filePath:local_path, tempPath:temp_path, fileName:file_name}) || '{"errors":"An unknown error occured"}';
 	console.log(upload_response)
 	var file_data = JSON.parse(upload_response);
 
@@ -503,97 +506,16 @@ async function createGithubUrl(data, type) {
 }
 
 async function deleteGithubUrl() {
-	var response = await invoke("github_get", {id:active_campaign.toString(), tempPath:false});
+	var response = await t.invoke("github_get", {id:active_campaign.toString(), tempPath:false});
 	var release = JSON.parse(response);
 
 	if (release.status == "404") return;
 	else if (release.assets.length == 1) {
-		var delete_response = invoke("github_delete", {release:release.id, tag:release.tag_name});
+		var delete_response = t.invoke("github_delete", {release:release.id, tag:release.tag_name});
 		console.log(delete_response);
 	}
 	else {
 		// handle individual files
 		// https://docs.github.com/de/rest/releases/assets?apiVersion=2022-11-28#upload-a-release-asset--parameters
 	} 
-}
-
-// unused uploadAttachment()
-async function uploadAttachment(data, type, embedable) {
-	// get file from path and size
-	if (type == "path") {
-		var file_array = await window.__TAURI__.fs.readBinaryFile(data);
-		var file_size = file_array.length / 1_048_576;
-		var file_type = data.split(".").pop();
-		var suggestion_name = data.split("\\").pop();
-	}
-	else if (type == "data-url") {
-		var file_size = Math.round(data.length * 3 / 4);
-		var file_type = data.split(";")[0].split("/")[1];
-		var suggestion_name = "Neue Datei." + file_type;
-	}
-	else return false;
-
-	var under_size_limit = true; // file_size + current_size <= max_size;
-	
-	// ask wheter to embed or upload img
-	if (under_size_limit && embedable && settings.secrets[1] == true) var user_action = await openDialog("embed");
-	// embed img when upload credentials arent defined 
-	if (under_size_limit && embedable && settings.secrets[1] != true) var user_action = "dialog_yes";
-	// upload file when campaign size limit is reached or file isnt embedable
-	else if ((!under_size_limit || !embedable) && settings.secrets[1] == true) var user_action = "dialog_no";
-	else {
-		openDialog("no_file_upload_auth");
-		return false;
-	}
-	
-	// return embedable data-url
-	if (user_action == "dialog_yes") {
-		if (type == "data-url") return data;
-		else if (type == "path") return URL.createObjectURL(file_array);
-	}
-	// upload file and return url
-	else if (user_action == "dialog_no") {
-		// ask for file name
-		var file_name = await openEnter(suggestion_name);
-		if (file_name == false) return false;
-
-		// get release of campaign or create one if it doesnt exist
-		var get_response = await invoke("github_get", {id:active_campaign.toString()});
-		var release_return = JSON.parse(get_response);
-
-		if (release_return.status == "404") {
-			var release_data = `{"tag_name":"${active_campaign}","name":"${document.getElementById("subject").value || "New Campaign"}"}`
-			var create_response = await invoke("github_create", {data:release_data});
-			release_return = JSON.parse(create_response);
-		}
-
-		// create temp file from data-url
-		if (type == "data-url") {
-			var local_path = "/com.cmd-golem.infomaniak-newsletter-interface/" + new Date().toISOString();
-
-			var url_index = data.indexOf(";base64,") + 8;
-			var base64 = data.substring(url_index);
-			var raw = window.atob(base64);
-			var file_array = new Uint8Array(new ArrayBuffer(raw.length));
-
-			for (var i = 0; i < raw.length; i++) {
-				file_array[i] = raw.charCodeAt(i);
-			}
-
-			var write_response = await window.__TAURI__.fs.writeBinaryFile(local_path, file_array, { dir: BaseDirectory.Temp });
-		}
-		else var local_path = data;
-
-		var upload_response = await invoke("github_upload_file", {id:release_return.id.toString(), filePath:local_path, fileName:file_name});
-		var file_data = JSON.parse(upload_response);
-
-		console.log(upload_response);
-
-		if (file_data.browser_download_url != undefined) return file_data.browser_download_url;
-		else {
-			openDialog("backend_error", JSON.parse(file_data.errors));
-			return false;
-		}
-	}
-	else return false;
 }
