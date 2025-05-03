@@ -1,6 +1,7 @@
 use tauri::{Manager, WindowEvent::Destroyed};
 use std::{fs, env};
 
+mod storage;
 mod infomaniak;
 mod webdav;
 
@@ -8,7 +9,9 @@ mod webdav;
 pub fn run() {
 	tauri::Builder::default()
 		.invoke_handler(tauri::generate_handler![
-			infomaniak::get_campaigns
+			infomaniak::get_campaigns,
+			storage::change_config,
+			storage::get_config
 			])
 		.plugin(tauri_plugin_window_state::Builder::new().build())
 		.plugin(tauri_plugin_updater::Builder::new().build())
@@ -16,17 +19,6 @@ pub fn run() {
 		.plugin(tauri_plugin_fs::init())
 		.plugin(tauri_plugin_clipboard_manager::init())
 		.plugin(tauri_plugin_opener::init())
-		.setup(|app| {
-			// set stronghold up
-			let salt_path = app
-				.path()
-				.app_local_data_dir()
-				.expect("could not resolve app local data path")
-				.join("salt.txt");
-			app.handle()
-				.plugin(tauri_plugin_stronghold::Builder::with_argon2(&salt_path).build())?;
-			Ok(())
-		})
 		.setup(|app| {
 			// clear temp folder
 			let window = app.get_webview_window("main").unwrap();
