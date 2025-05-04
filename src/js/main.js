@@ -1,4 +1,5 @@
 const t = window.__TAURI__;
+const invoke = window.__TAURI__.core.invoke;
 var active_error_dialog, tooltip_timeout;
 var dialog = document.querySelector("dialog");
 var tooltip = document.querySelector("tooltip");

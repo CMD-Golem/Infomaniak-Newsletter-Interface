@@ -63,7 +63,7 @@ impl Config {
 		let config_content = serde_json::to_string_pretty(self)?;
 		let encrypted_content = Config::encrypt(&config_content);
 		let mut file = fs::File::create(Config::path())?;
-        file.write_all(encrypted_content.as_bytes())?;
+		file.write_all(encrypted_content.as_bytes())?;
 		Ok(())
 	}
 
@@ -73,7 +73,7 @@ impl Config {
 	}
 
 	fn encrypt(string: &str) -> String {
-		// I know that this is shit but I had no time to learn iota stronghold
+		// I know that this is shit but I had no time to implement iota stronghold
 		let key: &str = "bV8n@EZO0d*[N-FeMI`J]/W7LrQLbP}>yS(ZdQ%4[GV[5<Rv644T.FQ^c!bU`D{B/nE@>nCh5*ZKTlh*?7b1[Oe(*a]%&+*6v)>6:WSa/.5]xrrf!SCv(YNN?nfjE<Vi";
 		return string
 			.chars()
@@ -106,11 +106,9 @@ pub fn change_config(data: &str) -> String {
 		}
 	}
 
-	CONFIG.lock().unwrap();
-
 	match config.store() {
-		Ok(_) => {"success".to_string()}
-		Err(err) => {err.to_string()}
+		Ok(_) => "success".to_string(),
+		Err(err) => err.to_string()
 	}
 }
 

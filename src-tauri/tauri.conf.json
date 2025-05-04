@@ -14,9 +14,9 @@
 				"url": "index.html",
 				"label": "main",
 				"width": 1100,
-				"height": 700,
+				"height": 750,
 				"minWidth": 980,
-				"minHeight": 690,
+				"minHeight": 720,
 				"resizable": true
 			}
 		],

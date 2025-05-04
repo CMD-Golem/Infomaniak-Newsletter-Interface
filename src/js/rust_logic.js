@@ -1,7 +1,7 @@
 var unsaved_campaign = false;
 var active_campaign = null;
-var defined_secrets;
 var settings = {test_email:undefined};
+const settings_array = ["infomaniak_domain", "webdav_url", "webdav_username", "sender_name", "sender_email", "lang", "unsubscribe", "file_text"]
 
 
 // initalize and load everything after document loaded
@@ -10,36 +10,26 @@ var el_test_email = document.getElementById("test_email");
 var newsletter_group = document.getElementById("newsletter_group");
 var subject = document.getElementById("subject");
 var el_infomaniak_secret = document.getElementById("infomaniak_secret");
-var el_webdav_url = document.getElementById("webdav_url");
-var el_webdav_user = document.getElementById("webdav_user");
 var el_webdav_password = document.getElementById("webdav_password");
 
 quill.on('text-change', () => { unsaved_campaign = true });
-
 
 window.onload = async () => {
 	// async function noStart() {
 	quill.focus();
 
-	if (t.invoke == undefined) return;
+	if (invoke == undefined) return;
 
-	var response = await t.invoke("init_config", {init:true});
-	var json = JSON.parse(response);
+	var response = await invoke("get_config");
+	json = JSON.parse(response);
 
-	if (json.result != "success") {
-		openDialog("backend_error", json.error);
-	}
-	else if (
+	if (
 		json.infomaniak_secret == true &&
-		json.newsletter.email_from_name != "" &&
-		json.newsletter.lang != "" &&
-		json.newsletter.email_from_addr != "" &&
-		json.newsletter.unsubscribe != "" &&
-		json.newsletter.link_text != ""
+		json.sender_name != "" &&
+		json.sender_email != ""
 	) {
-		settings = json.newsletter;
+		settings.stored = json;
 		el_test_email.value = settings.test_email ?? "";
-		settings.secrets = [json.infomaniak_secret, json.webdav_url, json.webdav_user, json.webdav_password];
 
 		getMailinglists();
 		initEditor();
@@ -49,10 +39,8 @@ window.onload = async () => {
 	else {
 		openSettings(json, true);
 	}
-}
 
-if (t.invoke != undefined) {
-	t.event.listen("changed_mailinglists", async (e) => {
+	t.event.listen("changed_mailinglists", async () => {
 		var set_value = newsletter_group.value;
 		await getMailinglists();
 		newsletter_group.value = set_value;
@@ -60,10 +48,8 @@ if (t.invoke != undefined) {
 }
 
 async function getCredits() {
-	var response = await t.invoke("get_credits");
-	var json = JSON.parse(response);
-	if (json.result == "success") document.getElementById("credits").innerHTML = json.data.credits;
-	else openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+	var response = await invoke("get_credits");
+	document.getElementById("credits").innerHTML = response;
 }
 
 function initEditor() {
@@ -84,25 +70,15 @@ async function openSettings(json, disable_cancel) {
 	document.querySelector("settings").style.display = "block";
 
 	if (json == undefined) {
-		var response = await t.invoke("init_config", {init:false});
+		var response = await invoke("get_config");
 		json = JSON.parse(response);
-
-		if (json.result == "error") {
-			openDialog("backend_error", json.error);
-			return;
-		}
 	}
 
 	if (disable_cancel) document.getElementById("settings_cancel").disabled = true;
 
-	settings.secrets = [json.infomaniak_secret, json.webdav_url, json.webdav_user, json.webdav_password];
-
 	// show current settings on page
-	document.getElementById("email_from_name").value = json.newsletter.email_from_name;
-	document.getElementById("lang").value = json.newsletter.lang;
-	document.getElementById("email_from_addr").value = json.newsletter.email_from_addr;
-	document.getElementById("unsubscribe").value = json.newsletter.unsubscribe;
-	document.getElementById("link_text").value = json.newsletter.link_text;
+	for (setting in settings_array) document.getElementById(setting).value = json[setting] || "";
+	document.getElementById("webdav_url").value = json.webdav_url || "de_DE";
 }
 
 async function saveSettings(action) {
@@ -115,9 +91,8 @@ async function saveSettings(action) {
 	// check if settings are defined
 	if (
 		email_from_name == "" ||
-		lang == "" ||
 		email_from_addr == "" ||
-		(el_infomaniak_secret.value == "" && !settings.secrets[0])
+		(el_infomaniak_secret.value == "" && !settings.stored.infomaniak_secret)
 	) {
 		openDialog("undefined_settings");
 		return;
@@ -139,7 +114,7 @@ async function saveSettings(action) {
 		if (el_webdav_user.value != "") new_settings.push({property:"webdav_user", value:el_webdav_user.value});
 		if (el_webdav_password.value != "") new_settings.push({property:"webdav_password", value:el_webdav_password.value});
 
-		if (new_settings.length != 0) var had_error = await t.invoke("change_config", {data:JSON.stringify(new_settings)});
+		if (new_settings.length != 0) var had_error = await invoke("change_config", {data:JSON.stringify(new_settings)});
 
 		if (had_error != "false") {
 			openDialog("backend_error", had_error);
@@ -174,8 +149,8 @@ function closeSettings(action) {
 }
 
 function validateSettings(property, value) {
-	if (settings[property] != value && value != "") {
-		settings[property] = value;
+	if (settings.stored[property] != value && value != "") {
+		settings.stored[property] = value;
 		return {property:property, value:value};
 	}
 	else return undefined;
@@ -199,7 +174,7 @@ function createCampaignHtml(campaign_object) {
 
 // load all campaings and show first campaign in editor
 async function getCampaigns(first_load) {
-	var response = await t.invoke("get_campaigns");
+	var response = await invoke("get_campaigns");
 	var json = JSON.parse(response);
 
 	if (json.result != "success") {
@@ -235,7 +210,7 @@ async function getCampaign(id) {
 	}
 	else if (active_campaign == id) return false;
 	
-	var response = await t.invoke("get_campaign", {id:id});
+	var response = await invoke("get_campaign", {id:id});
 	var json = JSON.parse(response);
 
 	if (json.result == "success") {
@@ -267,7 +242,7 @@ async function saveCampaign(wants_sending) {
 	var campaign_status = 2;
 
 	if (active_campaign != 0) {
-		var response = await t.invoke("get_campaign", {id:active_campaign});
+		var response = await invoke("get_campaign", {id:active_campaign});
 		var json = JSON.parse(response);
 
 		if (json.result == "success") campaign_status = json.data.status.id; // 1 Sent, 2 Draft, 3 Programmed, 4 Sending in progress
@@ -312,7 +287,7 @@ async function saveCampaign(wants_sending) {
 
 	// create new campaign if it doesnt exist or was already sent
 	if (active_campaign == 0 || campaign_status == 1) {
-		var response = await t.invoke("create_campaign", {data:data});
+		var response = await invoke("create_campaign", {data:data});
 		var json = JSON.parse(response);
 
 		if (json.result == "success") {
@@ -335,7 +310,7 @@ async function saveCampaign(wants_sending) {
 	else if (campaign_status != 2) openDialog("newsletter_programmed");
 	// update existing campaign draft
 	else {
-		var response = await t.invoke("update_campaign", {id:active_campaign, data:data});
+		var response = await invoke("update_campaign", {id:active_campaign, data:data});
 		var json = JSON.parse(response);
 
 		if (json.result == "success") {
@@ -362,7 +337,7 @@ async function sendCampaign(is_test) {
 			return false;
 		}
 
-		var response = await t.invoke("test_campaign", {id:active_campaign, data:`{"email":"${el_test_email.value}"}`});
+		var response = await invoke("test_campaign", {id:active_campaign, data:`{"email":"${el_test_email.value}"}`});
 		var json = JSON.parse(response);
 
 		if (json.result != "success") {
@@ -374,13 +349,13 @@ async function sendCampaign(is_test) {
 
 		if (el_test_email.value != settings.test_email) {
 			settings.test_email = el_test_email.value;
-			var had_error = await t.invoke("change_config", {data:JSON.stringify([{property:"test_email", value:el_test_email.value}])});
+			var had_error = await invoke("change_config", {data:JSON.stringify([{property:"test_email", value:el_test_email.value}])});
 			if (had_error != "false") openDialog("backend_error", had_error);
 		}
 	}
 	else {
 		// send campaign to mailinglist
-		var response = await t.invoke("send_campaign", {id:active_campaign});
+		var response = await invoke("send_campaign", {id:active_campaign});
 		var json = JSON.parse(response);
 
 		if (json.result == "success") {
@@ -421,7 +396,7 @@ async function deleteCampaign(id, user) {
 	else var user_action = "dialog_yes";
 
 	// prevent deleting of newsletter which is currently being sent (id 3 & 4)
-	var response = await t.invoke("get_campaign", {id:id});
+	var response = await invoke("get_campaign", {id:id});
 	var json = JSON.parse(response);
 
 	if (json.result == "success" && json.data.status.id >= 3) {
@@ -435,7 +410,7 @@ async function deleteCampaign(id, user) {
 
 	// delete campaign and select new from top
 	if (user_action == "dialog_yes") {
-		var response = await t.invoke("delete_campaign", {id:id});
+		var response = await invoke("delete_campaign", {id:id});
 		var json = JSON.parse(response);
 
 		if (json.result == "success") {
@@ -466,7 +441,7 @@ async function duplicateCampaign(id) {
 // #####################################################################################
 // load all mailinglist and add them to selection
 async function getMailinglists() {
-	var response = await t.invoke("get_mailinglists");
+	var response = await invoke("get_mailinglists");
 	var json = JSON.parse(response);
 
 	if (json.result == "success") {

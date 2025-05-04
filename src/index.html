@@ -202,27 +202,36 @@
 	<settings style="display: none;">
 		<dialogbox>
 			<p>Einstellungen</p>
-			<label>Name vom Absender</label>
+			<label>Name vom Absender*</label>
 			<input autocomplete="one-time-code" type="text" placeholder="Infomaniak Newsletter" id="email_from_name">
 			<label>Sprache vom Newsletter</label>
-			<input autocomplete="one-time-code" type="text" placeholder="de_DE" id="lang">
-			<label onmouseenter="showTooltip(this, 1, 'Email muss mit Newsletter Domain übereinstimmen')">Email vom Absender<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 1.999c5.524 0 10.002 4.478 10.002 10.002 0 5.523-4.478 10.001-10.002 10.001-5.524 0-10.002-4.478-10.002-10.001C1.998 6.477 6.476 1.999 12 1.999Zm0 1.5a8.502 8.502 0 1 0 0 17.003A8.502 8.502 0 0 0 12 3.5Zm-.004 7a.75.75 0 0 1 .744.648l.007.102.003 5.502a.75.75 0 0 1-1.493.102l-.007-.101-.003-5.502a.75.75 0 0 1 .75-.75ZM12 7.003a.999.999 0 1 1 0 1.997.999.999 0 0 1 0-1.997Z"/></svg></label>
+			<select autocomplete="one-time-code" type="text" id="lang">
+				<option value="de_DE" selected>de_DE</option>
+				<option value="en_GB">en_GB</option>
+				<option value="es_ES">es_ES</option>
+				<option value="fr_FR">fr_FR</option>
+				<option value="it_IT">it_IT</option>
+			</select>
+			<label onmouseenter="showTooltip(this, 1, 'Email muss mit Newsletter Domain übereinstimmen')">Email vom Absender*<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 1.999c5.524 0 10.002 4.478 10.002 10.002 0 5.523-4.478 10.001-10.002 10.001-5.524 0-10.002-4.478-10.002-10.001C1.998 6.477 6.476 1.999 12 1.999Zm0 1.5a8.502 8.502 0 1 0 0 17.003A8.502 8.502 0 0 0 12 3.5Zm-.004 7a.75.75 0 0 1 .744.648l.007.102.003 5.502a.75.75 0 0 1-1.493.102l-.007-.101-.003-5.502a.75.75 0 0 1 .75-.75ZM12 7.003a.999.999 0 1 1 0 1.997.999.999 0 0 1 0-1.997Z"/></svg></label>
 			<input autocomplete="one-time-code" type="text" placeholder="info@domain.com" id="email_from_addr">
 			<label onmouseenter="showTooltip(this, 1, 'Wenn nicht leer: Text wird immer am Ende des Newsletter angezeigt')">Abmeldelink Text<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 1.999c5.524 0 10.002 4.478 10.002 10.002 0 5.523-4.478 10.001-10.002 10.001-5.524 0-10.002-4.478-10.002-10.001C1.998 6.477 6.476 1.999 12 1.999Zm0 1.5a8.502 8.502 0 1 0 0 17.003A8.502 8.502 0 0 0 12 3.5Zm-.004 7a.75.75 0 0 1 .744.648l.007.102.003 5.502a.75.75 0 0 1-1.493.102l-.007-.101-.003-5.502a.75.75 0 0 1 .75-.75ZM12 7.003a.999.999 0 1 1 0 1.997.999.999 0 0 1 0-1.997Z"/></svg></label>
 			<input autocomplete="one-time-code" type="text" placeholder="Unsubscribe" id="unsubscribe">
 			<label onmouseenter="showTooltip(this, 1, 'Anzeigetext für eingefügte Dateilinks<br>${file_name} wird mit dem Dateinamen ersetzt')">Link-Anzeigetext<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 1.999c5.524 0 10.002 4.478 10.002 10.002 0 5.523-4.478 10.001-10.002 10.001-5.524 0-10.002-4.478-10.002-10.001C1.998 6.477 6.476 1.999 12 1.999Zm0 1.5a8.502 8.502 0 1 0 0 17.003A8.502 8.502 0 0 0 12 3.5Zm-.004 7a.75.75 0 0 1 .744.648l.007.102.003 5.502a.75.75 0 0 1-1.493.102l-.007-.101-.003-5.502a.75.75 0 0 1 .75-.75ZM12 7.003a.999.999 0 1 1 0 1.997.999.999 0 0 1 0-1.997Z"/></svg></label>
 			<input autocomplete="one-time-code" type="text" placeholder="Öffne ${file_name}" id="link_text">
 
-			<p>API Keys</p>
-			<label>API Key vom Infomaniak Newsletter<br><small>(Unter <span onclick="t.opener.openUrl('https://manager.infomaniak.com/v3/ng/profile/user/token/add')" class="link">diesem Link</span> mit Scope Newsletter erstellen.)</small></label>
-			<button class="settings_show" onclick="this.nextElementSibling.style.display = 'block'; this.style.display = 'none';">Überschreiben</button>
+			<p>Logins</p>
+			<label onmouseenter="showTooltip(this, 1, 'Auffindbar in der URL: https://newsletter.infomaniak.com/v3/DOMAIN_ID/dashboard')">Infomaniak Newsletter*<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 1.999c5.524 0 10.002 4.478 10.002 10.002 0 5.523-4.478 10.001-10.002 10.001-5.524 0-10.002-4.478-10.002-10.001C1.998 6.477 6.476 1.999 12 1.999Zm0 1.5a8.502 8.502 0 1 0 0 17.003A8.502 8.502 0 0 0 12 3.5Zm-.004 7a.75.75 0 0 1 .744.648l.007.102.003 5.502a.75.75 0 0 1-1.493.102l-.007-.101-.003-5.502a.75.75 0 0 1 .75-.75ZM12 7.003a.999.999 0 1 1 0 1.997.999.999 0 0 1 0-1.997Z"/></svg></label>
+			<input autocomplete="one-time-code" type="text" placeholder="Domain ID" id="infomaniak_domain">
+			<small>(Der API Key kann unter <span onclick="t.opener.openUrl('https://manager.infomaniak.com/v3/ng/profile/user/token/add')" class="link">diesem Link</span> mit Scope Newsletter erstellen.)</small>
+			<button class="settings_show" onclick="this.nextElementSibling.style.display = 'block'; this.style.display = 'none';">API Key überschreiben</button>
 			<input autocomplete="one-time-code" type="text" placeholder="TOKEN" id="infomaniak_secret" style="display: none;">
+			
 			<label>WebDav Server</label>
-			<button class="settings_show" onclick="this.nextElementSibling.style.display = 'block'; this.style.display = 'none';">Überschreiben</button>
+			<input autocomplete="one-time-code" type="text" placeholder="URL" id="webdav_url">
+			<input autocomplete="one-time-code" type="text" placeholder="Nutzername" id="webdav_username">
+			<button class="settings_show" onclick="this.nextElementSibling.style.display = 'block'; this.style.display = 'none';">Passwort überschreiben</button>
 			<div style="display: none;">
-				<input autocomplete="one-time-code" type="text" placeholder="url" id="webdav_url">
-				<input autocomplete="one-time-code" type="text" placeholder="username" id="webdav_user">
-				<input autocomplete="one-time-code" type="text" placeholder="password" id="webdav_password">
+				<input autocomplete="one-time-code" type="text" placeholder="Passwort" id="webdav_password">
 			</div>
 			<buttonbox>
 				<button onclick="saveSettings('ok');">OK</button>

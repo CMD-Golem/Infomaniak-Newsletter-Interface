@@ -469,12 +469,12 @@ async function createGithubUrl(data, type) {
 	file_name = file_name.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9._-]/g, "");
 
 	// get release of campaign or create one if it doesnt exist
-	var get_response = await t.invoke("github_get", {id:active_campaign.toString(), tempPath:temp_path});
+	var get_response = await invoke("github_get", {id:active_campaign.toString(), tempPath:temp_path});
 	var release_return = JSON.parse(get_response);
 
 	if (release_return.status == "404") {
 		var release_data = `{"tag_name":"${active_campaign}","name":"${document.getElementById("subject").value || "New Campaign"}"}`
-		var create_response = await t.invoke("github_create", {data:release_data});
+		var create_response = await invoke("github_create", {data:release_data});
 		release_return = JSON.parse(create_response);
 	}
 
@@ -494,7 +494,7 @@ async function createGithubUrl(data, type) {
 		await t.fs.writeFile(local_path, file_array, { baseDir: t.fs.BaseDirectory.Temp });
 	}
 
-	var upload_response = await t.invoke("github_upload_file", {id:release_return.id.toString(), filePath:local_path, tempPath:temp_path, fileName:file_name}) || '{"errors":"An unknown error occured"}';
+	var upload_response = await invoke("github_upload_file", {id:release_return.id.toString(), filePath:local_path, tempPath:temp_path, fileName:file_name}) || '{"errors":"An unknown error occured"}';
 	console.log(upload_response)
 	var file_data = JSON.parse(upload_response);
 
@@ -506,12 +506,12 @@ async function createGithubUrl(data, type) {
 }
 
 async function deleteGithubUrl() {
-	var response = await t.invoke("github_get", {id:active_campaign.toString(), tempPath:false});
+	var response = await invoke("github_get", {id:active_campaign.toString(), tempPath:false});
 	var release = JSON.parse(response);
 
 	if (release.status == "404") return;
 	else if (release.assets.length == 1) {
-		var delete_response = t.invoke("github_delete", {release:release.id, tag:release.tag_name});
+		var delete_response = invoke("github_delete", {release:release.id, tag:release.tag_name});
 		console.log(delete_response);
 	}
 	else {
