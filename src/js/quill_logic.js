@@ -367,6 +367,7 @@ function openLink() {
 // #####################################################################################
 // Attachments
 var attachments = document.querySelector("attachments");
+
 async function selectFile(insert_attachments) {
 	if (insert_attachments) var filters = ["avif", "bmp", "gif", "jfif", "jpeg", "jpg", "png", "svg", "tiff", "webp"];
 	else var filters = ["*"];
@@ -518,4 +519,17 @@ async function deleteGithubUrl() {
 		// handle individual files
 		// https://docs.github.com/de/rest/releases/assets?apiVersion=2022-11-28#upload-a-release-asset--parameters
 	} 
+}
+
+
+
+async function deleteAttachment(el, path) {
+	var user_action = await openDialog("delete_attachment");
+	if (user_action == "dialog_cancel") return false;
+
+	var response = await invoke("delete", {path:path});
+	console.log("Response from deleting attachment");
+	console.log(response)
+
+	el.remove();
 }

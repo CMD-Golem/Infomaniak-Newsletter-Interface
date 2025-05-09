@@ -1,6 +1,5 @@
 use std::{
-	process::Command,
-	os::windows::process::CommandExt
+	os::windows::process::CommandExt, process::Command
 };
 use serde_json::{self, Value};
 
@@ -34,7 +33,12 @@ pub fn get_campaigns() -> String {
 
 #[tauri::command]
 pub fn get_campaign(id: i32) -> String {
-	curl("GET", &format!("campaigns/{}", id), "").into()
+	curl("GET", &format!("campaigns/{}?with=recipients", id), "").into()
+}
+
+#[tauri::command]
+pub fn get_campaign_content(id: i32) -> String {
+	curl("GET", &format!("campaigns/{}?with=content", id), "").into()
 }
 
 #[tauri::command]

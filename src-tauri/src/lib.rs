@@ -13,6 +13,7 @@ pub fn run() {
 			storage::get_config,
 			infomaniak::get_campaigns,
 			infomaniak::get_campaign,
+			infomaniak::get_campaign_content,
 			infomaniak::create_campaign,
 			infomaniak::update_campaign,
 			infomaniak::delete_campaign,

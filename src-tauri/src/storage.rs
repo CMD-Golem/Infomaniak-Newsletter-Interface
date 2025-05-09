@@ -19,7 +19,8 @@ pub struct Config {
 	sender_email: String,
 	lang: String,
 	unsubscribe: String,
-	file_text: String
+	file_text: String,
+	test_email: String
 }
 
 #[derive(Debug, Deserialize)]
@@ -38,9 +39,10 @@ impl Config {
 			webdav_password: String::new(),
 			sender_name: String::new(),
 			sender_email: String::new(),
-			lang: String::new(),
+			lang: "de_DE".to_string(),
 			unsubscribe: String::new(),
-			file_text: String::new()
+			file_text: String::new(),
+			test_email: String::new()
 		}
 	}
 
@@ -68,8 +70,8 @@ impl Config {
 	}
 
 	fn path() -> PathBuf {
-		let local_app_data = env::var("LOCALAPPDATA").expect("Could find local appdata folder");
-		return PathBuf::from(format!("{}com.cmd-golem.infomaniak-newsletter-interface/config.dat", local_app_data));
+		let path = env::var("APPDATA").expect("Could find folder");
+		return PathBuf::from(format!("{}com.cmd-golem.infomaniak-newsletter-interface/config.dat", path));
 	}
 
 	fn encrypt(string: &str) -> String {
@@ -102,6 +104,7 @@ pub fn change_config(data: &str) -> String {
 			"lang" => config.lang = update.value,
 			"unsubscribe" => config.unsubscribe = update.value,
 			"file_text" => config.file_text = update.value,
+			"test_email" => config.test_email = update.value,
 			_ => (),
 		}
 	}

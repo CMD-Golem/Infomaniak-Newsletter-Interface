@@ -1,6 +1,7 @@
 var unsaved_campaign = false;
 var active_campaign = null;
-var settings = {test_email:undefined};
+var active_tab = "show_draft";
+var settings = undefined;
 const settings_array = ["infomaniak_domain", "webdav_url", "webdav_username", "sender_name", "sender_email", "lang", "unsubscribe", "file_text"]
 
 
@@ -23,17 +24,17 @@ window.onload = async () => {
 	var response = await invoke("get_config");
 	json = JSON.parse(response);
 
+	settings = json;
+	el_test_email.value = settings.test_email;
+
 	if (
-		json.infomaniak_secret == true &&
+		json.infomaniak_secret == "true" &&
 		json.sender_name != "" &&
 		json.sender_email != ""
 	) {
-		settings.stored = json;
-		el_test_email.value = settings.test_email ?? "";
-
 		getMailinglists();
 		initEditor();
-		getCampaigns(true);
+		getCampaigns(true, true);
 		getCredits();
 	}
 	else {
@@ -52,8 +53,21 @@ async function getCredits() {
 	document.getElementById("credits").innerHTML = response;
 }
 
+function changeTab(tab) {
+	if (tab == "show_draft") getCampaigns(true, false);
+	else getCampaigns(false, false);
+
+	document.querySelector(".active_tab").classList.remove("active_tab");
+	document.getElementById(tab).classList.add("active_tab");
+}
+
 function initEditor() {
 	var unsubscribe = settings.unsubscribe.replaceAll("\\n", "\n");
+	editor_el.firstChild.innerHTML = "";
+	subject.value = "";
+	newsletter_group.value = "";
+	attachments.innerHTML = "";
+	active_campaign = 0;
 
 	if (unsubscribe != "") {
 		quill.insertText(0, unsubscribe, {
@@ -77,47 +91,33 @@ async function openSettings(json, disable_cancel) {
 	if (disable_cancel) document.getElementById("settings_cancel").disabled = true;
 
 	// show current settings on page
-	for (setting in settings_array) document.getElementById(setting).value = json[setting] || "";
-	document.getElementById("webdav_url").value = json.webdav_url || "de_DE";
+	for (var i = 0; i < settings_array.length; i++) document.getElementById(settings_array[i]).value = json[settings_array[i]];
 }
 
 async function saveSettings(action) {
-	var email_from_name = document.getElementById("email_from_name").value;
-	var lang = document.getElementById("lang").value;
-	var email_from_addr = document.getElementById("email_from_addr").value;
-	var unsubscribe = document.getElementById("unsubscribe").value;
-	var link_text = document.getElementById("link_text").value;
-
 	// check if settings are defined
 	if (
-		email_from_name == "" ||
-		email_from_addr == "" ||
-		(el_infomaniak_secret.value == "" && !settings.stored.infomaniak_secret)
+		document.getElementById("sender_name").value == "" ||
+		document.getElementById("sender_email").value == "" ||
+		(el_infomaniak_secret.value == "" && settings.infomaniak_secret == "false")
 	) {
 		openDialog("undefined_settings");
 		return;
 	}
 
-
 	// save settings
 	else if (action != "cancel") {
-		var new_settings = [], setting;
+		var new_settings = [];
 
-		(setting = validateSettings("email_from_name", email_from_name)) != undefined && new_settings.push(setting);
-		(setting = validateSettings("lang", lang)) != undefined && new_settings.push(setting);
-		(setting = validateSettings("email_from_addr", email_from_addr)) != undefined && new_settings.push(setting);
-		(setting = validateSettings("unsubscribe", unsubscribe)) != undefined && new_settings.push(setting);
-		(setting = validateSettings("link_text", link_text)) != undefined && new_settings.push(setting);
+		for (var i = 0; i < settings_array.length; i++) validateSettings(settings_array[i], new_settings);
 
 		if (el_infomaniak_secret.value != "") new_settings.push({property:"infomaniak_secret", value:el_infomaniak_secret.value});
-		if (el_webdav_url.value != "") new_settings.push({property:"webdav_url", value:el_webdav_url.value});
-		if (el_webdav_user.value != "") new_settings.push({property:"webdav_user", value:el_webdav_user.value});
 		if (el_webdav_password.value != "") new_settings.push({property:"webdav_password", value:el_webdav_password.value});
 
-		if (new_settings.length != 0) var had_error = await invoke("change_config", {data:JSON.stringify(new_settings)});
+		if (new_settings.length != 0) var response = await invoke("change_config", {data:JSON.stringify(new_settings)});
 
-		if (had_error != "false") {
-			openDialog("backend_error", had_error);
+		if (response != "success") {
+			openDialog("backend_error", response);
 			return;
 		}
 	}
@@ -126,9 +126,18 @@ async function saveSettings(action) {
 	document.getElementById("settings_cancel").disabled = false;
 	// reload backend if infomaniak_secret changed
 	if (el_infomaniak_secret.value != "") {
-		getCampaigns(true);
+		getCampaigns(undefined, true);
 		getCredits();
 		getMailinglists();
+	}
+}
+
+function validateSettings(property, new_settings) {
+	var value = document.getElementById(property).value;
+
+	if (settings[property] != value && value != "") {
+		settings[property] = value;
+		new_settings.push({property:property, value:value});
 	}
 }
 
@@ -137,34 +146,31 @@ function closeSettings(action) {
 
 	document.querySelector("settings").style.display = "none";
 	el_infomaniak_secret.style.display = "none";
-	el_webdav_url.parentElement.style.display = "none";
+	el_webdav_password.style.display = "none";
 
 	el_infomaniak_secret.previousElementSibling.style.display = "block";
-	el_webdav_url.parentElement.previousElementSibling.style.display = "block";
+	el_webdav_password.previousElementSibling.style.display = "block";
 
 	el_infomaniak_secret.value = "";
-	el_webdav_url.value = "";
-	el_webdav_user.value = "";
 	el_webdav_password.value = "";
-}
-
-function validateSettings(property, value) {
-	if (settings.stored[property] != value && value != "") {
-		settings.stored[property] = value;
-		return {property:property, value:value};
-	}
-	else return undefined;
 }
 
 // #####################################################################################
 function createCampaignHtml(campaign_object) {
+	for (var i = 0; i < campaign_states.length; i++) {
+		if (campaign_states[i].status == campaign_object.status) {
+			var status = campaign_states[i];
+		}
+	}
+
 	var html = `
 	<listitem id="${campaign_object.id}" onclick="getCampaign(${campaign_object.id})">
+		<svg width="24" height="24" viewBox="0 0 24 24" onmouseenter="showTooltip(this, 1, '${status.description}')" class="standalone">${status.icon}</svg>
 		<p>${campaign_object.subject}</p>
 		<button onclick="duplicateCampaign(${campaign_object.id})" onmouseenter="showTooltip(this, 2, 'Newsletter duplizieren')">
 			<svg width="24" height="24" viewBox="0 0 24 24"><path d="M5.503 4.627 5.5 6.75v10.504a3.25 3.25 0 0 0 3.25 3.25h8.616a2.251 2.251 0 0 1-2.122 1.5H8.75A4.75 4.75 0 0 1 4 17.254V6.75c0-.98.627-1.815 1.503-2.123ZM17.75 2A2.25 2.25 0 0 1 20 4.25v13a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-13A2.25 2.25 0 0 1 8.75 2h9Z"/></svg>
 		</button>
-		<button onclick="deleteCampaign(${campaign_object.id}, true)" onmouseenter="showTooltip(this, 2, 'Newsletter löschen')">
+		<button onclick="deleteCampaign(${campaign_object.id})" onmouseenter="showTooltip(this, 2, 'Newsletter löschen')">
 			<svg width="24" height="24" viewBox="0 0 24 24"><path d="M21.5 6a1 1 0 0 1-.883.993L20.5 7h-.845l-1.231 12.52A2.75 2.75 0 0 1 15.687 22H8.313a2.75 2.75 0 0 1-2.737-2.48L4.345 7H3.5a1 1 0 0 1 0-2h5a3.5 3.5 0 1 1 7 0h5a1 1 0 0 1 1 1Zm-7.25 3.25a.75.75 0 0 0-.743.648L13.5 10v7l.007.102a.75.75 0 0 0 1.486 0L15 17v-7l-.007-.102a.75.75 0 0 0-.743-.648Zm-4.5 0a.75.75 0 0 0-.743.648L9 10v7l.007.102a.75.75 0 0 0 1.486 0L10.5 17v-7l-.007-.102a.75.75 0 0 0-.743-.648ZM12 3.5A1.5 1.5 0 0 0 10.5 5h3A1.5 1.5 0 0 0 12 3.5Z"/></svg>
 		</button>
 	</listitem>`
@@ -173,26 +179,27 @@ function createCampaignHtml(campaign_object) {
 }
 
 // load all campaings and show first campaign in editor
-async function getCampaigns(first_load) {
+async function getCampaigns(show_drafts, select_first_campaign) {
 	var response = await invoke("get_campaigns");
 	var json = JSON.parse(response);
 
 	if (json.result != "success") {
-		openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+		openDialog("backend_error", JSON.stringify(json.error));
 		return false;
 	}
+
+	if (show_drafts || (show_drafts == undefined && active_tab == "show_draft")) var remove_status = "sent";
+	else var remove_status = "draft";
 
 	var html = "";
 	var first_id = null;
 
-	for (var i = json.data.data.length - 1; i >= 0; i--) {
-		var campaign = json.data.data[i];
-
-		if (first_id == null) { first_id = campaign.id; }
-		html += createCampaignHtml(campaign);
+	for (var i = json.data.length - 1; i >= 0; i--) {
+		if (first_id == null) first_id = json.data[i].id;
+		if (json.data[i].status != remove_status) html += createCampaignHtml(json.data[i]);
 	}
 
-	if (first_load && json.data.data.length != 0) {
+	if (select_first_campaign && json.data.length != 0) {
 		getCampaign(first_id);
 		active_campaign = first_id;
 	}
@@ -213,22 +220,43 @@ async function getCampaign(id) {
 	var response = await invoke("get_campaign", {id:id});
 	var json = JSON.parse(response);
 
-	if (json.result == "success") {
-		attachments.innerHTML = "";
-		quill.clipboard.dangerouslyPasteHTML(json.data.content)
+	var content_res = await invoke("get_campaign_content", {id:id});
+	var json_res = JSON.parse(content_res);
+
+	console.log(json)
+	console.log(json_res)
+
+	if (json.result == "success" && json_res.result == "success") {
+		quill.clipboard.dangerouslyPasteHTML(json_res.data.content)
 		subject.value = json.data.subject;
 		unsaved_campaign = false;
-
-		if (json.data.mailinglists[0] == undefined) {
-			newsletter_group.value = "";
-		}
-		else {
-			newsletter_group.value = json.data.mailinglists[0].id;
-		}
-
 		active_campaign = id;
+
+		if (json.data.recipients.groups.include.length == 0) newsletter_group.value = "";
+		else newsletter_group.value = json.data.recipients.groups.include[0].id;
 	}
-	else openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+	else if (json.result != "success") openDialog("backend_error", JSON.stringify(json.error));
+	else openDialog("backend_error", JSON.stringify(json_res.error));
+
+	// show attachments
+	var html = "";
+
+	if (settings.webdav_url != "" && settings.webdav_username != "" && settings.webdav_password != "false") {
+		var xml = document.createElement("div");
+		xml.innerHTML = await invoke("get", {dir:id.toString()});
+
+		console.log(xml);
+
+		if (xml.getElementsByTagName("D:status")[0]?.innerHTML == "HTTP/1.1 200 OK") {
+			var files = xml.getElementsByTagName("D:href");
+
+			for (var i = 1; i < files.length; i++) {
+				var path = files[i].innerHTML.split("/").pop();
+				html += `<div onclick="deleteAttachment(this, '${id}/${path}')" onmouseenter="showTooltip(this, 2, 'Newsletter löschen')">${path}</div>`
+			}
+		}
+	}
+	attachments.innerHTML = html;
 }
 
 async function saveCampaign(wants_sending) {
@@ -239,26 +267,19 @@ async function saveCampaign(wants_sending) {
 	}
 
 	// check if campaign was already sent
-	var campaign_status = 2;
-
 	if (active_campaign != 0) {
 		var response = await invoke("get_campaign", {id:active_campaign});
 		var json = JSON.parse(response);
 
-		if (json.result == "success") campaign_status = json.data.status.id; // 1 Sent, 2 Draft, 3 Programmed, 4 Sending in progress
+		if (json.result == "success") campaign_status = json.data.status;
 		else {
-			openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+			openDialog("backend_error", JSON.stringify(json.error));
 			return false;
 		}
 	}
 
-	if (wants_sending && campaign_status >= 3) {
-		openDialog("already_sent");
-		return false;
-	}
-
-	// check if subject and newsletter_group is filled in
-	else if (newsletter_group.value == "") {
+	// check input fields
+	if (wants_sending && newsletter_group.value == "") {
 		openDialog("no_selected_mailinglist");
 		return false;
 	}
@@ -272,56 +293,67 @@ async function saveCampaign(wants_sending) {
 	// if (!html_content.includes('<a href="*|UNSUBSCRIBED|*"')) html_content += '<template><a href="*|UNSUBSCRIBED|*" target="_blank"></a></template>';
 	var content = `<style>p {margin: 0;} * {font-size: ${standard_text_size}; font-family: ${standard_font}}</style>` + html_content.replaceAll('"', '\\"').replaceAll("<p></p>", "<br>");
 
-	var email_from_addr = settings.email_from_addr.split("@");
-
 	var data = `{
 		"subject":"${subject.value}",
-		"email_from_name":"${settings.email_from_name}",
+		"email_from_name":"${settings.sender_name}",
 		"lang":"${settings.lang}",
-		"email_from_addr":"${email_from_addr[0]}",
+		"email_from_addr":"${settings.sender_email}",
 		"content":"${content}",
-		"mailinglistIds":[${newsletter_group.value}]
+		"recipients":{
+			"all_subscribers": false,
+			"expert":{conditions:[],id:0},
+			"groups":{
+				"include":[${newsletter_group.value}]
+			},
+			"segments":{include:{}}
+		},
+		"tracking_link": false,
+		"tracking_opening": false,
+		"unsub_link": false
 	}`;
 
 	data = data.replaceAll("\n", "").replaceAll("\t", "");
 
-	// create new campaign if it doesnt exist or was already sent
-	if (active_campaign == 0 || campaign_status == 1) {
+	console.log(data)
+
+	// create new campaign if it doesnt exist
+	if (active_campaign == 0) {
 		var response = await invoke("create_campaign", {data:data});
 		var json = JSON.parse(response);
 
 		if (json.result == "success") {
-			// if (campaign_status == 1) deleteCampaign(active_campaign, false); // delete sent campaign
 			active_campaign = json.data.id;
 			unsaved_campaign = false;
 
-			var current_html = campaign_list.innerHTML;
-			var html = createCampaignHtml(json.data);
-			campaign_list.innerHTML = html + current_html;
+			campaign_list.innerHTML = createCampaignHtml(json.data) + campaign_list.innerHTML;
 
 			return true;
 		}
 		else {
-			openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+			openDialog("backend_error", JSON.stringify(json.error));
 			return false;
 		}
 	}
-	// prevent saving of newsletter which is currently being sent (id 3 & 4)
-	else if (campaign_status != 2) openDialog("newsletter_programmed");
 	// update existing campaign draft
-	else {
+	else if (campaign_status == "draft") {
 		var response = await invoke("update_campaign", {id:active_campaign, data:data});
 		var json = JSON.parse(response);
 
 		if (json.result == "success") {
-			document.getElementById(json.data.id).firstElementChild.innerHTML = json.data.subject;
+			document.getElementById(json.data.id).children[1].innerHTML = json.data.subject;
 			unsaved_campaign = false;
 			return true;
 		}
 		else {
-			openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+			console.log(json.error)
+			openDialog("backend_error", JSON.stringify(json.error));
 			return false;
 		}
+	}
+	// message when campaign has wrong status
+	else {
+		openDialog("already_sent");
+		return false;
 	}
 }
 
@@ -341,7 +373,7 @@ async function sendCampaign(is_test) {
 		var json = JSON.parse(response);
 
 		if (json.result != "success") {
-			openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+			openDialog("backend_error", JSON.stringify(json.error));
 			return;
 		}
 
@@ -349,22 +381,23 @@ async function sendCampaign(is_test) {
 
 		if (el_test_email.value != settings.test_email) {
 			settings.test_email = el_test_email.value;
-			var had_error = await invoke("change_config", {data:JSON.stringify([{property:"test_email", value:el_test_email.value}])});
-			if (had_error != "false") openDialog("backend_error", had_error);
+			var response = await invoke("change_config", {data:JSON.stringify([{property:"test_email", value:el_test_email.value}])});
+			var json = JSON.parse(response);
+
+			if (json.result != "success") openDialog("backend_error", JSON.stringify(json.error));
 		}
 	}
 	else {
 		// send campaign to mailinglist
-		var response = await invoke("send_campaign", {id:active_campaign});
+		var response = await invoke("send_campaign", {id:active_campaign, data:`{"started_at":"${Date.now() + 60}"}`});
 		var json = JSON.parse(response);
 
 		if (json.result == "success") {
-			var date = json.data.scheduled_at.date.replace(" ", "T").slice(0, -3) + "+02:00";
 			getCampaigns();
-			openDialog("sent_campaign", date.slice(11,16));
+			openDialog("sent_campaign");
 			setTimeout(getCredits, 500);
 		}
-		else openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+		else openDialog("backend_error", JSON.stringify(json.error));
 	}
 }
 
@@ -379,46 +412,43 @@ async function startCampaign() {
 		else if (user_action == "dialog_cancel") return false;
 	}
 
-	editor_el.firstChild.innerHTML = "";
-	subject.value = "";
-	newsletter_group.value = "";
 	initEditor();
-
-	active_campaign = 0;
 }
 
-async function deleteCampaign(id, user) {
-	// if needed ask user again
-	if (user) {
-		event.stopPropagation(); 
-		var user_action = await openDialog("delete_campaign");
-	}
-	else var user_action = "dialog_yes";
+async function deleteCampaign(id) {
+	event.stopPropagation(); 
+	var user_action = await openDialog("delete_campaign");
+	if (user_action == "dialog_cancel") return false;
 
-	// prevent deleting of newsletter which is currently being sent (id 3 & 4)
+	// prevent deleting of newsletter which is currently being sent
 	var response = await invoke("get_campaign", {id:id});
 	var json = JSON.parse(response);
 
-	if (json.result == "success" && json.data.status.id >= 3) {
-		openDialog("delete_forbidden");
+	if (json.result != "success") {
+		openDialog("backend_error", JSON.stringify(json.error));
 		return false;
 	}
-	else if (json.result != "success") {
-		openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+
+	if (
+		json.data.status == "scheduled",
+		json.data.status == "scheduled_v1",
+		json.data.status == "sending",
+		json.data.status == "sending_failed",
+		json.data.status == "sending_v1"
+	) {
+		openDialog("delete_forbidden");
 		return false;
 	}
 
 	// delete campaign and select new from top
-	if (user_action == "dialog_yes") {
-		var response = await invoke("delete_campaign", {id:id});
-		var json = JSON.parse(response);
+	var response = await invoke("delete_campaign", {id:id});
+	var json = JSON.parse(response);
 
-		if (json.result == "success") {
-			document.getElementById(id).remove();
-			if (user) getCampaign(parseInt(campaign_list.firstElementChild.id));
-		}
-		else openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+	if (json.result == "success") {
+		document.getElementById(id).remove();
+		if (id == active_campaign) getCampaign(parseInt(campaign_list.firstElementChild.id));
 	}
+	else openDialog("backend_error", JSON.stringify(json.error));
 }
 
 async function duplicateCampaign(id) {
@@ -434,7 +464,8 @@ async function duplicateCampaign(id) {
 	await getCampaign(id);
 	active_campaign = 0;
 	subject.value = subject.value + " - Kopie";
-	saveCampaign();
+	attachments.innerHTML = "";
+	unsaved_campaign = true;
 }
 
 
@@ -447,13 +478,12 @@ async function getMailinglists() {
 	if (json.result == "success") {
 		var html = "<option style='display: none;' value='' selected></option>";
 		
-		for (var i = 0; i < json.data.data.length; i++) {
-			var mailinglist = json.data.data[i];
-			html += `<option value="${mailinglist.id}">${mailinglist.name}</option>`
+		for (var i = 0; i < json.data.length; i++) {
+			html += `<option value="${ json.data[i].id}">${ json.data[i].name}</option>`
 		}
 		newsletter_group.innerHTML = html;
 	}
-	else openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+	else openDialog("backend_error", JSON.stringify(json.error));
 }
 
 function openMailinglists() {

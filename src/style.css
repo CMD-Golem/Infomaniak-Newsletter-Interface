@@ -68,7 +68,8 @@ tooltip {
 
 /* Aside */
 aside {
-	display: block;
+	display: flex;
+	flex-direction: column;
 	position: relative;
 	height: 100vh;
 	width: 250px;
@@ -76,7 +77,6 @@ aside {
 }
 
 status, navigation {
-	position: absolute;
 	display: flex;
 	width: 100%;
 }
@@ -91,7 +91,7 @@ status button {
 	width: 50%;
 }
 
-status button.active {
+status button.active_tab {
 	font-weight: bold;
 	text-decoration: underline #2b88d8 solid 1.5px;
 }
@@ -127,7 +127,7 @@ navigation button svg {
 list {
 	padding: 0 10px;
 	display: block;
-	height: calc(100vh - 61px);
+	flex-grow: 1;
 	overflow-y: auto;
 }
 
@@ -153,7 +153,7 @@ listitem input[disabled] {
 	pointer-events: none;
 }
 
-listitem button {
+listitem button, listitem svg.standalone {
 	padding: 5px;
 }
 
@@ -546,6 +546,10 @@ dialog, dialogbox, enter {
 	background-color: white;
 	box-shadow: 0 0 15px 0 rgba(0,0,0,0.65);
 	text-align: center;
+}
+
+dialog p, dialog div {
+	user-select: text;
 }
 
 dialog div, settings p, enter div {

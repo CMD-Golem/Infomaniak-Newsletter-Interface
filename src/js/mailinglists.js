@@ -35,21 +35,19 @@ async function getMailinglists(first_load) {
 	var json = JSON.parse(response);
 
 	if (json.result != "success") {
-		openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+		openDialog("backend_error", JSON.stringify(json.error));
 		return false;
 	}
 
 	var html = "";
 	var first_id = null;
 
-	for (var i = json.data.data.length - 1; i >= 0; i--) {
-		var mailinglist = json.data.data[i];
-
-		if (first_id == null) first_id = mailinglist.id;
-		html += createMailinglistHtml(mailinglist, "");
+	for (var i = json.data.length - 1; i >= 0; i--) {
+		if (first_id == null) first_id = json.data[i].id;
+		html += createMailinglistHtml(json.data[i], "");
 	}
 
-	if (first_load && json.data.data.length != 0) getMailinglist(first_id, false);
+	if (first_load && json.data.length != 0) getMailinglist(first_id, false);
 	el_mailinglists.innerHTML = html;
 }
 
@@ -66,17 +64,17 @@ async function deleteMailinglist(id) {
 		await t.event.emit('changed_mailinglists');
 		getMailinglist(el_mailinglists.firstElementChild?.id, false);
 	}
-	else openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+	else openDialog("backend_error", JSON.stringify(json.error));
 }
 
 async function duplicateMailinglist(id) {
 	event.stopPropagation();
 
 	// create new mailinglist with name
-	var response_list = await invoke("create_mailinglist", {data:`{\"name\":\"${document.getElementById(id).firstElementChild.value} - Kopie\"}`});
+	var response_list = await invoke("create_mailinglist", {data:`{"name":"${document.getElementById(id).firstElementChild.value} - Kopie"}`});
 	var json_list = JSON.parse(response_list);
 	if (json_list.result != "success") {
-		openDialog("backend_error", Array.isArray(json_list.error) ? json_list.error.join(" | ") : (json_list.error ?? ""));
+		openDialog("backend_error", JSON.stringify(json_list.error));
 		return;
 	}
 
@@ -90,7 +88,7 @@ async function duplicateMailinglist(id) {
 	var reponse_contact = await invoke("mailinglist_get_contacts", {id:parseInt(id)});
 	var json_contact = JSON.parse(reponse_contact);
 	if (json_contact.result != "success") {
-		openDialog("backend_error", Array.isArray(json_contact.error) ? json_contact.error.join(" | ") : (json_contact.error ?? ""));
+		openDialog("backend_error", JSON.stringify(json_contact.error));
 		return;
 	}
 
@@ -141,7 +139,7 @@ async function createMailinglist(e) {
 		var json = JSON.parse(response);
 
 		if (json.result != "success") {
-			openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+			openDialog("backend_error", JSON.stringify(json.error));
 			remove = true;
 		}
 		else {
@@ -179,7 +177,7 @@ async function renameMailinglist(e) {
 		var json = JSON.parse(response);
 
 		if (json.result != "success") {
-			openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+			openDialog("backend_error", JSON.stringify(json.error));
 			e.target.value = e.target.getAttribute("data-old-value");
 		}
 		else await t.event.emit('changed_mailinglists');
@@ -223,12 +221,12 @@ async function getMailinglist(id, check_already_selected) {
 	var json = JSON.parse(response);
 
 	if (json.result != "success") {
-		openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+		openDialog("backend_error", JSON.stringify(json.error));
 		return;
 	}
 	
 	var html = "";
-	var data = json.data.data;
+	var data = json.data;
 
 	if (contact_sorting == "1") { // Z-A
 		data.sort((a, b) => {
@@ -341,5 +339,5 @@ async function newContact() {
 	var json = JSON.parse(response);
 
 	if (json.result == "success") setTimeout(getMailinglist, 800, id, false);
-	else openDialog("backend_error", Array.isArray(json.error) ? json.error.join(" | ") : (json.error ?? ""));
+	else openDialog("backend_error", JSON.stringify(json.error));
 }
