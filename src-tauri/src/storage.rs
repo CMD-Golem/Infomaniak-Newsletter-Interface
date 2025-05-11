@@ -71,7 +71,7 @@ impl Config {
 
 	fn path() -> PathBuf {
 		let path = env::var("APPDATA").expect("Could find folder");
-		return PathBuf::from(format!("{}com.cmd-golem.infomaniak-newsletter-interface/config.dat", path));
+		return PathBuf::from(format!("{}/com.cmd-golem.infomaniak-newsletter-interface/config.dat", path));
 	}
 
 	fn encrypt(string: &str) -> String {

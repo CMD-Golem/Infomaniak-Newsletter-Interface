@@ -40,14 +40,14 @@ async function getMailinglists(first_load) {
 	}
 
 	var html = "";
-	var first_id = null;
 
 	for (var i = json.data.length - 1; i >= 0; i--) {
-		if (first_id == null) first_id = json.data[i].id;
 		html += createMailinglistHtml(json.data[i], "");
 	}
 
-	if (first_load && json.data.length != 0) getMailinglist(first_id, false);
+	if (first_load && json.data.length != 0) {
+		getMailinglist(json.data[json.data.length - 1].id, false);
+	}
 	el_mailinglists.innerHTML = html;
 }
 
@@ -93,25 +93,19 @@ async function duplicateMailinglist(id) {
 	}
 
 	// upload and show contacts of new mailing list
-	var new_contacts = [];
+	var new_contacts = {subscriber_ids:[]};
 	var html = "";
 	for (var i = 0; i < json_contact.data.data.length; i++) {
 		var contact = json_contact.data.data[i];
-		if (contact.status == 1 || contact.status == 5) {
-			new_contacts.push({email: contact.email});
-			html += createContactHtml(contact);
-		}
+		new_contacts.push({email: contact.email});
 	}
 
-	var response_list = await invoke("mailinglist_add_contact", {id: json_list.data.id, data: JSON.stringify({contacts:new_contacts})});
+	var response_list = await invoke("mailinglist_assign_contacts", {id: json_list.data.id, data: JSON.stringify({contacts:new_contacts})});
 	var json_list = JSON.parse(response_list);
 	if (json_list.result != "success") {
-		openDialog("backend_error", Array.isArray(json_list.error) ? json_list.error.join(" | ") : (json_list.error ?? ""));
+		openDialog("backend_error", JSON.stringify(json_list.error));
 		return;
 	}
-
-	// show contacts
-	el_contacts.innerHTML = html;
 }
 
 function startCreatingMailinglist() {
@@ -135,7 +129,7 @@ async function createMailinglist(e) {
 	var remove = false;
 
 	if (e.type == "blur" || (e.type == "keydown" && e.key == "Enter")) {
-		var response = await invoke("create_mailinglist", {data:`{\"name\":\"${e.target.value}\"}`});
+		var response = await invoke("create_mailinglist", {data:`{"name":"${e.target.value}"}`});
 		var json = JSON.parse(response);
 
 		if (json.result != "success") {
@@ -195,17 +189,11 @@ async function renameMailinglist(e) {
 
 
 function createContactHtml(contact) {
-	if (contact.status == 0) var status = "abgemeldet";
-	else if (contact.status == 1) var status = "";
-	else if (contact.status == 3) var status = "ungültig";
-	else if (contact.status == 5) var status = "wird überprüft";
-	else var status = "unknown"
-
 	var html = `
 		<contact id="${contact.id}">
 			<p>${contact.email}</p>
-			<p>${status}</p>
-			<button onclick="deleteContact('${contact.email}', this)" onmouseenter="showTooltip(this, 3, 'Aus Kontaktgruppe entfernen')">
+			<p>${mailinglist_states[contact.status]}</p>
+			<button onclick="deleteContact(${contact.id})" onmouseenter="showTooltip(this, 3, 'Aus Kontaktgruppe entfernen')">
 				<svg width="24" height="24" viewBox="0 0 24 24"><path d="M21.5 6a1 1 0 0 1-.883.993L20.5 7h-.845l-1.231 12.52A2.75 2.75 0 0 1 15.687 22H8.313a2.75 2.75 0 0 1-2.737-2.48L4.345 7H3.5a1 1 0 0 1 0-2h5a3.5 3.5 0 1 1 7 0h5a1 1 0 0 1 1 1Zm-7.25 3.25a.75.75 0 0 0-.743.648L13.5 10v7l.007.102a.75.75 0 0 0 1.486 0L15 17v-7l-.007-.102a.75.75 0 0 0-.743-.648Zm-4.5 0a.75.75 0 0 0-.743.648L9 10v7l.007.102a.75.75 0 0 0 1.486 0L10.5 17v-7l-.007-.102a.75.75 0 0 0-.743-.648ZM12 3.5A1.5 1.5 0 0 0 10.5 5h3A1.5 1.5 0 0 0 12 3.5Z"/></svg>
 			</button>
 		</contact>
@@ -270,35 +258,24 @@ function reloadMailingList(new_sort) {
 	if (id != undefined) getMailinglist(id, false);
 }
 
-async function deleteContact(email, button) {
+async function deleteContact(id) {
 	// ask user again
 	var user_action = await openDialog("delete_contact");
 	if (user_action == "dialog_cancel") return;
 
-	// get contact data
-	var contact_id = +button.parentElement.id;
-	var response_get = await invoke("get_contact", {id:contact_id});
-	var json_get = JSON.parse(response_get);
+	var mailinglist_id = document.querySelector(".selected")?.id;
 
-	if (json_get.result != "success") {
-		openDialog("backend_error", Array.isArray(json_get.error) ? json_get.error.join(" | ") : (json_get.error ?? ""));
+	if (mailinglist_id == undefined) {
+		openDialog("no_mailinglist");
 		return;
 	}
 
-	// delete contact since it isn't used in any other mailinglist
-	if (json_get.data.mailinglists.length == 1) {
-		var response = await invoke("delete_contact", {id:contact_id});
-		var json = JSON.parse(response);
-	}
-	// only remove contact from mailinglist since it is used elsewhere
-	else {
-		var mailinglist_id = document.querySelector(".selected").id;
-		var response = await invoke("mailinglist_remove_contact", {id: parseInt(mailinglist_id), data:`{\"email\":\"${email}\", \"status\":\"delete\"}`});
-		var json = JSON.parse(response);
-	}
+	var response = await invoke("mailinglist_remove_contact", {subscriber:id, group:parseInt(mailinglist_id)});
 
-	if (json.result == "success") button.parentElement.remove();
-	else openDialog("backend_error", Array.isArray(json_get.error) ? json_get.error.join(" | ") : (json_get.error ?? ""));
+	var json = JSON.parse(response);
+
+	if (json.result == "success") document.getElementById(id).remove();
+	else openDialog("backend_error", JSON.stringify(json.error));
 }
 
 function checkContact() {
@@ -306,38 +283,30 @@ function checkContact() {
 }
 
 async function newContact() {
+		var id = document.querySelector(".selected")?.id;
+	if (id == undefined) {
+		openDialog("no_mailinglist");
+		return;
+	}
+
 	var input_value = el_add_contact.value;
 	var new_contacts = input_value.split(/\s*,\s*|\s+|\n/);
+	el_add_contact.value = "";
+
+	// catch empty enter
 	if (
 		(new_contacts.length == 1 && new_contacts[0] == "") || 
 		(new_contacts.length == 2 && new_contacts[0] == "" && new_contacts[1] == "")
-	) {
-		el_add_contact.value = "";
-		return;
-	}
-
-	var upload_array = [];
-	var id = document.querySelector(".selected")?.id;
-
-	if (id == undefined) {
-		openDialog("no_mailinglist");
-		el_add_contact.value = "";
-		return;
-	}
+	) return;
 
 	for (var i = 0; i < new_contacts.length; i++) {
-		if (email_validation.test(new_contacts[i])) upload_array.push({email: new_contacts[i]});
+		if (email_validation.test(new_contacts[i])) {
+			var response = await invoke("mailinglist_add_contact", {group:parseInt(id), email:new_contacts[i]});
+			var json = JSON.parse(response);
+			if (json.result != "success") openDialog("backend_error", JSON.stringify(json.error));
+		}
 	}
 
-	if (upload_array.length >= 2) {
-		el_add_contact.value = upload_array[upload_array.length - 1].email;
-		upload_array.pop();
-	}
-	else el_add_contact.value = "";
-
-	var response = await invoke("mailinglist_add_contact", {id: parseInt(id), data: JSON.stringify({contacts:upload_array})});
-	var json = JSON.parse(response);
-
-	if (json.result == "success") setTimeout(getMailinglist, 800, id, false);
-	else openDialog("backend_error", JSON.stringify(json.error));
+	// setTimeout(getMailinglist, 800, id, false);
+	getMailinglist(id, false)
 }

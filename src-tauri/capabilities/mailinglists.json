@@ -1,0 +1,11 @@
+{
+	"$schema": "../gen/schemas/desktop-schema.json",
+	"identifier": "mailinglists",
+	"description": "Capability for the mailinglists window",
+	"windows": [
+	  "mailinglists"
+	],
+	"permissions": [
+	  "core:default"
+	]
+  }

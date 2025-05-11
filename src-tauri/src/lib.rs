@@ -24,6 +24,7 @@ pub fn run() {
 			infomaniak::update_mailinglist,
 			infomaniak::delete_mailinglist,
 			infomaniak::mailinglist_get_contacts,
+			infomaniak::mailinglist_assign_contacts,
 			infomaniak::mailinglist_add_contact,
 			infomaniak::mailinglist_remove_contact,
 			infomaniak::get_credits,
@@ -44,7 +45,7 @@ pub fn run() {
 				if let Destroyed = event {
 					let temp = env::var("TEMP").expect("Failed to get configuration file path");
 					let folder_path = format!("{temp}/com.cmd-golem.infomaniak-newsletter-interface");
-					let _ = fs::remove_dir_all(folder_path).expect("Failed to remove temp files");
+					let _ = fs::remove_dir_all(folder_path);
 				}
 			});
 			Ok(())

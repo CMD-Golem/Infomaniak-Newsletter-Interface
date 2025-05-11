@@ -1,5 +1,6 @@
 use std::{
-	os::windows::process::CommandExt, process::Command
+	os::windows::process::CommandExt,
+	process::Command
 };
 use serde_json::{self, Value};
 
@@ -7,10 +8,11 @@ use crate::storage::CONFIG;
 
 fn curl(header: &str, url: &str, data: &str) -> String {
 	let config = CONFIG.lock().unwrap();
+
 	let output = Command::new("curl")
 		.arg("-X").arg(header)
 		.arg(format!("https://api.infomaniak.com/1/newsletters/{}/{}", config.infomaniak_domain, url))
-		.arg("-d").arg(data)
+		.arg("-d").arg(data.to_string())
 		.arg("-H").arg(format!("Authorization: Bearer {}", config.infomaniak_secret))
 		.arg("-H").arg("Content-Type: application/json")
 		
@@ -24,7 +26,6 @@ fn curl(header: &str, url: &str, data: &str) -> String {
 }
 
 
-
 // Tauri functions
 #[tauri::command]
 pub fn get_campaigns() -> String {
@@ -32,12 +33,12 @@ pub fn get_campaigns() -> String {
 }
 
 #[tauri::command]
-pub fn get_campaign(id: i32) -> String {
+pub fn get_campaign(id: u32) -> String {
 	curl("GET", &format!("campaigns/{}?with=recipients", id), "").into()
 }
 
 #[tauri::command]
-pub fn get_campaign_content(id: i32) -> String {
+pub fn get_campaign_content(id: u32) -> String {
 	curl("GET", &format!("campaigns/{}?with=content", id), "").into()
 }
 
@@ -47,22 +48,22 @@ pub fn create_campaign(data: &str) -> String {
 }
 
 #[tauri::command]
-pub fn update_campaign(id: i32, data: &str) -> String {
+pub fn update_campaign(id: u32, data: &str) -> String {
 	curl("PUT", &format!("campaigns/{}", id), data).into()
 }
 
 #[tauri::command]
-pub fn delete_campaign(id: i32) -> String {
+pub fn delete_campaign(id: u32) -> String {
 	curl("DELETE", &format!("campaigns/{}", id), "").into()
 }
 
 #[tauri::command]
-pub fn test_campaign(id: i32, data: &str) -> String {
+pub fn test_campaign(id: u32, data: &str) -> String {
 	curl("POST", &format!("campaigns/{}/test", id), data).into()
 }
 
 #[tauri::command]
-pub fn send_campaign(id: i32, data: &str) -> String {
+pub fn send_campaign(id: u32, data: &str) -> String {
 	curl("PUT", &format!("campaigns/{}/schedule", id), data).into()
 }
 
@@ -77,24 +78,28 @@ pub fn create_mailinglist(data: &str) -> String {
 }
 
 #[tauri::command]
-pub fn update_mailinglist(id: i32, data: &str) -> String {
+pub fn update_mailinglist(id: u32, data: &str) -> String {
 	curl("PUT", &format!("groups/{}", id), data).into()
 }
 
 #[tauri::command]
-pub fn delete_mailinglist(id: i32) -> String {
+pub fn delete_mailinglist(id: u32) -> String {
 	curl("DELETE", &format!("groups/{}", id), "").into()
 }
 
 #[tauri::command]
-pub fn mailinglist_get_contacts(id: i32) -> String {
+pub fn mailinglist_get_contacts(id: u32) -> String {
 	curl("GET", &format!("groups/{}/subscribers", id), "").into()
 }
 
+#[tauri::command]
+pub fn mailinglist_assign_contacts(id: u32, data: &str) -> String {
+	curl("GET", &format!("groups/{}/subscribers/assign", id), data).into()
+}
 
 // special implementations
 #[tauri::command]
-pub fn mailinglist_add_contact(email: &str, group: &str) -> String {
+pub fn mailinglist_add_contact(group: u32, email: &str) -> String {
 	let config = CONFIG.lock().unwrap();
 
 	// get all scbscribers
@@ -152,7 +157,7 @@ pub fn mailinglist_add_contact(email: &str, group: &str) -> String {
 }
 
 #[tauri::command]
-pub fn mailinglist_remove_contact(subscriber: &str, group: &str) -> String {
+pub fn mailinglist_remove_contact(subscriber: u32, group: i64) -> String {
 	let config = CONFIG.lock().unwrap();
 
 	// get all scbscribers
@@ -170,11 +175,11 @@ pub fn mailinglist_remove_contact(subscriber: &str, group: &str) -> String {
 	let list: Value = serde_json::from_str(&String::from_utf8_lossy(&fetch.stdout)).expect("Invalid JSON response");
 	let len = list["data"]["groups"].as_array().unwrap().len();
 
-	if (len == 1 && list["data"]["groups"][0]["id"].as_number().unwrap().to_string() == group) || len == 0 {
+	if (len == 1 && list["data"]["groups"][0]["id"].as_number().unwrap().as_i64().unwrap() == group) || len == 0 {
 		// delete subscriber
 		let output = Command::new("curl")
 			.arg("-X").arg("DELETE")
-			.arg(format!("https://api.infomaniak.com/1/newsletters/{}/subscribers{}/forget", config.infomaniak_domain, subscriber))
+			.arg(format!("https://api.infomaniak.com/1/newsletters/{}/subscribers/{}/forget", config.infomaniak_domain, subscriber))
 			.arg("-H").arg(format!("Authorization: Bearer {}", config.infomaniak_secret))
 			.arg("-H").arg("Content-Type: application/json")
 			
@@ -182,6 +187,7 @@ pub fn mailinglist_remove_contact(subscriber: &str, group: &str) -> String {
 			.output()
 			.expect("Error");
 
+		println!("Forget subscriber");
 		return String::from_utf8_lossy(&output.stdout).to_string();
 	}
 	else if len > 1 {
@@ -197,6 +203,7 @@ pub fn mailinglist_remove_contact(subscriber: &str, group: &str) -> String {
 			.output()
 			.expect("Error");
 
+			println!("Remove subscriber from group");
 		return String::from_utf8_lossy(&output.stdout).to_string();
 	}
 	else {

@@ -192,14 +192,13 @@ async function getCampaigns(show_drafts, select_first_campaign) {
 	else var remove_status = "draft";
 
 	var html = "";
-	var first_id = null;
 
 	for (var i = json.data.length - 1; i >= 0; i--) {
-		if (first_id == null) first_id = json.data[i].id;
 		if (json.data[i].status != remove_status) html += createCampaignHtml(json.data[i]);
 	}
 
 	if (select_first_campaign && json.data.length != 0) {
+		var first_id = json.data[json.data.length - 1].id;
 		getCampaign(first_id);
 		active_campaign = first_id;
 	}
@@ -223,9 +222,6 @@ async function getCampaign(id) {
 	var content_res = await invoke("get_campaign_content", {id:id});
 	var json_res = JSON.parse(content_res);
 
-	console.log(json)
-	console.log(json_res)
-
 	if (json.result == "success" && json_res.result == "success") {
 		quill.clipboard.dangerouslyPasteHTML(json_res.data.content)
 		subject.value = json.data.subject;
@@ -234,6 +230,9 @@ async function getCampaign(id) {
 
 		if (json.data.recipients.groups.include.length == 0) newsletter_group.value = "";
 		else newsletter_group.value = json.data.recipients.groups.include[0].id;
+
+		document.querySelector(".selected")?.classList.remove("selected");
+		document.getElementById(id).classList.add("selected");
 	}
 	else if (json.result != "success") openDialog("backend_error", JSON.stringify(json.error));
 	else openDialog("backend_error", JSON.stringify(json_res.error));
@@ -244,8 +243,6 @@ async function getCampaign(id) {
 	if (settings.webdav_url != "" && settings.webdav_username != "" && settings.webdav_password != "false") {
 		var xml = document.createElement("div");
 		xml.innerHTML = await invoke("get", {dir:id.toString()});
-
-		console.log(xml);
 
 		if (xml.getElementsByTagName("D:status")[0]?.innerHTML == "HTTP/1.1 200 OK") {
 			var files = xml.getElementsByTagName("D:href");
@@ -298,14 +295,14 @@ async function saveCampaign(wants_sending) {
 		"email_from_name":"${settings.sender_name}",
 		"lang":"${settings.lang}",
 		"email_from_addr":"${settings.sender_email}",
-		"content":"${content}",
+		"content_html":"${content}",
 		"recipients":{
 			"all_subscribers": false,
-			"expert":{conditions:[],id:0},
+			"expert":{"conditions":[],"id":0},
 			"groups":{
 				"include":[${newsletter_group.value}]
 			},
-			"segments":{include:{}}
+			"segments":{"include":{}}
 		},
 		"tracking_link": false,
 		"tracking_opening": false,
@@ -313,8 +310,6 @@ async function saveCampaign(wants_sending) {
 	}`;
 
 	data = data.replaceAll("\n", "").replaceAll("\t", "");
-
-	console.log(data)
 
 	// create new campaign if it doesnt exist
 	if (active_campaign == 0) {
@@ -345,7 +340,6 @@ async function saveCampaign(wants_sending) {
 			return true;
 		}
 		else {
-			console.log(json.error)
 			openDialog("backend_error", JSON.stringify(json.error));
 			return false;
 		}

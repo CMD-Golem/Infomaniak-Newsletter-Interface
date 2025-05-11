@@ -45,6 +45,9 @@ const campaign_states = [
 ]
 
 
+const mailinglist_states = {active:"Aktiv", bounced:"Nicht erreichbar", junk:"Gelöscht?", unconfirmed:"Unbestätigt", unsubscribed:"Abgemeldet"}
+
+
 // general functions
 function openDialog(id, additional_info) {
 	return new Promise((resolve) => {
