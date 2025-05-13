@@ -2,7 +2,7 @@ var unsaved_campaign = false;
 var active_campaign = null;
 var active_tab = "show_draft";
 var settings = undefined;
-const settings_array = ["infomaniak_domain", "webdav_url", "webdav_username", "sender_name", "sender_email", "lang", "unsubscribe", "file_text"]
+const settings_array = ["infomaniak_domain", "webdav_url", "webdav_username", "sender_name", "sender_email", "lang", "unsubscribe", "file_text"];
 
 
 // initalize and load everything after document loaded
@@ -383,14 +383,16 @@ async function sendCampaign(is_test) {
 	}
 	else {
 		// send campaign to mailinglist
-		var response = await invoke("send_campaign", {id:active_campaign, data:`{"started_at":"${Date.now() + 60}"}`});
+		var response = await invoke("send_campaign", {id:active_campaign, data:`{"started_at":"${Math.floor((Date.now() + schedule_delay_ms) / 1000)}"}`});
 		var json = JSON.parse(response);
 
 		if (json.result == "success") {
 			getCampaigns();
 			openDialog("sent_campaign");
 			setTimeout(getCredits, 500);
+			setTimeout(getCampaigns, schedule_delay_ms + 100);
 		}
+		else if (json.error.errors[0].code == "validation_rule_self") openDialog("wait_before_sending", json.error.errors[0].description.slice(74, 79));
 		else openDialog("backend_error", JSON.stringify(json.error));
 	}
 }
@@ -460,6 +462,7 @@ async function duplicateCampaign(id) {
 	subject.value = subject.value + " - Kopie";
 	attachments.innerHTML = "";
 	unsaved_campaign = true;
+	document.querySelector(".selected")?.classList.remove("selected");
 }
 
 

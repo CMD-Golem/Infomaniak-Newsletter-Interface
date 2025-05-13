@@ -94,13 +94,11 @@ async function duplicateMailinglist(id) {
 
 	// upload and show contacts of new mailing list
 	var new_contacts = {subscriber_ids:[]};
-	var html = "";
-	for (var i = 0; i < json_contact.data.data.length; i++) {
-		var contact = json_contact.data.data[i];
-		new_contacts.push({email: contact.email});
+	for (var i = 0; i < json_contact.data.length; i++) {
+		new_contacts.subscriber_ids.push(json_contact.data[i].id);
 	}
 
-	var response_list = await invoke("mailinglist_assign_contacts", {id: json_list.data.id, data: JSON.stringify({contacts:new_contacts})});
+	var response_list = await invoke("mailinglist_assign_contacts", {id: json_list.data.id, data: JSON.stringify(new_contacts)});
 	var json_list = JSON.parse(response_list);
 	if (json_list.result != "success") {
 		openDialog("backend_error", JSON.stringify(json_list.error));

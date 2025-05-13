@@ -6,6 +6,7 @@ var tooltip = document.querySelector("tooltip");
 
 const text_open_files = "Alle Dateien";
 const text_suggest_name = "Neue Datei.";
+var schedule_delay_ms = 10000; // seems like it has to be at least 1min
 
 // error and info box
 const error_msg = [
@@ -28,6 +29,7 @@ const error_msg = [
 	{id:"no_mailinglist", msg:"Erstelle zuerst eine neue Kontaktgruppe.", buttons:["dialog_ok"]},
 	{id:"embed", msg:"Soll das Bild eingebettet werden?", buttons:["dialog_yes", "dialog_no", "dialog_cancel"]},
 	{id:"delete_attachment", title:"Die Datei wird unwiederruflich gelöscht und vom Server entfernt", msg:"Möchten Sie fortfahren?", buttons:["dialog_yes", "dialog_cancel"]},
+	{id:"wait_before_sending", title:"Nach dem Erstellen muss mindesten 1 min gewartet werden, bis der Newsletter gesendet werden kann.", msg:"Um ${additional_info} kann dieser Newsletter frühstens versendet werden.", buttons:["dialog_yes", "dialog_cancel"]},
 ]
 
 // status translation

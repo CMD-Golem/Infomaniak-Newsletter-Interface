@@ -94,7 +94,7 @@ pub fn mailinglist_get_contacts(id: u32) -> String {
 
 #[tauri::command]
 pub fn mailinglist_assign_contacts(id: u32, data: &str) -> String {
-	curl("GET", &format!("groups/{}/subscribers/assign", id), data).into()
+	curl("POST", &format!("groups/{}/subscribers/assign", id), data).into()
 }
 
 // special implementations
