@@ -15,7 +15,6 @@ var ImageBlot = Quill.import("formats/image");
 class StyleImageBlot extends ImageBlot {
 	static create(value) {
 		let node = super.create();
-		console.log(value)
 		if (typeof value === "string" && value.includes(";base64,")) {
 			node.setAttribute("id", "no_file");
 			node.setAttribute("src", value);
@@ -25,7 +24,7 @@ class StyleImageBlot extends ImageBlot {
 			node.setAttribute("src", value);
 		}
 		else {
-			node.setAttribute("id", value.id);
+			// node.setAttribute("id", "");
 			node.setAttribute("src", value.url);
 			node.setAttribute("style", value.style);
 			node.setAttribute("class", "computed");
@@ -42,29 +41,6 @@ class StyleImageBlot extends ImageBlot {
 	}
 }
 Quill.register(StyleImageBlot);
-
-// var Inline = Quill.import("blots/inline");
-// class Meta extends Inline {
-// 	static blotName = 'meta';
-// 	static tagName = 'META';
-
-// 	static create(value) {
-// 		console.log("etst")
-// 		const node = super.create(value);
-// 		node.setAttribute("name", value.name);
-// 		node.setAttribute("content", value.content);
-// 		return node;
-// 	}
-
-// 	static value(node) {
-// 		return {
-// 			name: node.getAttribute("name"),
-// 			content: node.getAttribute("content")
-// 		};
-// 	}
-// }
-// Quill.register(Meta);
-
 Quill.register("modules/resize", window.QuillResizeModule);
 
 // register editor
@@ -192,8 +168,6 @@ async function paste() {
 
 		quill.insertText(range.index, clipboard_text);
 	}
-
-	
 }
 
 function copySelection(cut) {
@@ -231,21 +205,20 @@ quill.on("selection-change", (e) => {
 });
 
 // import copied images
-quill.on("text-change", async (e) => {
+quill.on("text-change", async () => {
 	var new_img = document.getElementById("no_file");
 	if (new_img != null) {
 		quill.enable(false);
-		console.log("text change")
-		var {src, id} = await createGithubUrl(new_img.src, "data-url");
+		var src = await uploadFile(new_img.src, "data-url");
+		new_img.removeAttribute("id");
 
 		quill.enable(true);
 
-		if (id == undefined) {
+		if (src == false) {
 			quill.history.undo();
 		}
 		else {
 			new_img.src = src;
-			new_img.id = id;
 			new_img.classList.add("computed");
 		}
 	}
@@ -274,6 +247,7 @@ document.addEventListener("keydown", e => { if (e.key) formatPainterEnd(); });
 // context and selection menu
 var context_menu = document.querySelector("contextmenu");
 var selection_menu = document.querySelector("selectionmenu");
+var quill_link_menu = document.querySelector(".ql-tooltip");
 
 var normalizePozition = (mouseX, mouseY, menu, outOfBoundsCorrectionY) => {
 	// compute what is the mouse position relative to the container element (body)
@@ -345,13 +319,13 @@ body.addEventListener("click", (e) => {
 
 	if (e.target.nodeName == "A" && e.target.classList.contains("ql-preview")) {
 		var href = e.target.href;
-		console.log(e)
 		href = href.replace("https://tauri.localhost", "https:/").replace("http://127.0.0.1:1430", "http:/");
 
 		if (href == "http://*%7CUNSUBSCRIBED%7C*") return;
 
 		t.opener.openUrl(href);
 	}
+	else if (e.target.nodeName == "A" && parseFloat(quill_link_menu.style.left) < 0) quill_link_menu.style.left = "0";
 });
 
 
@@ -367,6 +341,11 @@ function openLink() {
 // #####################################################################################
 // Attachments
 var attachments = document.querySelector("attachments");
+
+function generateAttachmentHtml(id, src) {
+	var path = src.split("/").pop();
+	return `<div onclick="deleteAttachment(this, '${id}/${path}')" onmouseenter="showTooltip(this, 2, 'Newsletter löschen')">${path}</div>`;
+}
 
 async function selectFile(insert_attachments) {
 	if (insert_attachments) var filters = ["avif", "bmp", "gif", "jfif", "jpeg", "jpg", "png", "svg", "tiff", "webp"];
@@ -385,45 +364,18 @@ async function selectFile(insert_attachments) {
 	if (files == null) return;
 
 	for (var i = 0; i < files.length; i++) {
-		var {src, id} = await createGithubUrl(files[i], "path", insert_attachments);
+		var src = await uploadFile(files[i], "path", insert_attachments);
 
 		if (src == false) return;
-		var link_text = src.split("/").pop();
-
-		// show file in attachment list
-		var attachment = document.createElement("div");
-		attachment.innerHTML = link_text;
-		attachment.id = id;
-
-		attachment.setAttribute("onmouseenter", "showTooltip(this, 2, 'Löschen')");
-		attachment.addEventListener("click", e => {
-			e.target.remove();
-			if (tooltip_timeout != undefined) clearTimeout(tooltip_timeout);
-			tooltip.removeAttribute("style");
-			tooltip_timeout = undefined;
-
-			var links = editor_el.querySelectorAll(`a[href="${src}"]`);
-			for (var i = 0; i < links.length; i++) {
-				var link = Quill.find(links[i]);
-				var link_index = quill.getIndex(link);
-				var link_length = quill.getLeaf(link_index)[0].text.length;
-				quill.formatText(link_index, link_length, "link", false);
-
-				// deleteGithubUrl(id)
-			}
-		});
-
-		attachments.appendChild(attachment);
 
 		// show file in newsletter text
 		if (insert_attachments) {
 			quill.insertEmbed(index, "image", src);
 			var new_img = editor_el.querySelector("img:not(.computed)");
 			new_img.classList.add("computed");
-			new_img.id = id;
 		}
 		else {
-			var showing_text = settings.link_text.replace("${file_name}", link_text)
+			var showing_text = settings.file_text?.replace("${file_name}", src.split("/").pop()) || src.split("/").pop();
 			quill.insertText(index, showing_text, {link:src});
 			quill.setSelection(index, showing_text.length);
 		}
@@ -440,28 +392,34 @@ function openEnter(suggestion_name) {
 		enter_input.value = suggestion_name;
 		enter_input.setSelectionRange(0, suggestion_name.lastIndexOf("."));
 
-		document.getElementById("enter_ok").addEventListener("click", (e) => {
+		document.getElementById("enter_ok").addEventListener("click", () => {
 			resolve(enter_input.value);
 			enter.style.display = "none";
 		});
-		document.getElementById("enter_cancel").addEventListener("click", (e) => {
+		document.getElementById("enter_cancel").addEventListener("click", () => {
 			resolve(false);
 			enter.style.display = "none";
 		});
 	});
 }
 
-async function createGithubUrl(data, type) {
+async function uploadFile(data, type) {
+	// check for webdav credetials
+	if (settings.webdav_url == "" || settings.webdav_username == "" || settings.webdav_password == "false" || settings.public_url == "") {
+		openDialog("no_file_upload_auth");
+		return false;
+	}
+
 	// ask for file name
 	if (type == "path") {
 		var suggestion_name = data.split("\\").pop();
-		var temp_path = false;
+		var is_temp = false;
 		var local_path = data;
 	}
 	else if (type == "data-url") {
 		var file_type = data.split(";")[0].split("/")[1];
 		var suggestion_name = text_suggest_name + file_type;
-		var temp_path = true;
+		var is_temp = true;
 	}
 	else return false;
 
@@ -469,18 +427,11 @@ async function createGithubUrl(data, type) {
 	if (file_name == false) return false;
 	file_name = file_name.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9._-]/g, "");
 
-	// get release of campaign or create one if it doesnt exist
-	var get_response = await invoke("github_get", {id:active_campaign.toString(), tempPath:temp_path});
-	var release_return = JSON.parse(get_response);
-
-	if (release_return.status == "404") {
-		var release_data = `{"tag_name":"${active_campaign}","name":"${document.getElementById("subject").value || "New Campaign"}"}`
-		var create_response = await invoke("github_create", {data:release_data});
-		release_return = JSON.parse(create_response);
-	}
+	// check if file already exists
+	console.warn("Implement existing file check");
 
 	// create temp file from data-url
-	if (type == "data-url") {
+	if (is_temp) {
 		if (!(await t.fs.exists("com.cmd-golem.infomaniak-newsletter-interface", { baseDir: t.fs.BaseDirectory.Temp}))) {
 			await t.fs.mkdir("com.cmd-golem.infomaniak-newsletter-interface", { baseDir: t.fs.BaseDirectory.Temp });
 		}
@@ -495,41 +446,34 @@ async function createGithubUrl(data, type) {
 		await t.fs.writeFile(local_path, file_array, { baseDir: t.fs.BaseDirectory.Temp });
 	}
 
-	var upload_response = await invoke("github_upload_file", {id:release_return.id.toString(), filePath:local_path, tempPath:temp_path, fileName:file_name}) || '{"errors":"An unknown error occured"}';
-	console.log(upload_response)
-	var file_data = JSON.parse(upload_response);
+	// upload file
+	var online_path = `${active_campaign}/${file_name}`;
+	var upload_response = await invoke("post", {localPath:local_path, onlinePath:online_path, isTemp:is_temp});
+	console.log("Response from uploading attachment: " + upload_response);
 
-	if (file_data.browser_download_url != undefined) return {src: file_data.browser_download_url, id: file_data.id};
-	else {
-		openDialog("backend_error", file_data.message + ": " + JSON.stringify(file_data.errors));
-		return false;
-	}
+	// insert pill, only if file is not overwritten
+	attachments.innerHTML += generateAttachmentHtml(active_campaign, online_path);
+
+	return `${settings.public_url}/${online_path}`;
+
+	// var file_data = JSON.parse(upload_response);
+
+	// if (file_data.browser_download_url != undefined) return {src: file_data.browser_download_url, id: file_data.id};
+	// else {
+	// 	openDialog("backend_error", file_data.message + ": " + JSON.stringify(file_data.errors));
+	// 	return false;
+	// }
 }
-
-async function deleteGithubUrl() {
-	var response = await invoke("github_get", {id:active_campaign.toString(), tempPath:false});
-	var release = JSON.parse(response);
-
-	if (release.status == "404") return;
-	else if (release.assets.length == 1) {
-		var delete_response = invoke("github_delete", {release:release.id, tag:release.tag_name});
-		console.log(delete_response);
-	}
-	else {
-		// handle individual files
-		// https://docs.github.com/de/rest/releases/assets?apiVersion=2022-11-28#upload-a-release-asset--parameters
-	} 
-}
-
-
 
 async function deleteAttachment(el, path) {
 	var user_action = await openDialog("delete_attachment");
 	if (user_action == "dialog_cancel") return false;
 
+	var lining_elements = editor_el.querySelectorAll(`img[src="${settings.public_url}/${path}"], a[href="${settings.public_url}/${path}"]`);
+	for (var i = 0; i < lining_elements.length; i++) lining_elements[i].remove();
+
 	var response = await invoke("delete", {path:path});
-	console.log("Response from deleting attachment");
-	console.log(response)
+	console.log("Response from deleting attachment: " + response);
 
 	el.remove();
 }

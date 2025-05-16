@@ -596,6 +596,18 @@ dialogbox {
 	max-width: 1200px;
 }
 
+settingsbox {
+	display: block;
+	overflow-y: auto;
+	height: 80vh;
+	max-height: fit-content;
+}
+
+buttonbox {
+	display: block;
+	padding-top: 40px;
+}
+
 settings p {
 	margin-top: 0;
 }

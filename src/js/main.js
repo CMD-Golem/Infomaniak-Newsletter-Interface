@@ -19,7 +19,7 @@ const error_msg = [
 	{id:"sent_test_mail", msg:"Das Testmail wurde erfolgreich versendet", buttons:["dialog_ok"]},
 	{id:"sent_campaign", msg:"Der Newsletter startet in 60s mit dem Versand", buttons:["dialog_ok"]},
 	{id:"delete_campaign", title:"Der Newsletter wird unwiederruflich gelöscht", msg:"Möchten Sie fortfahren?", buttons:["dialog_yes", "dialog_cancel"]},
-	{id:"no_file_upload_auth", msg:"Der API Key, sowie Owner und Repository von GitHub muss definiert sein, wenn sie Dateien hochladen möchten.", buttons:["dialog_ok"]},
+	{id:"no_file_upload_auth", msg:"Die WebDav Server Daten müssen ausgefüllt sein um Bilder und Dateien hochzuladen.", buttons:["dialog_ok"]},
 	{id:"undefined_settings", msg:"Der API Key vom Infomaniak Newsletter und alle Einstellungen müssen definiert sein, um das Programm nutzen zu können.", buttons:["dialog_ok"]},
 	{id:"newsletter_programmed", title:"Speichern nicht möglich", msg:"Dieser Newsletter wird momentan versandt. Das Editieren ist erst möglich, sobald der Newsletter an alle Empfänger versendet wurde.", buttons:["dialog_ok"]},
 	{id:"delete_forbidden", title:"Löschen nicht möglich", msg:"Dieser Newsletter wird momentan versandt. Das Löschen ist erst möglich, sobald der Newsletter an alle Empfänger versendet wurde.", buttons:["dialog_ok"]},
@@ -29,7 +29,7 @@ const error_msg = [
 	{id:"no_mailinglist", msg:"Erstelle zuerst eine neue Kontaktgruppe.", buttons:["dialog_ok"]},
 	{id:"embed", msg:"Soll das Bild eingebettet werden?", buttons:["dialog_yes", "dialog_no", "dialog_cancel"]},
 	{id:"delete_attachment", title:"Die Datei wird unwiederruflich gelöscht und vom Server entfernt", msg:"Möchten Sie fortfahren?", buttons:["dialog_yes", "dialog_cancel"]},
-	{id:"wait_before_sending", title:"Nach dem Erstellen muss mindesten 1 min gewartet werden, bis der Newsletter gesendet werden kann.", msg:"Um ${additional_info} kann dieser Newsletter frühstens versendet werden.", buttons:["dialog_yes", "dialog_cancel"]},
+	{id:"wait_before_sending", title:"Nach dem Erstellen muss mindesten 1 min gewartet werden, bis der Newsletter gesendet werden kann.", msg:"Um ${additional_info} kann dieser Newsletter frühstens versendet werden.", buttons:["dialog_ok"]},
 ]
 
 // status translation

@@ -1,8 +1,8 @@
+use std::{env, fs};
 use tauri::{Manager, WindowEvent::Destroyed};
-use std::{fs, env};
 
-mod storage;
 mod infomaniak;
+mod storage;
 mod webdav;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -31,7 +31,7 @@ pub fn run() {
 			webdav::get,
 			webdav::delete,
 			webdav::post
-			])
+		])
 		.plugin(tauri_plugin_window_state::Builder::new().build())
 		.plugin(tauri_plugin_updater::Builder::new().build())
 		.plugin(tauri_plugin_dialog::init())

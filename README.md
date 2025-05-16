@@ -9,9 +9,3 @@ Built with [Tauri](https://tauri.app/) and [Quill](https://quilljs.com/) and pow
 * Currently not enabled:
 	* [Typo.js by Christopher Finke](https://github.com/cfinke/Typo.js)
 	* [Better tables by soccerloway](https://github.com/soccerloway/quill-better-table)
-
-
-Planned improvments:
-* Use iota stronghold as secret storage
-* Use http/curl create instead of std::process::Command
-* Better error handling

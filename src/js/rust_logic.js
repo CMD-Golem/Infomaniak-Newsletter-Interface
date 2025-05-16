@@ -2,7 +2,7 @@ var unsaved_campaign = false;
 var active_campaign = null;
 var active_tab = "show_draft";
 var settings = undefined;
-const settings_array = ["infomaniak_domain", "webdav_url", "webdav_username", "sender_name", "sender_email", "lang", "unsubscribe", "file_text"];
+const settings_array = ["infomaniak_domain", "public_url", "webdav_url", "webdav_username", "sender_name", "sender_email", "lang", "unsubscribe", "file_text"];
 
 
 // initalize and load everything after document loaded
@@ -240,7 +240,7 @@ async function getCampaign(id) {
 	// show attachments
 	var html = "";
 
-	if (settings.webdav_url != "" && settings.webdav_username != "" && settings.webdav_password != "false") {
+	if (settings.webdav_url != "" && settings.webdav_username != "" && settings.webdav_password != "false" && settings.public_url != "") {
 		var xml = document.createElement("div");
 		xml.innerHTML = await invoke("get", {dir:id.toString()});
 
@@ -248,8 +248,7 @@ async function getCampaign(id) {
 			var files = xml.getElementsByTagName("D:href");
 
 			for (var i = 1; i < files.length; i++) {
-				var path = files[i].innerHTML.split("/").pop();
-				html += `<div onclick="deleteAttachment(this, '${id}/${path}')" onmouseenter="showTooltip(this, 2, 'Newsletter löschen')">${path}</div>`
+				html += generateAttachmentHtml(id, files[i].innerHTML);
 			}
 		}
 	}

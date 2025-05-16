@@ -1,8 +1,5 @@
-use std::{
-	os::windows::process::CommandExt,
-	process::Command
-};
 use serde_json::{self, Value};
+use std::{os::windows::process::CommandExt, process::Command};
 
 use crate::storage::CONFIG;
 
@@ -10,21 +7,23 @@ fn curl(header: &str, url: &str, data: &str) -> String {
 	let config = CONFIG.lock().unwrap();
 
 	let output = Command::new("curl")
-		.arg("-X").arg(header)
+		.arg("-X")
+		.arg(header)
 		.arg(format!("https://api.infomaniak.com/1/newsletters/{}/{}", config.infomaniak_domain, url))
-		.arg("-d").arg(data.to_string())
-		.arg("-H").arg(format!("Authorization: Bearer {}", config.infomaniak_secret))
-		.arg("-H").arg("Content-Type: application/json")
-		
+		.arg("-d")
+		.arg(data.to_string())
+		.arg("-H")
+		.arg(format!( "Authorization: Bearer {}", config.infomaniak_secret))
+		.arg("-H")
+		.arg("Content-Type: application/json")
 		.creation_flags(0x08000000)
 		.output();
 
 	match output {
 		Ok(success) => String::from_utf8_lossy(&success.stdout).into(),
-		Err(err) => err.to_string()
+		Err(err) => err.to_string(),
 	}
 }
-
 
 // Tauri functions
 #[tauri::command]
@@ -108,7 +107,6 @@ pub fn mailinglist_add_contact(group: u32, email: &str) -> String {
 		.arg(format!("https://api.infomaniak.com/1/newsletters/{}/subscribers", config.infomaniak_domain))
 		.arg("-H").arg(format!("Authorization: Bearer {}", config.infomaniak_secret))
 		.arg("-H").arg("Content-Type: application/json")
-		
 		.creation_flags(0x08000000)
 		.output()
 		.expect("Coudnt connect with the Infomaniak API");
@@ -116,7 +114,7 @@ pub fn mailinglist_add_contact(group: u32, email: &str) -> String {
 	// search for existing subscriber with email
 	let list: Value = serde_json::from_str(&String::from_utf8_lossy(&fetch.stdout)).expect("Invalid JSON response");
 	let mut id = String::new();
-	
+
 	for subscriber in list["data"].as_array().unwrap() {
 		if subscriber["email"].as_str().unwrap() == email {
 			id = subscriber["id"].as_number().unwrap().to_string();
@@ -133,11 +131,9 @@ pub fn mailinglist_add_contact(group: u32, email: &str) -> String {
 			.arg("-d").arg(format!("{{\"email\":\"{}\",\"groups\":[{}]}}", email, group))
 			.arg("-H").arg(format!("Authorization: Bearer {}", config.infomaniak_secret))
 			.arg("-H").arg("Content-Type: application/json")
-			
 			.creation_flags(0x08000000)
 			.output();
-	}
-	else {
+	} else {
 		// add existing user to group
 		output = Command::new("curl")
 			.arg("-X").arg("POST")
@@ -145,14 +141,13 @@ pub fn mailinglist_add_contact(group: u32, email: &str) -> String {
 			.arg("-d").arg(format!("{{\"subscriber_ids\":[{}]}}", id))
 			.arg("-H").arg(format!("Authorization: Bearer {}", config.infomaniak_secret))
 			.arg("-H").arg("Content-Type: application/json")
-			
 			.creation_flags(0x08000000)
 			.output();
 	}
 
 	match output {
 		Ok(success) => String::from_utf8_lossy(&success.stdout).into(),
-		Err(err) => err.to_string()
+		Err(err) => err.to_string(),
 	}
 }
 
@@ -166,13 +161,13 @@ pub fn mailinglist_remove_contact(subscriber: u32, group: i64) -> String {
 		.arg(format!("https://api.infomaniak.com/1/newsletters/{}/subscribers/{}?with=groups", config.infomaniak_domain, subscriber))
 		.arg("-H").arg(format!("Authorization: Bearer {}", config.infomaniak_secret))
 		.arg("-H").arg("Content-Type: application/json")
-		
 		.creation_flags(0x08000000)
 		.output()
 		.expect("Error");
 
 	// search for existing subscriber with email
-	let list: Value = serde_json::from_str(&String::from_utf8_lossy(&fetch.stdout)).expect("Invalid JSON response");
+	let list: Value = serde_json::from_str(&String::from_utf8_lossy(&fetch.stdout))
+		.expect("Invalid JSON response");
 	let len = list["data"]["groups"].as_array().unwrap().len();
 
 	if (len == 1 && list["data"]["groups"][0]["id"].as_number().unwrap().as_i64().unwrap() == group) || len == 0 {
@@ -182,7 +177,6 @@ pub fn mailinglist_remove_contact(subscriber: u32, group: i64) -> String {
 			.arg(format!("https://api.infomaniak.com/1/newsletters/{}/subscribers/{}/forget", config.infomaniak_domain, subscriber))
 			.arg("-H").arg(format!("Authorization: Bearer {}", config.infomaniak_secret))
 			.arg("-H").arg("Content-Type: application/json")
-			
 			.creation_flags(0x08000000)
 			.output()
 			.expect("Error");
@@ -198,14 +192,13 @@ pub fn mailinglist_remove_contact(subscriber: u32, group: i64) -> String {
 			.arg("-d").arg(format!("{{\"subscriber_ids\":[{subscriber}]}}"))
 			.arg("-H").arg(format!("Authorization: Bearer {}", config.infomaniak_secret))
 			.arg("-H").arg("Content-Type: application/json")
-			
 			.creation_flags(0x08000000)
 			.output()
 			.expect("Error");
 
-			println!("Remove subscriber from group");
+		println!("Remove subscriber from group");
 		return String::from_utf8_lossy(&output.stdout).to_string();
-	}
+	} 
 	else {
 		return "{\"result\":\"error\",\"error\":{\"code\":\"subscriber_doesnt_exist\",\"description\":\"Selected subscriber isn't part of the selected group\"}}".to_string();
 	}
