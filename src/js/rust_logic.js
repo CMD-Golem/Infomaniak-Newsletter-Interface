@@ -163,9 +163,24 @@ function createCampaignHtml(campaign_object) {
 		}
 	}
 
+	if ((campaign_object.status == "scheduled" || campaign_object.status == "sent") && campaign_object.started_at != null) {
+		var now = new Date();
+		var date = new Date(campaign_object.started_at * 1000);
+
+		if (now.toDateString() == date.toDateString()) {
+			var time = date.toLocaleTimeString();
+		}
+		else {
+			var time = date.toLocaleString();
+		}
+
+		var status_description = status.description + time
+	}
+	else var status_description = status.description
+
 	var html = `
 	<listitem id="${campaign_object.id}" onclick="getCampaign(${campaign_object.id})">
-		<svg width="24" height="24" viewBox="0 0 24 24" onmouseenter="showTooltip(this, 1, '${status.description}')" class="standalone">${status.icon}</svg>
+		<svg width="24" height="24" viewBox="0 0 24 24" onmouseenter="showTooltip(this, 1, '${status_description}')" class="standalone">${status.icon}</svg>
 		<p>${campaign_object.subject}</p>
 		<button onclick="duplicateCampaign(${campaign_object.id})" onmouseenter="showTooltip(this, 2, 'Newsletter duplizieren')">
 			<svg width="24" height="24" viewBox="0 0 24 24"><path d="M5.503 4.627 5.5 6.75v10.504a3.25 3.25 0 0 0 3.25 3.25h8.616a2.251 2.251 0 0 1-2.122 1.5H8.75A4.75 4.75 0 0 1 4 17.254V6.75c0-.98.627-1.815 1.503-2.123ZM17.75 2A2.25 2.25 0 0 1 20 4.25v13a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-13A2.25 2.25 0 0 1 8.75 2h9Z"/></svg>
@@ -203,6 +218,8 @@ async function getCampaigns(show_drafts, select_first_campaign) {
 		active_campaign = first_id;
 	}
 	campaign_list.innerHTML = html;
+
+	return json;
 }
 
 // get specific campaign and show it in editor
@@ -286,7 +303,7 @@ async function saveCampaign(wants_sending) {
 
 	// create data string if a campaign is active
 	var html_content = quill.getSemanticHTML();
-	// if (!html_content.includes('<a href="*|UNSUBSCRIBED|*"')) html_content += '<template><a href="*|UNSUBSCRIBED|*" target="_blank"></a></template>';
+	if (!html_content.includes('<a href="*|UNSUBSCRIBED|*"')) html_content += '<template><a href="*|UNSUBSCRIBED|*" target="_blank"></a></template>';
 	var content = `<style>p {margin: 0;} * {font-size: ${standard_text_size}; font-family: ${standard_font}}</style>` + html_content.replaceAll('"', '\\"').replaceAll("<p></p>", "<br>");
 
 	var data = `{
@@ -320,6 +337,9 @@ async function saveCampaign(wants_sending) {
 			unsaved_campaign = false;
 
 			campaign_list.innerHTML = createCampaignHtml(json.data) + campaign_list.innerHTML;
+
+			document.querySelector(".selected")?.classList.remove("selected");
+			document.getElementById(active_campaign).classList.add("selected");
 
 			return true;
 		}
@@ -381,17 +401,25 @@ async function sendCampaign(is_test) {
 		}
 	}
 	else {
-		// send campaign to mailinglist
-		var response = await invoke("send_campaign", {id:active_campaign, data:`{"started_at":"${Math.floor((Date.now() + schedule_delay_ms) / 1000)}"}`});
+		var response = await invoke("send_campaign", {id:active_campaign, data:""});
 		var json = JSON.parse(response);
 
 		if (json.result == "success") {
-			getCampaigns();
-			openDialog("sent_campaign");
+			var json = await getCampaigns();
+
+			for (var i = 0; i < json.data.length; i++) {
+				var campaign_object = json.data[i];
+				if (campaign_object.id == active_campaign && campaign_object.started_at != null) {
+					var date = new Date(campaign_object.started_at * 1000);
+				}
+			}
+
+			var timeout = campaign_object.started_at * 1000 - Date.now() + 5000;
+
+			openDialog("sent_campaign", date.toLocaleString());
 			setTimeout(getCredits, 500);
-			setTimeout(getCampaigns, schedule_delay_ms + 100);
+			setTimeout(getCampaigns, timeout);
 		}
-		else if (json.error.errors[0].code == "validation_rule_self") openDialog("wait_before_sending", json.error.errors[0].description.slice(74, 79));
 		else openDialog("backend_error", JSON.stringify(json.error));
 	}
 }
@@ -455,6 +483,8 @@ async function duplicateCampaign(id) {
 		else if (user_action == "dialog_no") unsaved_campaign = false;
 		else if (user_action == "dialog_cancel") return false;
 	}
+
+	changeTab("show_draft");
 
 	await getCampaign(id);
 	active_campaign = 0;

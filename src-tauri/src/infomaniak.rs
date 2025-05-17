@@ -7,15 +7,11 @@ fn curl(header: &str, url: &str, data: &str) -> String {
 	let config = CONFIG.lock().unwrap();
 
 	let output = Command::new("curl")
-		.arg("-X")
-		.arg(header)
+		.arg("-X").arg(header)
 		.arg(format!("https://api.infomaniak.com/1/newsletters/{}/{}", config.infomaniak_domain, url))
-		.arg("-d")
-		.arg(data.to_string())
-		.arg("-H")
-		.arg(format!( "Authorization: Bearer {}", config.infomaniak_secret))
-		.arg("-H")
-		.arg("Content-Type: application/json")
+		.arg("-d").arg(data.to_string())
+		.arg("-H").arg(format!( "Authorization: Bearer {}", config.infomaniak_secret))
+		.arg("-H").arg("Content-Type: application/json")
 		.creation_flags(0x08000000)
 		.output();
 
@@ -88,7 +84,7 @@ pub fn delete_mailinglist(id: u32) -> String {
 
 #[tauri::command]
 pub fn mailinglist_get_contacts(id: u32) -> String {
-	curl("GET", &format!("groups/{}/subscribers", id), "").into()
+	curl("GET", "subscribers", &format!("{{\"filter\":{{\"groups\":[{id}]}}}}")).into()
 }
 
 #[tauri::command]
@@ -166,8 +162,7 @@ pub fn mailinglist_remove_contact(subscriber: u32, group: i64) -> String {
 		.expect("Error");
 
 	// search for existing subscriber with email
-	let list: Value = serde_json::from_str(&String::from_utf8_lossy(&fetch.stdout))
-		.expect("Invalid JSON response");
+	let list: Value = serde_json::from_str(&String::from_utf8_lossy(&fetch.stdout)).expect("Invalid JSON response");
 	let len = list["data"]["groups"].as_array().unwrap().len();
 
 	if (len == 1 && list["data"]["groups"][0]["id"].as_number().unwrap().as_i64().unwrap() == group) || len == 0 {
