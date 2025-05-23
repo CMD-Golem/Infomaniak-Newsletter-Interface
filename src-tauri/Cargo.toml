@@ -1,9 +1,9 @@
 [package]
 name = "infomaniak-newsletter-interface"
-version = "1.0.0"
+version = "1.0.1"
 description = "Infomaniak Newsletter Interface"
 authors = ["CMD-Golem"]
-license = "GPL-3.0"
+license = "AGPL-3.0"
 repository = "https://github.com/CMD-Golem/Infomaniak-Newsletter-Interface/"
 edition = "2021"
 
