@@ -9,3 +9,10 @@ Built with [Tauri](https://tauri.app/) and [Quill](https://quilljs.com/) and pow
 * Currently not enabled:
 	* [Typo.js by Christopher Finke](https://github.com/cfinke/Typo.js)
 	* [Better tables by soccerloway](https://github.com/soccerloway/quill-better-table)
+
+
+# New versions:
+- updater.json
+- package.json
+- 2x tauri.conf.json
+- Cargon.toml

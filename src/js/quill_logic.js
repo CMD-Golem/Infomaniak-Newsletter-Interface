@@ -18,10 +18,12 @@ class StyleImageBlot extends ImageBlot {
 		if (typeof value === "string" && value.includes(";base64,")) {
 			node.setAttribute("id", "no_file");
 			node.setAttribute("src", value);
+			node.setAttribute("style", "width: 500px;");
 			node.setAttribute("class", "computed");
 		}
 		else if (typeof value === "string") {
 			node.setAttribute("src", value);
+			node.setAttribute("style", "width: 500px;");
 		}
 		else {
 			// node.setAttribute("id", "");
@@ -218,7 +220,7 @@ quill.on("text-change", async () => {
 			quill.history.undo();
 		}
 		else {
-			new_img.src = src;
+			new_img.src = `${settings.public_url}/${src}`;
 			new_img.classList.add("computed");
 		}
 	}
@@ -325,13 +327,17 @@ body.addEventListener("click", (e) => {
 
 		t.opener.openUrl(href);
 	}
-	else if (e.target.nodeName == "A" && parseFloat(quill_link_menu.style.left) < 0) quill_link_menu.style.left = "0";
+	else if (e.target.nodeName == "A") {
+		if (parseFloat(quill_link_menu.style.left) < 0) quill_link_menu.style.left = "0";
+		quill_link_menu.style.top = (parseFloat(quill_link_menu.style.top) + editor_el.scrollTop) + "px";
+	} 
 });
 // link
 function openLink() {
 	document.getElementsByClassName('ql-link')[0].click();
 	var link_tool = document.querySelector(".ql-tooltip.ql-editing[data-mode='link']");
 	
+	link_tool.style.top = (parseFloat(quill_link_menu.style.top) + editor_el.scrollTop) + "px"
 	if (parseFloat(link_tool.style.left) < 0) link_tool.style.left = "0";
 }
 
@@ -342,14 +348,12 @@ var attachments = document.querySelector("attachments");
 
 function generateAttachmentHtml(id, src) {
 	var path = src.split("/").pop();
-	return `<div onclick="deleteAttachment(this, '${id}/${path}')" onmouseenter="showTooltip(this, 2, 'Newsletter löschen')">${path}</div>`;
+	return `<div onmouseenter="attachmentMenu(this, '${id}/${path}')">${path}</div>`;
 }
 
 async function selectFile(insert_attachments) {
 	if (insert_attachments) var filters = ["avif", "bmp", "gif", "jfif", "jpeg", "jpg", "png", "svg", "tiff", "webp"];
 	else var filters = ["*"];
-
-	var index = quill.getSelection().index;
 
 	var files = await t.dialog.open({
 		multiple: true,
@@ -362,21 +366,27 @@ async function selectFile(insert_attachments) {
 	if (files == null) return;
 
 	for (var i = 0; i < files.length; i++) {
+		var index = quill.getSelection().index;
 		var src = await uploadFile(files[i], "path", insert_attachments);
+		insertFile(src, insert_attachments, true, index);
+	}
+}
 
-		if (src == false) return;
+function insertFile(src, insert_attachments, select, index) {
+	if (src == false) return;
+	if (index == false) index = quill.getSelection().index;
+	var path = `${settings.public_url}/${src}`;
 
-		// show file in newsletter text
-		if (insert_attachments) {
-			quill.insertEmbed(index, "image", src);
-			var new_img = editor_el.querySelector("img:not(.computed)");
-			new_img.classList.add("computed");
-		}
-		else {
-			var showing_text = settings.file_text?.replace("${file_name}", src.split("/").pop()) || src.split("/").pop();
-			quill.insertText(index, showing_text, {link:src});
-			quill.setSelection(index, showing_text.length);
-		}
+	// show file in newsletter text
+	if (insert_attachments) {
+		quill.insertEmbed(index, "image", path);
+		var new_img = editor_el.querySelector("img:not(.computed)");
+		new_img.classList.add("computed");
+	}
+	else {
+		var showing_text = settings.file_text?.replace("${file_name}", src.split("/").pop()) || src.split("/").pop();
+		quill.insertText(index, showing_text, {link:path});
+		if (select) quill.setSelection(index, showing_text.length);
 	}
 }
 
@@ -452,7 +462,7 @@ async function uploadFile(data, type) {
 	// insert pill, only if file is not overwritten
 	attachments.innerHTML += generateAttachmentHtml(active_campaign, online_path);
 
-	return `${settings.public_url}/${online_path}`;
+	return online_path;
 
 	// var file_data = JSON.parse(upload_response);
 
@@ -474,4 +484,26 @@ async function deleteAttachment(el, path) {
 	console.log("Response from deleting attachment: " + response);
 
 	el.remove();
+}
+
+// hover over attachment pil for menu
+var attachment_menu = document.querySelector("attachment");
+var selected_attachment = [null, false];
+var attachment_menu_timeout;
+
+function attachmentMenu(el, src) {
+	var el_pos = el.getBoundingClientRect();
+	attachment_menu.setAttribute("style", `transform: scale(1); top: ${el_pos.top + el_pos.height +5}px; left: ${el_pos.left + el_pos.width /2}px; transform: translate(-50%, 0);`);
+	
+	var menu_pos = attachment_menu.getBoundingClientRect();
+	attachment_menu.firstElementChild.setAttribute("style", `top: -${el_pos.height +5}px; left: ${(menu_pos.width - el_pos.width)/2}px; width: ${el_pos.width}px; height: ${el_pos.height +5}px;`);
+	
+	selected_attachment = [el, src];
+	attachment_menu.addEventListener("mouseleave", closeAttachmentMenu, {once: true});
+}
+
+function closeAttachmentMenu() {
+	attachment_menu.removeAttribute("style");
+	attachment_menu.firstElementChild.removeAttribute("style");
+	selected_attachment = [null, false];
 }

@@ -2,6 +2,7 @@ var unsaved_campaign = false;
 var active_campaign = null;
 var active_tab = "show_draft";
 var settings = undefined;
+var unlisten;
 const settings_array = ["infomaniak_domain", "public_url", "webdav_url", "webdav_username", "sender_name", "sender_email", "lang", "unsubscribe", "file_text"];
 
 
@@ -45,6 +46,16 @@ window.onload = async () => {
 		var set_value = newsletter_group.value;
 		await getMailinglists();
 		newsletter_group.value = set_value;
+	});
+
+	unlisten = await t.window.getCurrentWindow().onCloseRequested(async (event) => {
+		console.log("hello")
+		if (unsaved_campaign) {
+			var user_action = await openDialog("unsaved_changes");
+	
+			if (user_action == "dialog_yes") await saveCampaign();
+			else if (user_action == "dialog_cancel") event.preventDefault();
+		}
 	});
 }
 
@@ -263,6 +274,8 @@ async function getCampaign(id) {
 		var xml = document.createElement("div");
 		xml.innerHTML = await invoke("get", {dir:id.toString()});
 
+		console.log(xml)
+
 		if (xml.getElementsByTagName("D:status")[0]?.innerHTML == "HTTP/1.1 200 OK") {
 			var files = xml.getElementsByTagName("D:href");
 
@@ -303,8 +316,18 @@ async function saveCampaign(wants_sending) {
 		return false;
 	}
 
+	// compute images
+	var img_el = editor_el.querySelectorAll("img");
+	for (var i = 0; i < img_el.length; i++) {
+		var el = img_el[i];
+		el.width = parseFloat(el.style.width).toFixed();
+		el.height = parseFloat(el.style.height).toFixed();
+	}
+
 	// create data string if a campaign is active
 	var html_content = quill.getSemanticHTML();
+	html_content = html_content.replaceAll("\t", "&#x9;");
+	console.log(html_content)
 	if (!html_content.includes('<a href="*|UNSUBSCRIBED|*"')) html_content += '<template><a href="*|UNSUBSCRIBED|*" target="_blank"></a></template>';
 	var content = `<style>p {margin: 0;} * {font-size: ${standard_text_size}; font-family: ${standard_font}}</style>` + html_content.replaceAll('"', '\\"').replaceAll("<p></p>", "<br>");
 

@@ -217,7 +217,8 @@ textarea {
 }
 
 contacts {
-	height: 100vh;
+	display: block;
+	height: calc(100vh - 41px);
 	overflow-y: auto;
 }
 
@@ -418,7 +419,7 @@ picker input {
 
 
 /* Context and Selection menu */
-selectionmenu, contextmenu {
+selectionmenu, contextmenu, attachment {
 	display: flex;
 	flex-direction: row;
 	position: fixed;
@@ -430,8 +431,13 @@ selectionmenu, contextmenu {
 	box-shadow: 0 0 15px 0 rgba(0,0,0,0.65);
 }
 
-contextmenu {
+contextmenu, attachment {
 	flex-direction: column;
+}
+
+attachment span {
+	position: absolute;
+	display: block;
 }
 
 selectionmenu.visible, contextmenu.visible {
@@ -449,12 +455,12 @@ selectionmenu button:last-child {
 	border-bottom-right-radius: 3px;
 }
 
-contextmenu button:first-child {
+contextmenu button:first-child, attachment button:first-child {
 	border-top-left-radius: 3px;
 	border-top-right-radius: 3px;
 }
 
-contextmenu button:last-child {
+contextmenu button:last-child, attachment button:last-child {
 	border-bottom-left-radius: 3px;
 	border-bottom-right-radius: 3px;
 }
