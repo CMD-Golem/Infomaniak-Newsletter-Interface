@@ -232,9 +232,7 @@
 				<input autocomplete="one-time-code" type="text" placeholder="WebDav URL" id="webdav_url">
 				<input autocomplete="one-time-code" type="text" placeholder="Nutzername" id="webdav_username">
 				<button class="settings_show" onclick="this.nextElementSibling.style.display = 'block'; this.style.display = 'none';">Passwort überschreiben</button>
-				<div style="display: none;">
-					<input autocomplete="one-time-code" type="text" placeholder="Passwort" id="webdav_password">
-				</div>
+				<input autocomplete="one-time-code" type="text" placeholder="Passwort" id="webdav_password" style="display: none;">
 			</settingsbox>
 			<buttonbox>
 				<button onclick="saveSettings('ok');">OK</button>

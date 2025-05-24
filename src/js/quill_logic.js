@@ -319,7 +319,7 @@ body.addEventListener("click", (e) => {
 
 	if (e.target.nodeName == "A" && e.target.classList.contains("ql-preview")) {
 		var href = e.target.href;
-		href = href.replace("https://tauri.localhost", "https:/").replace("http://127.0.0.1:1430", "http:/");
+		href = href.replace("http://tauri.localhost", "http:/").replace("http://127.0.0.1:1430", "http:/");
 
 		if (href == "http://*%7CUNSUBSCRIBED%7C*") return;
 
@@ -327,8 +327,6 @@ body.addEventListener("click", (e) => {
 	}
 	else if (e.target.nodeName == "A" && parseFloat(quill_link_menu.style.left) < 0) quill_link_menu.style.left = "0";
 });
-
-
 // link
 function openLink() {
 	document.getElementsByClassName('ql-link')[0].click();

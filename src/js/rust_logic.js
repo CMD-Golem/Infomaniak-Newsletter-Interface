@@ -99,6 +99,7 @@ async function saveSettings(action) {
 	if (
 		document.getElementById("sender_name").value == "" ||
 		document.getElementById("sender_email").value == "" ||
+		document.getElementById("infomaniak_domain").value == "" ||
 		(el_infomaniak_secret.value == "" && settings.infomaniak_secret == "false")
 	) {
 		openDialog("undefined_settings");
@@ -114,11 +115,12 @@ async function saveSettings(action) {
 		if (el_infomaniak_secret.value != "") new_settings.push({property:"infomaniak_secret", value:el_infomaniak_secret.value});
 		if (el_webdav_password.value != "") new_settings.push({property:"webdav_password", value:el_webdav_password.value});
 
-		if (new_settings.length != 0) var response = await invoke("change_config", {data:JSON.stringify(new_settings)});
-
-		if (response != "success") {
-			openDialog("backend_error", response);
-			return;
+		if (new_settings.length != 0) {
+			var response = await invoke("change_config", {data:JSON.stringify(new_settings)});
+			if (response != "success") {
+				openDialog("backend_error", response);
+				return;
+			}
 		}
 	}
 
@@ -135,7 +137,7 @@ async function saveSettings(action) {
 function validateSettings(property, new_settings) {
 	var value = document.getElementById(property).value;
 
-	if (settings[property] != value && value != "") {
+	if (settings[property] != value) {
 		settings[property] = value;
 		new_settings.push({property:property, value:value});
 	}
