@@ -206,8 +206,6 @@ async function getMailinglist(id, check_already_selected) {
 	var response = await invoke("mailinglist_get_contacts", {id:parseInt(id)});
 	var json = JSON.parse(response);
 
-	console.log(response)
-
 	if (json.result != "success") {
 		openDialog("backend_error", JSON.stringify(json.error));
 		return;
@@ -301,7 +299,6 @@ async function newContact() {
 
 	for (var i = 0; i < new_contacts.length; i++) {
 		if (email_validation.test(new_contacts[i])) {
-			console.log(new_contacts[i])
 			var response = await invoke("mailinglist_add_contact", {group:parseInt(id), email:new_contacts[i]});
 			var json = JSON.parse(response);
 			if (json.result != "success") openDialog("backend_error", JSON.stringify(json.error));

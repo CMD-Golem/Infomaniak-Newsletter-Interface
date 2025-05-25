@@ -49,7 +49,6 @@ window.onload = async () => {
 	});
 
 	unlisten = await t.window.getCurrentWindow().onCloseRequested(async (event) => {
-		console.log("hello")
 		if (unsaved_campaign) {
 			var user_action = await openDialog("unsaved_changes");
 	
@@ -274,8 +273,6 @@ async function getCampaign(id) {
 		var xml = document.createElement("div");
 		xml.innerHTML = await invoke("get", {dir:id.toString()});
 
-		console.log(xml)
-
 		if (xml.getElementsByTagName("D:status")[0]?.innerHTML == "HTTP/1.1 200 OK") {
 			var files = xml.getElementsByTagName("D:href");
 
@@ -326,8 +323,7 @@ async function saveCampaign(wants_sending) {
 
 	// create data string if a campaign is active
 	var html_content = quill.getSemanticHTML();
-	html_content = html_content.replaceAll("\t", "&#x9;");
-	console.log(html_content)
+	html_content = html_content.replaceAll("  ", "&nbsp;&nbsp;");
 	if (!html_content.includes('<a href="*|UNSUBSCRIBED|*"')) html_content += '<template><a href="*|UNSUBSCRIBED|*" target="_blank"></a></template>';
 	var content = `<style>p {margin: 0;} * {font-size: ${standard_text_size}; font-family: ${standard_font}}</style>` + html_content.replaceAll('"', '\\"').replaceAll("<p></p>", "<br>");
 
