@@ -70,6 +70,11 @@ impl Config {
 
 	fn path() -> PathBuf {
 		let path = env::var("APPDATA").expect("Could find folder");
+		
+		if !fs::exists(format!("{path}/com.cmd-golem.infomaniak-newsletter-interface")).expect("Error with existance check") {
+			fs::create_dir(format!("{path}/com.cmd-golem.infomaniak-newsletter-interface")).expect("Couldnt create folder");
+		}
+
 		return PathBuf::from(format!("{path}/com.cmd-golem.infomaniak-newsletter-interface/config.dat"));
 	}
 

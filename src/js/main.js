@@ -6,28 +6,39 @@ var tooltip = document.querySelector("tooltip");
 
 const text_open_files = "Alle Dateien";
 const text_suggest_name = "Neue Datei.";
+const text_duplicate = "Newsletter duplizieren";
+const text_delete = "Newsletter löschen";
+const text_rename = "Kontaktgruppe umbenennen";
+const text_contact_duplicate = "Kontaktgruppe duplizieren";
+const text_contact_delete = "Kontaktgruppe löschen";
+const text_contact_remove = "Aus Kontaktgruppe entfernen";
+const text_contact_default = "Neue Kontaktgruppe";
+const copy = "Kopie";
+
 
 // error and info box
 const error_msg = [
 	{id:"backend_error", title:"Error", msg:"Folgender Fehler ist bei der Synchronisierung mit dem Newsletter Server aufgetreten:<br><br>${additional_info}", buttons:["dialog_ok"]},
 	{id:"unsaved_changes", title:"Die Änderungen wurden nicht gespeichert", msg:"Möchten Sie diese speichern?", buttons:["dialog_yes", "dialog_no", "dialog_cancel"]},
-	{id:"no_selection", msg:"Erstelle zuerst ein neuer Newsletter.", buttons:["dialog_ok"]},
-	{id:"no_selected_mailinglist", msg:"Es muss eine Kontaktgruppe vor dem Speichern ausgewählt werden", buttons:["dialog_ok"]},
-	{id:"no_subject", msg:"Es muss ein Betreff vor dem Speichern definiert werden", buttons:["dialog_ok"]},
+	{id:"no_campaign_selected", msg:"Erstelle zuerst ein neuer Newsletter.", buttons:["dialog_ok"]},
+	{id:"no_campaign_metadata", msg:"Vor dem Speichern muss der Betreff und eine Kontaktgruppe definiert werden", buttons:["dialog_ok"]},
 	{id:"no_test_mail", msg:"Für das Senden eines Tests muss eine Test E-Mail Adresse definiert sein", buttons:["dialog_ok"]},
 	{id:"sent_test_mail", msg:"Das Testmail wurde erfolgreich versendet", buttons:["dialog_ok"]},
 	{id:"sent_campaign", msg:"Der Newsletter wird am ${additional_info} versendet", buttons:["dialog_ok"]},
-	{id:"delete_campaign", title:"Der Newsletter wird unwiederruflich gelöscht", msg:"Möchten Sie fortfahren?", buttons:["dialog_yes", "dialog_cancel"]},
+	{id:"delete_campaign", title:"Der Newsletter und alle seine Anhänge werden unwiederruflich vom Server gelöscht", msg:"Möchten Sie fortfahren?", buttons:["dialog_yes", "dialog_cancel"]},
 	{id:"no_file_upload_auth", msg:"Die WebDav Server Daten müssen ausgefüllt sein um Bilder und Dateien hochzuladen.", buttons:["dialog_ok"]},
-	{id:"undefined_settings", msg:"Der API Key vom Infomaniak Newsletter und alle Einstellungen müssen definiert sein, um das Programm nutzen zu können.", buttons:["dialog_ok"]},
+	{id:"undefined_settings", msg:"Der API Key vom Infomaniak Newsletter und alle Einstellungen mit Stern müssen definiert sein, um das Programm nutzen zu können.", buttons:["dialog_ok"]},
 	{id:"newsletter_programmed", title:"Speichern nicht möglich", msg:"Dieser Newsletter wird momentan versandt. Das Editieren ist erst möglich, sobald der Newsletter an alle Empfänger versendet wurde.", buttons:["dialog_ok"]},
 	{id:"delete_forbidden", title:"Löschen nicht möglich", msg:"Dieser Newsletter wird momentan versandt. Das Löschen ist erst möglich, sobald der Newsletter an alle Empfänger versendet wurde.", buttons:["dialog_ok"]},
 	{id:"already_sent", title:"Newsletter bereits versendet", msg:"Erstelle eine Kopie von diesem Newsletter um ihn erneut zu verschicken.", buttons:["dialog_ok"]},
-	{id:"delete_mailinglist", title:"Die Kontaktgruppe wird unwiederruflich gelöscht", msg:"Möchten Sie fortfahren?", buttons:["dialog_yes", "dialog_cancel"]},
-	{id:"delete_contact", title:"Der Kontakt wird unwiederruflich gelöscht", msg:"Möchten Sie fortfahren?", buttons:["dialog_yes", "dialog_cancel"]},
+	{id:"delete_mailinglist", title:"Die Kontaktgruppe wird unwiederruflich vom Server gelöscht", msg:"Kontakte die nur in dieser Kontakgruppen vorhanden sind werden ebenfalls gelöscht<br>Möchten Sie fortfahren?", buttons:["dialog_yes", "dialog_cancel"]},
+	{id:"delete_contact", title:"Der Kontakt wird unwiederruflich vom Server gelöscht", msg:"Möchten Sie fortfahren?", buttons:["dialog_yes", "dialog_cancel"]},
 	{id:"no_mailinglist", msg:"Erstelle zuerst eine neue Kontaktgruppe.", buttons:["dialog_ok"]},
 	{id:"embed", msg:"Soll das Bild eingebettet werden?", buttons:["dialog_yes", "dialog_no", "dialog_cancel"]},
-	{id:"delete_attachment", title:"Die Datei wird unwiederruflich gelöscht und vom Server entfernt", msg:"Möchten Sie fortfahren?", buttons:["dialog_yes", "dialog_cancel"]},
+	{id:"delete_attachment", title:"Die Datei wird unwiederruflich vom Server gelöscht", msg:"Möchten Sie fortfahren?", buttons:["dialog_yes", "dialog_cancel"]},
+	{id:"update", title:"Updating", msg:"Das Programm wird anschliessend automatisch neugestartet", buttons:[]},
+	{id:"overwrite_attachment", title:"Diese Datei exisitert auf dem Server bereits", msg:"Möchten Sie diese überschreiben?", buttons:["dialog_yes", "dialog_cancel"]},
+	{id:"quill_no_selection", msg:"Plazieren den Cursor im Text Editor um an dieser Stelle einzufügen", buttons:["dialog_ok"]},
 ]
 
 // status translation

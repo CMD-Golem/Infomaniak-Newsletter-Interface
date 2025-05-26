@@ -366,27 +366,29 @@ async function selectFile(insert_attachments) {
 	if (files == null) return;
 
 	for (var i = 0; i < files.length; i++) {
-		var index = quill.getSelection().index;
 		var src = await uploadFile(files[i], "path", insert_attachments);
-		insertFile(src, insert_attachments, true, index);
+		insertFile(src, insert_attachments, true);
 	}
 }
 
-function insertFile(src, insert_attachments, select, index) {
+function insertFile(src, insert_attachments, select) {
 	if (src == false) return;
-	if (index == false) index = quill.getSelection().index;
+
+	var sel = quill.getSelection();
+	if (sel == null) return openDialog("quill_no_selection");
+	
 	var path = `${settings.public_url}/${src}`;
 
 	// show file in newsletter text
 	if (insert_attachments) {
-		quill.insertEmbed(index, "image", path);
+		quill.insertEmbed(sel.index, "image", path);
 		var new_img = editor_el.querySelector("img:not(.computed)");
 		new_img.classList.add("computed");
 	}
 	else {
 		var showing_text = settings.file_text?.replace("${file_name}", src.split("/").pop()) || src.split("/").pop();
-		quill.insertText(index, showing_text, {link:path});
-		if (select) quill.setSelection(index, showing_text.length);
+		quill.insertText(sel.index, showing_text, {link:path});
+		if (select) quill.setSelection(sel.index, showing_text.length);
 	}
 }
 
@@ -418,6 +420,9 @@ async function uploadFile(data, type) {
 		return false;
 	}
 
+	// check if newsletter already has id
+	if (active_campaign == 0) return await saveCampaign();
+
 	// ask for file name
 	if (type == "path") {
 		var suggestion_name = data.split("\\").pop();
@@ -435,8 +440,14 @@ async function uploadFile(data, type) {
 	if (file_name == false) return false;
 	file_name = file_name.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9._-]/g, "");
 
+	
 	// check if file already exists
-	console.warn("Implement existing file check");
+	var online_path = `${active_campaign}/${file_name}`;
+	
+	if (await invoke("get", {dir:online_path}) != "Not Found") {
+		var user_action = await openDialog("overwrite_attachment");
+		if (user_action == "dialog_cancel") return false;
+	}
 
 	// create temp file from data-url
 	if (is_temp) {
@@ -455,7 +466,6 @@ async function uploadFile(data, type) {
 	}
 
 	// upload file
-	var online_path = `${active_campaign}/${file_name}`;
 	var upload_response = await invoke("post", {localPath:local_path, onlinePath:online_path, isTemp:is_temp});
 	console.log("Response from uploading attachment: " + upload_response);
 
@@ -463,14 +473,6 @@ async function uploadFile(data, type) {
 	attachments.innerHTML += generateAttachmentHtml(active_campaign, online_path);
 
 	return online_path;
-
-	// var file_data = JSON.parse(upload_response);
-
-	// if (file_data.browser_download_url != undefined) return {src: file_data.browser_download_url, id: file_data.id};
-	// else {
-	// 	openDialog("backend_error", file_data.message + ": " + JSON.stringify(file_data.errors));
-	// 	return false;
-	// }
 }
 
 async function deleteAttachment(el, path) {

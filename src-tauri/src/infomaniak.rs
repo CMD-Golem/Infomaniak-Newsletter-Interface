@@ -58,8 +58,8 @@ pub fn test_campaign(id: u32, data: &str) -> String {
 }
 
 #[tauri::command]
-pub fn send_campaign(id: u32, data: &str) -> String {
-	curl("PUT", &format!("campaigns/{}/schedule", id), data).into()
+pub fn send_campaign(id: u32) -> String {
+	curl("PUT", &format!("campaigns/{}/schedule", id), "").into()
 }
 
 #[tauri::command]
@@ -201,8 +201,11 @@ pub fn mailinglist_remove_contact(subscriber: u32, group: i64) -> String {
 
 #[tauri::command]
 pub fn get_credits() -> String {
-	let list: Value = serde_json::from_str(&curl("GET", "credits/details", "")).expect("Invailid JSON response");
-	let total = list["data"]["total"].as_number().unwrap();
+	let list: Value = serde_json::from_str(&curl("GET", "credits/details", "")).expect("Couldnt read json");
+	let credits = list["data"]["total"].as_number();
 
-	return total.to_string();
+	match credits {
+		Some(credit) => credit.to_string(),
+		None => "unknown".to_string(),
+	}
 }

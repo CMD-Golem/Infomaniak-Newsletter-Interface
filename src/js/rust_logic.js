@@ -17,7 +17,6 @@ var el_webdav_password = document.getElementById("webdav_password");
 quill.on('text-change', () => { unsaved_campaign = true });
 
 window.onload = async () => {
-	// async function noStart() {
 	quill.focus();
 
 	if (invoke == undefined) return;
@@ -48,6 +47,8 @@ window.onload = async () => {
 		newsletter_group.value = set_value;
 	});
 
+	t.event.listen("app-updater", async () => await openDialog("update"));
+
 	unlisten = await t.window.getCurrentWindow().onCloseRequested(async (event) => {
 		if (unsaved_campaign) {
 			var user_action = await openDialog("unsaved_changes");
@@ -60,6 +61,7 @@ window.onload = async () => {
 
 async function getCredits() {
 	var response = await invoke("get_credits");
+
 	document.getElementById("credits").innerHTML = response;
 }
 
@@ -116,32 +118,40 @@ async function saveSettings(action) {
 		return;
 	}
 
+	document.getElementById("settings_cancel").disabled = false;
+	if (action != "apply") closeSettings(action);
+	if (action == "cancel") return false;
+
+	// store changes before
+	if (unsaved_campaign) {
+		var user_action = await openDialog("unsaved_changes");
+
+		if (user_action == "dialog_yes") await saveCampaign();
+		else if (user_action == "dialog_no") unsaved_campaign = false;
+		else if (user_action == "dialog_cancel") return false;
+	}
+	active_campaign = null;
+
 	// save settings
-	else if (action != "cancel") {
-		var new_settings = [];
+	var new_settings = [];
 
-		for (var i = 0; i < settings_array.length; i++) validateSettings(settings_array[i], new_settings);
+	for (var i = 0; i < settings_array.length; i++) validateSettings(settings_array[i], new_settings);
 
-		if (el_infomaniak_secret.value != "") new_settings.push({property:"infomaniak_secret", value:el_infomaniak_secret.value});
-		if (el_webdav_password.value != "") new_settings.push({property:"webdav_password", value:el_webdav_password.value});
+	if (el_infomaniak_secret.value != "") new_settings.push({property:"infomaniak_secret", value:el_infomaniak_secret.value});
+	if (el_webdav_password.value != "") new_settings.push({property:"webdav_password", value:el_webdav_password.value});
 
-		if (new_settings.length != 0) {
-			var response = await invoke("change_config", {data:JSON.stringify(new_settings)});
-			if (response != "success") {
-				openDialog("backend_error", response);
-				return;
-			}
+	if (new_settings.length != 0) {
+		var response = await invoke("change_config", {data:JSON.stringify(new_settings)});
+		if (response != "success") {
+			openDialog("backend_error", response);
+			return;
 		}
 	}
-
-	if (action != "apply") closeSettings(action);
-	document.getElementById("settings_cancel").disabled = false;
-	// reload backend if infomaniak_secret changed
-	if (el_infomaniak_secret.value != "") {
-		getCampaigns(undefined, true);
-		getCredits();
-		getMailinglists();
-	}
+	
+	// reload backend
+	getCampaigns(true, true);
+	getCredits();
+	getMailinglists();
 }
 
 function validateSettings(property, new_settings) {
@@ -194,10 +204,10 @@ function createCampaignHtml(campaign_object) {
 	<listitem id="${campaign_object.id}" onclick="getCampaign(${campaign_object.id})">
 		<svg width="24" height="24" viewBox="0 0 24 24" onmouseenter="showTooltip(this, 1, '${status_description}')" class="standalone">${status.icon}</svg>
 		<p>${campaign_object.subject}</p>
-		<button onclick="duplicateCampaign(${campaign_object.id})" onmouseenter="showTooltip(this, 2, 'Newsletter duplizieren')">
+		<button onclick="duplicateCampaign(${campaign_object.id})" onmouseenter="showTooltip(this, 2, '${text_duplicate}')">
 			<svg width="24" height="24" viewBox="0 0 24 24"><path d="M5.503 4.627 5.5 6.75v10.504a3.25 3.25 0 0 0 3.25 3.25h8.616a2.251 2.251 0 0 1-2.122 1.5H8.75A4.75 4.75 0 0 1 4 17.254V6.75c0-.98.627-1.815 1.503-2.123ZM17.75 2A2.25 2.25 0 0 1 20 4.25v13a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-13A2.25 2.25 0 0 1 8.75 2h9Z"/></svg>
 		</button>
-		<button onclick="deleteCampaign(${campaign_object.id})" onmouseenter="showTooltip(this, 2, 'Newsletter löschen')">
+		<button onclick="deleteCampaign(${campaign_object.id})" onmouseenter="showTooltip(this, 2, '${text_delete}')">
 			<svg width="24" height="24" viewBox="0 0 24 24"><path d="M21.5 6a1 1 0 0 1-.883.993L20.5 7h-.845l-1.231 12.52A2.75 2.75 0 0 1 15.687 22H8.313a2.75 2.75 0 0 1-2.737-2.48L4.345 7H3.5a1 1 0 0 1 0-2h5a3.5 3.5 0 1 1 7 0h5a1 1 0 0 1 1 1Zm-7.25 3.25a.75.75 0 0 0-.743.648L13.5 10v7l.007.102a.75.75 0 0 0 1.486 0L15 17v-7l-.007-.102a.75.75 0 0 0-.743-.648Zm-4.5 0a.75.75 0 0 0-.743.648L9 10v7l.007.102a.75.75 0 0 0 1.486 0L10.5 17v-7l-.007-.102a.75.75 0 0 0-.743-.648ZM12 3.5A1.5 1.5 0 0 0 10.5 5h3A1.5 1.5 0 0 0 12 3.5Z"/></svg>
 		</button>
 	</listitem>`
@@ -219,17 +229,15 @@ async function getCampaigns(show_drafts, select_first_campaign) {
 	else var remove_status = "draft";
 
 	var html = "";
-
 	for (var i = json.data.length - 1; i >= 0; i--) {
 		if (json.data[i].status != remove_status) html += createCampaignHtml(json.data[i]);
 	}
+	campaign_list.innerHTML = html;
 
 	if (select_first_campaign && json.data.length != 0) {
 		var first_id = json.data[json.data.length - 1].id;
-		getCampaign(first_id);
-		active_campaign = first_id;
+		await getCampaign(first_id);
 	}
-	campaign_list.innerHTML = html;
 
 	return json;
 }
@@ -281,13 +289,20 @@ async function getCampaign(id) {
 			}
 		}
 	}
+	
 	attachments.innerHTML = html;
 }
 
-async function saveCampaign(wants_sending) {
+async function saveCampaign() {
 	// check for active campaign
 	if (active_campaign == null) {
-		openDialog("no_selection");
+		openDialog("no_campaign_selected");
+		return false;
+	}
+
+	// check input fields
+	if (newsletter_group.value == "" || subject.value == "") {
+		openDialog("no_campaign_metadata");
 		return false;
 	}
 
@@ -296,21 +311,11 @@ async function saveCampaign(wants_sending) {
 		var response = await invoke("get_campaign", {id:active_campaign});
 		var json = JSON.parse(response);
 
-		if (json.result == "success") campaign_status = json.data.status;
+		if (json.result == "success") var campaign_status = json.data.status;
 		else {
 			openDialog("backend_error", JSON.stringify(json.error));
 			return false;
 		}
-	}
-
-	// check input fields
-	if (wants_sending && newsletter_group.value == "") {
-		openDialog("no_selected_mailinglist");
-		return false;
-	}
-	else if (subject.value == "") {
-		openDialog("no_subject");
-		return false;
 	}
 
 	// compute images
@@ -393,7 +398,7 @@ async function saveCampaign(wants_sending) {
 
 // send or test campaign
 async function sendCampaign(is_test) {
-	var should_continue = await saveCampaign(true);
+	var should_continue = await saveCampaign();
 	if (!should_continue) return false;
 
 	// send test mail
@@ -422,11 +427,13 @@ async function sendCampaign(is_test) {
 		}
 	}
 	else {
-		var response = await invoke("send_campaign", {id:active_campaign, data:""});
+		var response = await invoke("send_campaign", {id:active_campaign});
 		var json = JSON.parse(response);
 
 		if (json.result == "success") {
 			var json = await getCampaigns();
+
+			if (json == false) return false;
 
 			for (var i = 0; i < json.data.length; i++) {
 				var campaign_object = json.data[i];
@@ -435,7 +442,7 @@ async function sendCampaign(is_test) {
 				}
 			}
 
-			var timeout = campaign_object.started_at * 1000 - Date.now() + 5000;
+			var timeout = campaign_object.started_at * 1000 - Date.now() + 8000;
 
 			openDialog("sent_campaign", date.toLocaleString());
 			setTimeout(getCredits, 500);
@@ -493,6 +500,10 @@ async function deleteCampaign(id) {
 		if (id == active_campaign) getCampaign(parseInt(campaign_list.firstElementChild.id));
 	}
 	else openDialog("backend_error", JSON.stringify(json.error));
+
+	// delete attachments
+	var response = await invoke("delete", {path:active_campaign.toString()});
+	console.log("Response from deleting attachment: " + response);
 }
 
 async function duplicateCampaign(id) {
@@ -505,11 +516,11 @@ async function duplicateCampaign(id) {
 		else if (user_action == "dialog_cancel") return false;
 	}
 
-	changeTab("show_draft");
-
 	await getCampaign(id);
+
+	changeTab("show_draft");
 	active_campaign = 0;
-	subject.value = subject.value + " - Kopie";
+	subject.value = subject.value + " - " + copy;
 	attachments.innerHTML = "";
 	unsaved_campaign = true;
 	document.querySelector(".selected")?.classList.remove("selected");
