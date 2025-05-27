@@ -4,7 +4,7 @@
 	"platforms": {
 		"windows-x86_64": {
 			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUNHdoRVVINGJWbkFjSFYweWJpWDRqSm1nK2I1dVlNemZmcWs5MElLcldJQkxOT1pFRmgxTmhFTlVQVyswQ0p4NUZyRjhtMHNHbmFEL1Q3YXI3NnIrbU5lWGl3R0VsNXc4PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzQ4MDM4MzU3CWZpbGU6aW5mb21hbmlhay1uZXdzbGV0dGVyLWludGVyZmFjZV8xLjAuMV94NjRfZW4tVVMubXNpCnZYU2lndW5RamxhbDB6SFh2Y0lRcll6ZitrZ0dmSkNMelllMmIrMWFDeEFUdDlUeWFyS0RUR3NNL1J2TmNBODVRVkJDcXJ4Sis5Lzk1ODZ1enFoQ0FBPT0K",
-			"url": "https://github.com/CMD-Golem/Infomaniak-Newsletter-Interface/releases/download/1.0.3/Infomaniak.Newsletter.Interface_1.0.3_x64_en-US"
+			"url": "https://github.com/CMD-Golem/Infomaniak-Newsletter-Interface/releases/download/1.0.3/Infomaniak.Newsletter.Interface_1.0.3_x64_en-US.msi"
 		}
 	}
 }
