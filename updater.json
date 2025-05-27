@@ -3,7 +3,7 @@
 	"notes": "",
 	"platforms": {
 		"windows-x86_64": {
-			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDlDRDU4NjFGMTQxMUMyRjgKUldUNHdoRVVINGJWbkx5WTZtVXBJcm1Dc292MHJOcEEzZ3p3U1hsYTJvQmp5c2oyUEZhSVovTnIK",
+			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUNHdoRVVINGJWbkdkMy9aRE1qTVhLdUxNdkZoREFnU2tpUnlvZ0pnNlZERG1uTHRTNkRCSmN6SmRDam5wV2dwV3FobGpNREhFR21xMEU0Q2o3WitLUGxUejVDV3hDZnc0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzQ4MzU4MzA5CWZpbGU6SW5mb21hbmlhayBOZXdzbGV0dGVyIEludGVyZmFjZV8xLjAuMl94NjRfZW4tVVMubXNpCmpzUXZRTDhXM3Y3TjZvUldqbVJhckdsaWpJdnZpZUV2bndYcHBLNWM5dU1VQU0yYWVSam5FcXRPQ3pNcEpUZXJsay82bVcwemwrd2R0cWp2L1hxb0FnPT0K",
 			"url": "https://github.com/CMD-Golem/Infomaniak-Newsletter-Interface/releases/download/1.0.3/Infomaniak.Newsletter.Interface_1.0.3_x64_en-US.msi"
 		}
 	}
