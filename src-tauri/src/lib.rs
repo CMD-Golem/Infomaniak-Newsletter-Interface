@@ -1,5 +1,5 @@
 use std::{env, fs};
-use tauri::{Manager, WindowEvent::Destroyed, Emitter};
+use tauri::{Manager, WindowEvent::Destroyed};
 use tauri_plugin_updater::UpdaterExt;
 
 mod infomaniak;
@@ -54,7 +54,6 @@ pub fn run() {
 			let handle = app.handle().clone();
 			tauri::async_runtime::spawn(async move {
 				if let Ok(Some(update)) = handle.updater().unwrap().check().await {
-					handle.emit("app-updater", true).unwrap();
 					update.download_and_install(|_, _| {}, || {}).await.unwrap();
 					handle.restart();
 				}

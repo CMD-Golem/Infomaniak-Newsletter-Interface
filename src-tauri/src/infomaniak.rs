@@ -201,11 +201,14 @@ pub fn mailinglist_remove_contact(subscriber: u32, group: i64) -> String {
 
 #[tauri::command]
 pub fn get_credits() -> String {
-	let list: Value = serde_json::from_str(&curl("GET", "credits/details", "")).expect("Couldnt read json");
-	let credits = list["data"]["total"].as_number();
+	let result: Result<String, &str> = (|| {
+        let json: Value = serde_json::from_str(&curl("GET", "credits/details", "")).map_err(|_| "Invalid JSON")?;
+        let credit = json["data"]["total"].as_number().ok_or("Missing or invalid credit")?;
+        Ok(credit.to_string())
+    })();
 
-	match credits {
-		Some(credit) => credit.to_string(),
-		None => "unknown".to_string(),
+	match result {
+		Ok(credit) => credit.to_string(),
+		Err(err) => err.to_string(),
 	}
 }

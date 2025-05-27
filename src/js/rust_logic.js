@@ -47,8 +47,6 @@ window.onload = async () => {
 		newsletter_group.value = set_value;
 	});
 
-	t.event.listen("app-updater", async () => await openDialog("update"));
-
 	unlisten = await t.window.getCurrentWindow().onCloseRequested(async (event) => {
 		if (unsaved_campaign) {
 			var user_action = await openDialog("unsaved_changes");
@@ -229,13 +227,16 @@ async function getCampaigns(show_drafts, select_first_campaign) {
 	else var remove_status = "draft";
 
 	var html = "";
+	var first_id = undefined;
 	for (var i = json.data.length - 1; i >= 0; i--) {
-		if (json.data[i].status != remove_status) html += createCampaignHtml(json.data[i]);
+		if (json.data[i].status != remove_status) {
+			html += createCampaignHtml(json.data[i]);
+			if (first_id == undefined) first_id = json.data[json.data.length - 1].id;
+		}
 	}
 	campaign_list.innerHTML = html;
 
 	if (select_first_campaign && json.data.length != 0) {
-		var first_id = json.data[json.data.length - 1].id;
 		await getCampaign(first_id);
 	}
 

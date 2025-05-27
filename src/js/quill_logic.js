@@ -366,7 +366,7 @@ async function selectFile(insert_attachments) {
 	if (files == null) return;
 
 	for (var i = 0; i < files.length; i++) {
-		var src = await uploadFile(files[i], "path", insert_attachments);
+		var src = await uploadFile(files[i], "path");
 		insertFile(src, insert_attachments, true);
 	}
 }
@@ -420,8 +420,15 @@ async function uploadFile(data, type) {
 		return false;
 	}
 
+	var sel = quill.getSelection();
+	if (sel == null) {
+		openDialog("quill_no_selection");
+		return false;
+	}
+
 	// check if newsletter already has id
-	if (active_campaign == 0) return await saveCampaign();
+	if (active_campaign == 0) var saving_result = await saveCampaign();
+	if (saving_result == false) return false;
 
 	// ask for file name
 	if (type == "path") {
@@ -436,9 +443,11 @@ async function uploadFile(data, type) {
 	}
 	else return false;
 
+	
 	var file_name = await openEnter(suggestion_name);
 	if (file_name == false) return false;
 	file_name = file_name.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9._-]/g, "");
+	quill.setSelection(sel.index);
 
 	
 	// check if file already exists

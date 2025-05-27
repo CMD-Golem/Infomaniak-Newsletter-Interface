@@ -12,7 +12,7 @@ Built with [Tauri](https://tauri.app/) and [Quill](https://quilljs.com/) and pow
 
 
 # New versions:
-- updater.json
+- updater.json with new signature
 - package.json
 - 2x tauri.conf.json
 - Cargon.toml
