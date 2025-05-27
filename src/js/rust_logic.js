@@ -356,6 +356,7 @@ async function saveCampaign() {
 
 	// create new campaign if it doesnt exist
 	if (active_campaign == 0) {
+		console.log(data)
 		var response = await invoke("create_campaign", {data:data});
 		var json = JSON.parse(response);
 

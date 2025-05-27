@@ -211,9 +211,12 @@ quill.on("text-change", async () => {
 	var new_img = document.getElementById("no_file");
 	if (new_img != null) {
 		quill.enable(false);
-		var src = await uploadFile(new_img.src, "data-url");
-		new_img.removeAttribute("id");
 
+		var base64 = new_img.src
+		new_img.removeAttribute("id");
+		new_img.removeAttribute("src");
+
+		var src = await uploadFile(base64, "data-url");
 		quill.enable(true);
 
 		if (src == false) {
@@ -426,10 +429,6 @@ async function uploadFile(data, type) {
 		return false;
 	}
 
-	// check if newsletter already has id
-	if (active_campaign == 0) var saving_result = await saveCampaign();
-	if (saving_result == false) return false;
-
 	// ask for file name
 	if (type == "path") {
 		var suggestion_name = data.split("\\").pop();
@@ -449,15 +448,6 @@ async function uploadFile(data, type) {
 	file_name = file_name.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9._-]/g, "");
 	quill.setSelection(sel.index);
 
-	
-	// check if file already exists
-	var online_path = `${active_campaign}/${file_name}`;
-	
-	if (await invoke("get", {dir:online_path}) != "Not Found") {
-		var user_action = await openDialog("overwrite_attachment");
-		if (user_action == "dialog_cancel") return false;
-	}
-
 	// create temp file from data-url
 	if (is_temp) {
 		if (!(await t.fs.exists("com.cmd-golem.infomaniak-newsletter-interface", { baseDir: t.fs.BaseDirectory.Temp}))) {
@@ -472,6 +462,18 @@ async function uploadFile(data, type) {
 
 		for (var i = 0; i < raw.length; i++) file_array[i] = raw.charCodeAt(i);
 		await t.fs.writeFile(local_path, file_array, { baseDir: t.fs.BaseDirectory.Temp });
+	}
+
+	// check if newsletter already has id
+	if (active_campaign == 0) var saving_result = await saveCampaign();
+	if (saving_result == false) return false;
+
+	// check if file already exists
+	var online_path = `${active_campaign}/${file_name}`;
+	
+	if (await invoke("get", {dir:online_path}) != "Not Found") {
+		var user_action = await openDialog("overwrite_attachment");
+		if (user_action == "dialog_cancel") return false;
 	}
 
 	// upload file
