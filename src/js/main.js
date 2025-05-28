@@ -13,7 +13,6 @@ const text_contact_duplicate = "Kontaktgruppe duplizieren";
 const text_contact_delete = "Kontaktgruppe löschen";
 const text_contact_remove = "Aus Kontaktgruppe entfernen";
 const text_contact_default = "Neue Kontaktgruppe";
-const copy = "Kopie";
 
 
 // error and info box
@@ -39,6 +38,7 @@ const error_msg = [
 	{id:"update", title:"Updating", msg:"Das Programm wird anschliessend automatisch neugestartet", buttons:[]},
 	{id:"overwrite_attachment", title:"Diese Datei exisitert auf dem Server bereits", msg:"Möchten Sie diese überschreiben?", buttons:["dialog_yes", "dialog_cancel"]},
 	{id:"quill_no_selection", msg:"Plazieren den Cursor im Text Editor um an dieser Stelle einzufügen", buttons:["dialog_ok"]},
+	{id:"not_found", msg:"Die Datei konnte nicht gefunden werden.", buttons:["dialog_ok"]},
 ]
 
 // status translation

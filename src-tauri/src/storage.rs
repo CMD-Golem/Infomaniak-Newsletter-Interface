@@ -23,6 +23,7 @@ pub struct Config {
 	unsubscribe: String,
 	file_text: String,
 	test_email: String,
+	copy_text: String,
 }
 
 impl Default for Config {
@@ -40,6 +41,7 @@ impl Default for Config {
 			unsubscribe: String::new(),
 			file_text: String::new(),
 			test_email: String::new(),
+			copy_text: String::new(),
 		}
 	}
 }
@@ -113,6 +115,7 @@ pub fn change_config(data: &str) -> String {
 			"unsubscribe" => config.unsubscribe = update.value,
 			"file_text" => config.file_text = update.value,
 			"test_email" => config.test_email = update.value,
+			"copy_text" => config.copy_text = update.value,
 			_ => (),
 		}
 	}

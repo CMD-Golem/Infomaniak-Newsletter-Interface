@@ -313,6 +313,10 @@ button.big svg {
 	width: 35px;
 }
 
+button.big div {
+	height: 31px;
+}
+
 button.long, header button {
 	height: 30px;
 	display: flex;
@@ -363,10 +367,6 @@ attachments div {
 	padding: 5px 10px;
 	border-radius: 8px;
 	border: 1.5px #3a3a3a solid;
-}
-
-attachments div:hover {
-	background-color: #e60000;
 }
 
 /* Color Picker */

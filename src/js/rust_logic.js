@@ -3,7 +3,7 @@ var active_campaign = null;
 var active_tab = "show_draft";
 var settings = undefined;
 var unlisten;
-const settings_array = ["infomaniak_domain", "public_url", "webdav_url", "webdav_username", "sender_name", "sender_email", "lang", "unsubscribe", "file_text"];
+const settings_array = ["infomaniak_domain", "public_url", "webdav_url", "webdav_username", "sender_name", "sender_email", "lang", "unsubscribe", "file_text", "copy_text"];
 
 
 // initalize and load everything after document loaded
@@ -199,7 +199,7 @@ function createCampaignHtml(campaign_object) {
 	else var status_description = status.description
 
 	var html = `
-	<listitem id="${campaign_object.id}" onclick="getCampaign(${campaign_object.id})">
+	<listitem id="${campaign_object.id}" onclick="getCampaign(${campaign_object.id})" data-status="${campaign_object.status}">
 		<svg width="24" height="24" viewBox="0 0 24 24" onmouseenter="showTooltip(this, 1, '${status_description}')" class="standalone">${status.icon}</svg>
 		<p>${campaign_object.subject}</p>
 		<button onclick="duplicateCampaign(${campaign_object.id})" onmouseenter="showTooltip(this, 2, '${text_duplicate}')">
@@ -227,18 +227,14 @@ async function getCampaigns(show_drafts, select_first_campaign) {
 	else var remove_status = "draft";
 
 	var html = "";
-	var first_id = undefined;
 	for (var i = json.data.length - 1; i >= 0; i--) {
 		if (json.data[i].status != remove_status) {
 			html += createCampaignHtml(json.data[i]);
-			if (first_id == undefined) first_id = json.data[json.data.length - 1].id;
 		}
 	}
 	campaign_list.innerHTML = html;
 
-	if (select_first_campaign && json.data.length != 0) {
-		await getCampaign(first_id);
-	}
+	if (select_first_campaign) getCampaign(parseInt(getFirstCampaign().id));
 
 	return json;
 }
@@ -252,7 +248,7 @@ async function getCampaign(id) {
 		else if (user_action == "dialog_no") unsaved_campaign = false;
 		else if (user_action == "dialog_cancel") return false;
 	}
-	else if (active_campaign == id) return false;
+	else if (active_campaign == id || isNaN(id)) return false;
 	
 	var response = await invoke("get_campaign", {id:id});
 	var json = JSON.parse(response);
@@ -294,6 +290,22 @@ async function getCampaign(id) {
 	attachments.innerHTML = html;
 }
 
+function getFirstCampaign() {
+	if (active_tab == "show_draft") var searched_status = "draft";
+	else var searched_status = "sent";
+
+	// serach for wanted status
+	for (var i = 0; i < campaign_list.children.length; i++) {
+		if (campaign_list.children[i].getAttribute("data-status") == searched_status) {
+			return campaign_list.children[i];
+		}
+	}
+
+	// return first not searched status
+	if (campaign_list.children.length >= 1) return campaign_list.children[0];
+	else return {id:undefined};
+}
+
 async function saveCampaign() {
 	// check for active campaign
 	if (active_campaign == null) {
@@ -324,7 +336,7 @@ async function saveCampaign() {
 	for (var i = 0; i < img_el.length; i++) {
 		var el = img_el[i];
 		el.width = parseFloat(el.style.width).toFixed();
-		el.height = parseFloat(el.style.height).toFixed();
+		if (el.style.height != "" && el.style.height != 0) el.height = parseFloat(el.style.height).toFixed();
 	}
 
 	// create data string if a campaign is active
@@ -356,7 +368,6 @@ async function saveCampaign() {
 
 	// create new campaign if it doesnt exist
 	if (active_campaign == 0) {
-		console.log(data)
 		var response = await invoke("create_campaign", {data:data});
 		var json = JSON.parse(response);
 
@@ -364,7 +375,9 @@ async function saveCampaign() {
 			active_campaign = json.data.id;
 			unsaved_campaign = false;
 
-			campaign_list.innerHTML = createCampaignHtml(json.data) + campaign_list.innerHTML;
+			var first_campaign = getFirstCampaign();
+			var html = createCampaignHtml(json.data);
+			first_campaign.insertAdjacentHTML("beforebegin", html);
 
 			document.querySelector(".selected")?.classList.remove("selected");
 			document.getElementById(active_campaign).classList.add("selected");
@@ -483,10 +496,10 @@ async function deleteCampaign(id) {
 	}
 
 	if (
-		json.data.status == "scheduled",
-		json.data.status == "scheduled_v1",
-		json.data.status == "sending",
-		json.data.status == "sending_failed",
+		json.data.status == "scheduled" ||
+		json.data.status == "scheduled_v1" ||
+		json.data.status == "sending" ||
+		json.data.status == "sending_failed" ||
 		json.data.status == "sending_v1"
 	) {
 		openDialog("delete_forbidden");
@@ -497,11 +510,12 @@ async function deleteCampaign(id) {
 	var response = await invoke("delete_campaign", {id:id});
 	var json = JSON.parse(response);
 
-	if (json.result == "success") {
-		document.getElementById(id).remove();
-		if (id == active_campaign) getCampaign(parseInt(campaign_list.firstElementChild.id));
+	if (json.result != "success") return openDialog("backend_error", JSON.stringify(json.error));
+	document.getElementById(id).remove();
+	if (id == active_campaign) {
+		active_campaign = null;
+		getCampaign(parseInt(getFirstCampaign().id));
 	}
-	else openDialog("backend_error", JSON.stringify(json.error));
 
 	// delete attachments
 	var response = await invoke("delete", {path:active_campaign.toString()});
@@ -522,7 +536,7 @@ async function duplicateCampaign(id) {
 
 	changeTab("show_draft");
 	active_campaign = 0;
-	subject.value = subject.value + " - " + copy;
+	subject.value = subject.value + settings.copy_text;
 	attachments.innerHTML = "";
 	unsaved_campaign = true;
 	document.querySelector(".selected")?.classList.remove("selected");

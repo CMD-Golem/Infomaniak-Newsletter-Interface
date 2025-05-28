@@ -64,7 +64,7 @@ var quill = new Quill("#editor",
 
 // set standard font/ font size
 var standard_text_size = "14px";
-var standard_font = "calibri";
+var standard_font = "arial";
 var size_selection = document.getElementById("size_selection");
 var body = document.querySelector("body");
 size_selection.value = standard_text_size;
@@ -192,7 +192,7 @@ quill.on("selection-change", (e) => {
 		if ("size" in format_object) size_selection.value = format_object.size;
 		else size_selection.value = standard_text_size;
 		if ("font" in format_object) font_selection.value = format_object.font;
-		else font_selection.value = "calibri";
+		else font_selection.value = "arial";
 
 		if (selected_formats != false) {
 			var formats = Object.keys(selected_formats);
@@ -223,7 +223,7 @@ quill.on("text-change", async () => {
 			quill.history.undo();
 		}
 		else {
-			new_img.src = `${settings.public_url}/${src}`;
+			new_img.src = src;
 			new_img.classList.add("computed");
 		}
 	}
@@ -351,7 +351,7 @@ var attachments = document.querySelector("attachments");
 
 function generateAttachmentHtml(id, src) {
 	var path = src.split("/").pop();
-	return `<div onmouseenter="attachmentMenu(this, '${id}/${path}')">${path}</div>`;
+	return `<div onmouseenter="attachmentMenu(this, '${settings.public_url}/${id}/${path}')">${path}</div>`;
 }
 
 async function selectFile(insert_attachments) {
@@ -374,23 +374,35 @@ async function selectFile(insert_attachments) {
 	}
 }
 
+async function selectOnlineFile() {
+	var sel = quill.getSelection();
+	if (sel == null) {
+		openDialog("quill_no_selection");
+		return false;
+	}
+
+	var file_name = await openEnter(false);
+	if (file_name == false) return false;
+	quill.setSelection(sel.index);
+
+	insertFile(file_name, true, false);
+}
+
 function insertFile(src, insert_attachments, select) {
 	if (src == false) return;
 
 	var sel = quill.getSelection();
 	if (sel == null) return openDialog("quill_no_selection");
-	
-	var path = `${settings.public_url}/${src}`;
 
 	// show file in newsletter text
 	if (insert_attachments) {
-		quill.insertEmbed(sel.index, "image", path);
+		quill.insertEmbed(sel.index, "image", src);
 		var new_img = editor_el.querySelector("img:not(.computed)");
 		new_img.classList.add("computed");
 	}
 	else {
 		var showing_text = settings.file_text?.replace("${file_name}", src.split("/").pop()) || src.split("/").pop();
-		quill.insertText(sel.index, showing_text, {link:path});
+		quill.insertText(sel.index, showing_text, {link:src});
 		if (select) quill.setSelection(sel.index, showing_text.length);
 	}
 }
@@ -400,10 +412,12 @@ var enter_input = enter.querySelector("input");
 function openEnter(suggestion_name) {
 	return new Promise((resolve) => {
 		enter.style.display = "block";
-		
 		enter_input.focus();
-		enter_input.value = suggestion_name;
-		enter_input.setSelectionRange(0, suggestion_name.lastIndexOf("."));
+
+		if (suggestion_name != false) {
+			enter_input.value = suggestion_name;
+			enter_input.setSelectionRange(0, suggestion_name.lastIndexOf("."));
+		}
 
 		document.getElementById("enter_ok").addEventListener("click", () => {
 			resolve(enter_input.value);
@@ -470,10 +484,12 @@ async function uploadFile(data, type) {
 
 	// check if file already exists
 	var online_path = `${active_campaign}/${file_name}`;
+	var new_pill_needed = true;
 	
 	if (await invoke("get", {dir:online_path}) != "Not Found") {
 		var user_action = await openDialog("overwrite_attachment");
 		if (user_action == "dialog_cancel") return false;
+		else new_pill_needed = false;
 	}
 
 	// upload file
@@ -481,19 +497,23 @@ async function uploadFile(data, type) {
 	console.log("Response from uploading attachment: " + upload_response);
 
 	// insert pill, only if file is not overwritten
-	attachments.innerHTML += generateAttachmentHtml(active_campaign, online_path);
+	if (new_pill_needed) attachments.innerHTML += generateAttachmentHtml(active_campaign, online_path);
 
-	return online_path;
+	return `${settings.public_url}/${online_path}`;
 }
 
 async function deleteAttachment(el, path) {
 	var user_action = await openDialog("delete_attachment");
 	if (user_action == "dialog_cancel") return false;
 
-	var lining_elements = editor_el.querySelectorAll(`img[src="${settings.public_url}/${path}"], a[href="${settings.public_url}/${path}"]`);
+	var src = path.replace(settings.public_url + "/", "");
+
+	var response = await invoke("delete", {path:src});
+	if (response == "Not Found") return openDialog("not_found");
+
+	var lining_elements = editor_el.querySelectorAll(`img[src="${path}"], a[href="${path}"]`);
 	for (var i = 0; i < lining_elements.length; i++) lining_elements[i].remove();
 
-	var response = await invoke("delete", {path:path});
 	console.log("Response from deleting attachment: " + response);
 
 	el.remove();
