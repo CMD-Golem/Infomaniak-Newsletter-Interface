@@ -8,7 +8,7 @@ Size.whitelist = ["8px", "9px", "10px", "11px", "12px", "13px", "14px", "15px", 
 Quill.register(Size, true);
 
 var Font = Quill.import("formats/font");
-Font.whitelist = ["arial", "calibri", "times"];
+Font.whitelist = ["arial", "calibri", "times", "microgramma"];
 Quill.register(Font, true);
 
 var ImageBlot = Quill.import("formats/image");

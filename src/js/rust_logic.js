@@ -343,7 +343,7 @@ async function saveCampaign() {
 	var html_content = quill.getSemanticHTML();
 	html_content = html_content.replaceAll("  ", "&nbsp;&nbsp;");
 	if (!html_content.includes('<a href="*|UNSUBSCRIBED|*"')) html_content += '<template><a href="*|UNSUBSCRIBED|*" target="_blank"></a></template>';
-	var content = `<style>p {margin: 0;} * {font-size: ${standard_text_size}; font-family: ${standard_font}}</style>` + html_content.replaceAll('"', '\\"').replaceAll("<p></p>", "<br>");
+	var content = `<style>p {margin: 0;} * {font-size: ${standard_text_size}; font-family: ${standard_font}} .ql-font-microgramma {font-family:MicrogrammaDBolExt; panose-1:2 14 9 7 3 5 6 6 2 4;}</style>` + html_content.replaceAll('"', '\\"').replaceAll("<p></p>", "<br>");
 
 	var data = `{
 		"subject":"${subject.value}",

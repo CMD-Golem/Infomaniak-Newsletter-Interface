@@ -16,6 +16,12 @@
 	font-weight: normal;
 }
 
+@font-face {
+	font-family: microgramma;
+	src: url(fonts/microgramma.ttf);
+	font-weight: normal;
+}
+
 #editor {
 	display: block;
 	font-family: var(--font);
@@ -41,6 +47,9 @@
 #toolbar .ql-font span[data-label='times']::before {
 	font-family: 'times';
 }
+#toolbar .ql-font span[data-label='microgramma']::before {
+	font-family: 'microgramma';
+}
 
 .ql-font-arial {
 	font-family: 'arial';
@@ -50,6 +59,9 @@
 }
 .ql-font-times {
 	font-family: 'times';
+}
+.ql-font-microgramma {
+	font-family: 'microgramma';
 }
 
 .ql-snow .ql-picker.ql-size .ql-picker-label[data-value]::before, .ql-snow .ql-picker.ql-size .ql-picker-item[data-value]::before {
