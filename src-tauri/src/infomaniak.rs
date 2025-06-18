@@ -54,7 +54,21 @@ pub fn delete_campaign(id: u32) -> String {
 
 #[tauri::command]
 pub fn test_campaign(id: u32, data: &str) -> String {
-	curl("POST", &format!("campaigns/{}/test", id), data).into()
+	let config = CONFIG.lock().unwrap();
+
+	let output = Command::new("curl")
+		.arg("-X").arg("POST")
+		.arg(format!("https://newsletter.infomaniak.com/v3/api/1/newsletters/{}/campaigns/{}/test", config.infomaniak_domain, id))
+		.arg("-d").arg(data.to_string())
+		.arg("-H").arg(format!( "Authorization: Bearer {}", config.infomaniak_secret))
+		.arg("-H").arg("Content-Type: application/json")
+		.creation_flags(0x08000000)
+		.output();
+
+	match output {
+		Ok(success) => String::from_utf8_lossy(&success.stdout).into(),
+		Err(err) => err.to_string(),
+	}
 }
 
 #[tauri::command]

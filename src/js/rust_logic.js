@@ -435,10 +435,7 @@ async function sendCampaign(is_test) {
 
 		if (el_test_email.value != settings.test_email) {
 			settings.test_email = el_test_email.value;
-			var response = await invoke("change_config", {data:JSON.stringify([{property:"test_email", value:el_test_email.value}])});
-			var json = JSON.parse(response);
-
-			if (json.result != "success") openDialog("backend_error", JSON.stringify(json.error));
+			await invoke("change_config", {data:JSON.stringify([{property:"test_email", value:el_test_email.value}])});
 		}
 	}
 	else {
