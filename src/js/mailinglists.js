@@ -71,7 +71,7 @@ async function duplicateMailinglist(id) {
 	event.stopPropagation();
 
 	// create new mailinglist with name
-	var response_list = await invoke("create_mailinglist", {data:`{"name":"${document.getElementById(id).firstElementChild.value} - ${copy}"}`});
+	var response_list = await invoke("create_mailinglist", {data:`{"name":"${document.getElementById(id).firstElementChild.value}${copy}"}`});
 	var json_list = JSON.parse(response_list);
 	if (json_list.result != "success") {
 		openDialog("backend_error", JSON.stringify(json_list.error));
