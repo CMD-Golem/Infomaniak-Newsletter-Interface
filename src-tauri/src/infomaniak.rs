@@ -29,12 +29,7 @@ pub fn get_campaigns() -> String {
 
 #[tauri::command]
 pub fn get_campaign(id: u32) -> String {
-	curl("GET", &format!("campaigns/{}?with=recipients", id), "").into()
-}
-
-#[tauri::command]
-pub fn get_campaign_content(id: u32) -> String {
-	curl("GET", &format!("campaigns/{}?with=content", id), "").into()
+	curl("GET", &format!("campaigns/{}?with=recipients,content", id), "").into()
 }
 
 #[tauri::command]

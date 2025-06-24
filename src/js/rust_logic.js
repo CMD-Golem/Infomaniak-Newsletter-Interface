@@ -253,11 +253,8 @@ async function getCampaign(id) {
 	var response = await invoke("get_campaign", {id:id});
 	var json = JSON.parse(response);
 
-	var content_res = await invoke("get_campaign_content", {id:id});
-	var json_res = JSON.parse(content_res);
-
-	if (json.result == "success" && json_res.result == "success") {
-		quill.clipboard.dangerouslyPasteHTML(json_res.data.content)
+	if (json.result == "success" && json.result == "success") {
+		quill.clipboard.dangerouslyPasteHTML(json.data.content)
 		subject.value = json.data.subject;
 		unsaved_campaign = false;
 		active_campaign = id;
@@ -269,7 +266,7 @@ async function getCampaign(id) {
 		document.getElementById(id).classList.add("selected");
 	}
 	else if (json.result != "success") openDialog("backend_error", JSON.stringify(json.error));
-	else openDialog("backend_error", JSON.stringify(json_res.error));
+	else openDialog("backend_error", JSON.stringify(json.error));
 
 	// show attachments
 	var html = "";
