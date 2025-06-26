@@ -357,8 +357,7 @@ async function saveCampaign() {
 			"segments":{"include":{}}
 		},
 		"tracking_link": false,
-		"tracking_opening": false,
-		"unsub_link": false
+		"tracking_opening": false
 	}`;
 
 	data = data.replaceAll("\n", "").replaceAll("\t", "");
