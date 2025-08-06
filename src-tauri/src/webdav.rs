@@ -1,61 +1,57 @@
-use std::{env, os::windows::process::CommandExt, process::Command};
+use std::{env, fs};
+use reqwest::{self, header::CONTENT_TYPE, Method};
 
 use crate::storage::CONFIG;
 
-#[tauri::command]
-pub fn get(dir: String) -> String {
-	let config = CONFIG.lock().unwrap();
-	let output = Command::new("curl")
-		.arg("-X").arg("PROPFIND")
-		.arg(format!("{}/{}", config.webdav_url, dir))
-		.arg("-u").arg(format!("{}:{}",config.webdav_username, config.webdav_password))
-		.arg("--digest")
-		.arg("-H").arg("Content-Type: application/xml")
-		.creation_flags(0x08000000)
-		.output();
+// ToDo: Check js errorhandling
 
-	match output {
-		Ok(success) => String::from_utf8_lossy(&success.stdout).into(),
-		Err(err) => err.to_string(),
-	}
+#[tauri::command]
+pub async fn get(dir: String) -> Result<String, String> {
+	let config = CONFIG.lock().unwrap().clone();
+
+	let client = reqwest::Client::new();
+	let request = client.request(Method::from_bytes(b"PROPFIND").unwrap(), format!("{}/{}", config.webdav_url, dir))
+		.basic_auth(config.webdav_username, Some(config.webdav_password))
+		.send().await.map_err(|e| e.without_url().to_string())?
+		.text().await.map_err(|e| e.without_url().to_string())?;
+
+	return Ok(request);
 }
 
 #[tauri::command]
-pub fn delete(path: String) -> String {
-	let config = CONFIG.lock().unwrap();
-	let output = Command::new("curl")
-		.arg("-X").arg("DELETE")
-		.arg(format!("{}/{}", config.webdav_url, path))
-		.arg("-u").arg(format!("{}:{}",config.webdav_username, config.webdav_password))
-		.arg("--digest")
-		.creation_flags(0x08000000)
-		.output();
+pub async fn delete(path: String) -> Result<String, String> {
+	let config = CONFIG.lock().unwrap().clone();
 
-	match output {
-		Ok(success) => String::from_utf8_lossy(&success.stdout).into(),
-		Err(err) => err.to_string(),
-	}
+	let client = reqwest::Client::new();
+	let request = client.request(Method::DELETE, format!("{}/{}", config.webdav_url, path))
+		.basic_auth(config.webdav_username, Some(config.webdav_password))
+		.send().await.map_err(|e| e.without_url().to_string())?
+		.text().await.map_err(|e| e.without_url().to_string())?;
+
+	return Ok(request);
 }
 
 #[tauri::command]
-pub fn post(mut local_path: String, online_path: String, is_temp: bool) -> String {
-	let config = CONFIG.lock().unwrap();
+pub async fn post(local_path: String, online_path: String, is_temp: bool) -> Result<String, String> {
+	let config = CONFIG.lock().unwrap().clone();
+
+	let file;
 
 	if is_temp {
 		let temp = env::var("TEMP").expect("Failed to get configuration file path");
-		local_path = format!("{temp}/{local_path}");
+		file = fs::read(format!("{temp}/{local_path}"));
+	}
+	else {
+		file = fs::read(local_path);
 	}
 
-	let output = Command::new("curl")
-		.arg(format!("{}/{}", config.webdav_url, online_path))
-		.arg("-T").arg(local_path)
-		.arg("-u").arg(format!("{}:{}", config.webdav_username, config.webdav_password))
-		.arg("--digest")
-		.creation_flags(0x08000000)
-		.output();
+	let client = reqwest::Client::new();
+	let request = client.request(Method::PUT, format!("{}/{}", config.webdav_url, online_path))
+		.header(CONTENT_TYPE, "application/octet-stream")
+		.basic_auth(config.webdav_username, Some(config.webdav_password))
+		.body(file.map_err(|e| e.to_string())?)
+		.send().await.map_err(|e| e.without_url().to_string())?
+		.text().await.map_err(|e| e.without_url().to_string())?;
 
-	match output {
-		Ok(success) => String::from_utf8_lossy(&success.stdout).into(),
-		Err(err) => err.to_string(),
-	}
+	return Ok(request);
 }

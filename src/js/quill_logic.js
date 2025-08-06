@@ -479,7 +479,7 @@ async function uploadFile(data, type) {
 	}
 
 	// check if newsletter already has id
-	if (active_campaign == 0) var saving_result = await saveCampaign();
+	if (!(active_campaign >= 1)) var saving_result = await saveCampaign();
 	if (saving_result == false) return false;
 
 	// check if file already exists

@@ -73,6 +73,7 @@ function changeTab(tab) {
 
 function initEditor() {
 	var unsubscribe = settings.unsubscribe.replaceAll("\\n", "\n");
+	document.querySelector(".selected")?.classList.remove("selected");
 	editor_el.firstChild.innerHTML = "";
 	subject.value = "";
 	newsletter_group.value = "";
@@ -291,7 +292,7 @@ function getFirstCampaign() {
 	if (active_tab == "show_draft") var searched_status = "draft";
 	else var searched_status = "sent";
 
-	// serach for wanted status
+	// search for wanted status
 	for (var i = 0; i < campaign_list.children.length; i++) {
 		if (campaign_list.children[i].getAttribute("data-status") == searched_status) {
 			return campaign_list.children[i];
@@ -332,8 +333,11 @@ async function saveCampaign() {
 	var img_el = editor_el.querySelectorAll("img");
 	for (var i = 0; i < img_el.length; i++) {
 		var el = img_el[i];
-		el.width = parseFloat(el.style.width).toFixed();
-		if (el.style.height != "" && el.style.height != 0) el.height = parseFloat(el.style.height).toFixed();
+
+		if (el.scrollWidth == 0 || el.scrollHeight == 0) continue;
+
+		el.width = Math.round(el.scrollWidth).toString();
+		el.height = Math.round(el.scrollHeight).toString();
 	}
 
 	// create data string if a campaign is active
@@ -505,14 +509,15 @@ async function deleteCampaign(id) {
 
 	if (json.result != "success") return openDialog("backend_error", JSON.stringify(json.error));
 	document.getElementById(id).remove();
-	if (id == active_campaign) {
-		active_campaign = null;
-		getCampaign(parseInt(getFirstCampaign().id));
-	}
 
 	// delete attachments
 	var response = await invoke("delete", {path:active_campaign.toString()});
 	console.log("Response from deleting attachment: " + response);
+
+	if (id == active_campaign) {
+		active_campaign = null;
+		getCampaign(parseInt(getFirstCampaign().id));
+	}
 }
 
 async function duplicateCampaign(id) {

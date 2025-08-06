@@ -70,6 +70,7 @@
 
 .ql-editor {
 	overflow: visible;
+	height: unset;
 }
 
 .ql-editor > * {
