@@ -1953,7 +1953,7 @@ dependencies = [
 
 [[package]]
 name = "infomaniak-newsletter-interface"
-version = "1.0.4"
+version = "1.0.5"
 dependencies = [
  "once_cell",
  "reqwest",

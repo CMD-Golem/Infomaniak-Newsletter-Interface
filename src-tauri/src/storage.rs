@@ -2,9 +2,10 @@ use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::{
 	env, fs,
-	io::{self, Write},
+	io::{Write, Error},
 	path::PathBuf,
 	sync::Mutex,
+	error,
 };
 
 // config storage functions
@@ -48,36 +49,37 @@ impl Default for Config {
 
 impl Config {
 	fn load() -> Config {
-		let file = fs::read_to_string(Config::path());
-
-		match file {
-			Ok(content) => {
-				let decrypted_content = Config::encrypt(&content);
-				let config: Config = serde_json::from_str(&decrypted_content).expect("Config could not be parsed");
-				return config;
-			}
-			Err(_) => {
-				return Config::default();
-			}
-		}
+		return match Config::decrypt() {
+			Ok(content) => content,
+			Err(_) => return Config::default(),
+		};
 	}
 
-	fn store(&mut self) -> io::Result<()> {
+	fn decrypt() -> Result<Config, Box<dyn error::Error>> {
+		let path = Config::path()?;
+		let file = fs::read_to_string(path);
+		let decrypted_content = Config::encrypt(&file?);
+		let config: Config = serde_json::from_str(&decrypted_content)?;
+		return Ok(config);
+	}
+
+	fn store(&mut self) -> Result<(), Error> {
 		let config_content = serde_json::to_string_pretty(self)?;
 		let encrypted_content = Config::encrypt(&config_content);
-		let mut file = fs::File::create(Config::path())?;
+		let mut file = fs::File::create(Config::path()?)?;
 		file.write_all(encrypted_content.as_bytes())?;
-		Ok(())
+		return Ok(());
 	}
 
-	fn path() -> PathBuf {
+	fn path() -> Result<PathBuf, Error> {
 		let path = env::var("APPDATA").expect("Could find folder");
+		let full_path = format!("{path}/com.cmd-golem.infomaniak-newsletter-interface");
 		
-		if !fs::exists(format!("{path}/com.cmd-golem.infomaniak-newsletter-interface")).expect("Error with existance check") {
-			fs::create_dir(format!("{path}/com.cmd-golem.infomaniak-newsletter-interface")).expect("Couldnt create folder");
+		if !fs::exists(&full_path)? {
+			fs::create_dir(&full_path)?;
 		}
 
-		return PathBuf::from(format!("{path}/com.cmd-golem.infomaniak-newsletter-interface/config.dat"));
+		return Ok(PathBuf::from(format!("{path}/com.cmd-golem.infomaniak-newsletter-interface/config.dat")));
 	}
 
 	fn encrypt(string: &str) -> String {
@@ -97,9 +99,9 @@ struct ChangeConfigObj {
 pub static CONFIG: Lazy<Mutex<Config>> = Lazy::new(|| Mutex::new(Config::load()));
 
 #[tauri::command]
-pub fn change_config(data: &str) -> String {
+pub fn change_config(data: &str) -> Result<String, String> {
 	let mut config = CONFIG.lock().unwrap();
-	let data_vec: Vec<ChangeConfigObj> = serde_json::from_str(data).expect("JSON is broken");
+	let data_vec: Vec<ChangeConfigObj> = serde_json::from_str(data).map_err(|e| e.to_string())?;
 
 	for update in data_vec {
 		match update.property.as_str() {
@@ -120,14 +122,16 @@ pub fn change_config(data: &str) -> String {
 		}
 	}
 
-	match config.store() {
+	let status = match config.store() {
 		Ok(_) => "success".to_string(),
 		Err(err) => err.to_string(),
-	}
+	};
+
+	return Ok(status);
 }
 
 #[tauri::command]
-pub fn get_config() -> String {
+pub fn get_config() -> Result<String, String> {
 	let config = CONFIG.lock().unwrap();
 	let mut return_config = config.clone();
 
@@ -143,5 +147,9 @@ pub fn get_config() -> String {
 		return_config.webdav_password = "true".to_string()
 	}
 
-	serde_json::to_string(&return_config).expect("Config could not be returned").into()
+	let json = serde_json::to_string(&return_config).map_err(|e|
+		format!("{{\"status\":\"error\",\"error\":\"{}\"}}", e.to_string())
+	)?;
+	
+	return Ok(json);
 }

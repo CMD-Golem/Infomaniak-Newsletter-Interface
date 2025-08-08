@@ -40,6 +40,7 @@ const error_msg = [
 	{id:"overwrite_attachment", title:"Diese Datei exisitert auf dem Server bereits", msg:"Möchten Sie diese überschreiben?", buttons:["dialog_yes", "dialog_cancel"]},
 	{id:"quill_no_selection", msg:"Plazieren den Cursor im Text Editor um an dieser Stelle einzufügen", buttons:["dialog_ok"]},
 	{id:"not_found", msg:"Die Datei konnte nicht gefunden werden.", buttons:["dialog_ok"]},
+	{id:"webdav_error", msg:"Folgende Nachricht wurde vom Server zurückgegeben:<br><br>${additional_info}", buttons:["dialog_ok"]},
 ]
 
 // status translation
@@ -62,6 +63,7 @@ const mailinglist_states = {active:"Aktiv", bounced:"Nicht erreichbar", junk:"Ge
 
 // general functions
 function openDialog(id, additional_info) {
+	// console.error("Error happend here");
 	return new Promise((resolve) => {
 		dialog.open = true;
 

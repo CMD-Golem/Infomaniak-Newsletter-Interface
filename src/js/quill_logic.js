@@ -355,7 +355,7 @@ function generateAttachmentHtml(id, src) {
 }
 
 async function selectFile(insert_attachments) {
-	if (insert_attachments) var filters = ["avif", "bmp", "gif", "jfif", "jpeg", "jpg", "png", "svg", "tiff", "webp"];
+	if (insert_attachments) var filters = ["bmp", "gif", "ico", "jfif", "jpeg", "jpg", "png", "svg"];
 	else var filters = ["*"];
 
 	var files = await t.dialog.open({
@@ -494,7 +494,7 @@ async function uploadFile(data, type) {
 
 	// upload file
 	var upload_response = await invoke("post", {localPath:local_path, onlinePath:online_path, isTemp:is_temp});
-	console.log("Response from uploading attachment: " + upload_response);
+	if (upload_response != "") return openDialog("webdav_error", upload_response);
 
 	// insert pill, only if file is not overwritten
 	if (new_pill_needed) attachments.innerHTML += generateAttachmentHtml(active_campaign, online_path);
@@ -510,6 +510,7 @@ async function deleteAttachment(el, path) {
 
 	var response = await invoke("delete", {path:src});
 	if (response == "Not Found") return openDialog("not_found");
+	else if (response != "") return openDialog("webdav_error", response);
 
 	var lining_elements = editor_el.querySelectorAll(`img[src="${path}"], a[href="${path}"]`);
 	for (var i = 0; i < lining_elements.length; i++) lining_elements[i].remove();

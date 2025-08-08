@@ -24,6 +24,8 @@ window.onload = async () => {
 	var response = await invoke("get_config");
 	json = JSON.parse(response);
 
+	if (json.status == "error") return openDialog("backend_error", json.error);
+
 	settings = json;
 	el_test_email.value = settings.test_email;
 
@@ -99,6 +101,7 @@ async function openSettings(json, disable_cancel) {
 		json = JSON.parse(response);
 	}
 
+	if (json.status == "error") return openDialog("backend_error", json.error);
 	if (disable_cancel) document.getElementById("settings_cancel").disabled = true;
 
 	// show current settings on page
@@ -142,10 +145,17 @@ async function saveSettings(action) {
 	if (new_settings.length != 0) {
 		var response = await invoke("change_config", {data:JSON.stringify(new_settings)});
 		if (response != "success") {
-			openDialog("backend_error", response);
-			return;
+			console.log("error in settings")
+			return openDialog("backend_error", response);
 		}
 	}
+
+	// reload settings
+	var response = await invoke("get_config");
+	json = JSON.parse(response);
+
+	if (json.status == "error") return openDialog("backend_error", json.error);
+	settings = json;
 	
 	// reload backend
 	getCampaigns(true, true);
@@ -254,7 +264,7 @@ async function getCampaign(id) {
 	var response = await invoke("get_campaign", {id:id});
 	var json = JSON.parse(response);
 
-	if (json.result == "success" && json.result == "success") {
+	if (json.result == "success") {
 		quill.clipboard.dangerouslyPasteHTML(json.data.content)
 		subject.value = json.data.subject;
 		unsaved_campaign = false;
@@ -283,6 +293,7 @@ async function getCampaign(id) {
 				html += generateAttachmentHtml(id, files[i].innerHTML);
 			}
 		}
+		else if (xml.innerHTML != "Not Found") openDialog("webdav_error", xml.innerHTML);
 	}
 	
 	attachments.innerHTML = html;
@@ -341,10 +352,13 @@ async function saveCampaign() {
 	}
 
 	// create data string if a campaign is active
+	var app_version = await t.app.getVersion();
+
 	var html_content = quill.getSemanticHTML();
 	html_content = html_content.replaceAll("  ", "&nbsp;&nbsp;");
+	html_content = html_content.replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;");
 	if (!html_content.includes('<a href="*|UNSUBSCRIBED|*"')) html_content += '<template><a href="*|UNSUBSCRIBED|*" target="_blank"></a></template>';
-	var content = `<style>p {margin: 0;} * {font-size: ${standard_text_size}; font-family: ${standard_font}} .ql-font-microgramma {font-family:MicrogrammaDBolExt; panose-1:2 14 9 7 3 5 6 6 2 4;}</style>` + html_content.replaceAll('"', '\\"').replaceAll("<p></p>", "<br>");
+	var content = `<style data-infonewsversion=${app_version}>p {margin: 0;} * {font-size: ${standard_text_size}; font-family: ${standard_font}} .ql-font-microgramma {font-family:MicrogrammaDBolExt; panose-1:2 14 9 7 3 5 6 6 2 4;}</style>` + html_content.replaceAll('"', '\\"').replaceAll("<p></p>", "<br>");
 
 	var data = `{
 		"subject":"${subject.value}",
@@ -512,7 +526,7 @@ async function deleteCampaign(id) {
 
 	// delete attachments
 	var response = await invoke("delete", {path:active_campaign.toString()});
-	console.log("Response from deleting attachment: " + response);
+	if (response != "" && response != "Not Found") return openDialog("webdav_error", response);
 
 	if (id == active_campaign) {
 		active_campaign = null;
