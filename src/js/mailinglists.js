@@ -8,7 +8,6 @@ window.onload = () => {
 	if (invoke == undefined) return;
 
 	getMailinglists(true);
-	document.querySelector("body").addEventListener("contextmenu", (e) => e.preventDefault());
 }
 
 function createMailinglistHtml(mailinglist, select_class) {
@@ -224,14 +223,14 @@ async function getMailinglist(id, check_already_selected) {
 	else if (contact_sorting == "2") { // info
 		data.sort((a, b) => {
 			// Handle special case for status 1
-			if (a.status === 1 && b.status !== 1) return 1;
-			if (b.status === 1 && a.status !== 1) return -1;
-			
+			if (a.status == "active" && b.status != "active") return 1;
+  			if (a.status != "active" && b.status == "active") return -1;
+
 			// Sort by status in descending order
-			if (a.status !== b.status) return b.status - a.status;
+			if (a.status < b.status) return 1;
+			if (a.status > b.status) return -1;
 			
-			// Sort by name in ascending order if statuses are equal
-			return a.email.localeCompare(b.email);
+			return 0;
 		});
 	}
 	else { // A-Z

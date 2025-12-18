@@ -58,7 +58,7 @@ const campaign_states = [
 ]
 
 
-const mailinglist_states = {active:"Aktiv", bounced:"Nicht erreichbar", junk:"Gelöscht?", unconfirmed:"Unbestätigt", unsubscribed:"Abgemeldet", bounced_import:"Exisitert nicht"}
+const mailinglist_states = {active:"Aktiv", junk:"Gelöscht?", unconfirmed:"Unbestätigt", unsubscribed:"Abgemeldet", bounced:"Exisitert nicht", bounced_import:"Exisitert nicht", bounced_campaign:"Exisitert nicht"}
 
 
 // general functions

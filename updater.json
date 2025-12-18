@@ -1,10 +1,10 @@
 {
-	"version": "1.0.5",
+	"version": "1.0.6",
 	"notes": "",
 	"platforms": {
 		"windows-x86_64": {
-			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUNHdoRVVINGJWblB6SWhuT3FwVndzWEZBcU1VSzl5VmlZUERIYndrUnRzZE1Lb0JlMjJxTzFxUGI5RlJaektCLzFybzBjY0pqT1BPMXA4UWZJeVJtWmU1ZjlpTDN1S1E0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzU0Njg1NjQ0CWZpbGU6SW5mb21hbmlhayBOZXdzbGV0dGVyIEludGVyZmFjZV8xLjAuNV94NjRfZW4tVVMubXNpCnNNN2pnNmM2ckV5OHJnbm9iZTk4cUt3V011VDhoNG9YMHNXRFRnNHAxajU4bG1Db0ZEeXlCYTdhejRtUHEwUzRhZGRiTkUwelJFU3RmVEpYMzM0bkRRPT0K",
-			"url": "https://github.com/CMD-Golem/Infomaniak-Newsletter-Interface/releases/download/1.0.5/Infomaniak.Newsletter.Interface_1.0.5_x64_en-US.msi"
+			"signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUNHdoRVVINGJWbkFhT0dSQ1cweWhNSFVmd21RKzNkcDlsQ2JXVFdIVlZsM3FwaEdMSTNrZStaQ1dYaFlEamVNYjNEajY1Yy9oUXVoK2dZaERGUmpQYUxsT0V4T253OXdBPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzY2MDgxNjczCWZpbGU6SW5mb21hbmlhayBOZXdzbGV0dGVyIEludGVyZmFjZV8xLjAuNl94NjRfZW4tVVMubXNpCmorRy9RelVqT2RMUUNPd1puSEZvSTdJWERaeldMVXRYbzl5ZktzVjRmaGFBYnVIVlJkeGdmcWJ2emo3T0VyQnpFZVhuMnA1anl0WEVqdGtKYnoreEFRPT0K",
+			"url": "https://github.com/CMD-Golem/Infomaniak-Newsletter-Interface/releases/download/1.0.6/Infomaniak.Newsletter.Interface_1.0.6_x64_en-US.msi"
 		}
 	}
 }

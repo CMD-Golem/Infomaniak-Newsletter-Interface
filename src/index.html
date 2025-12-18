@@ -180,7 +180,7 @@
 					<div>Test senden</div>
 				</button>
 				<label for="test_email">An E-Mail Adresse</label>
-				<input autocomplete="one-time-code" type="text" id="test_email">
+				<input  type="text" id="test_email">
 			</headerbox>
 			<headerbox>
 				<button onclick="sendCampaign()">
@@ -196,7 +196,7 @@
 					<div>Speichern</div>
 				</button>
 				<label for="subject">Betreff</label>
-				<input autocomplete="one-time-code" type="text" id="subject" onchange="unsaved_campaign = true;">
+				<input  type="text" id="subject" onchange="unsaved_campaign = true;">
 			</headerbox>
 		</header>
 		<attachments></attachments>
@@ -208,9 +208,9 @@
 			<settingsbox>
 				<p>Einstellungen</p>
 				<label>Name vom Absender*</label>
-				<input autocomplete="one-time-code" type="text" placeholder="Infomaniak Newsletter" id="sender_name">
+				<input  type="text" placeholder="Infomaniak Newsletter" id="sender_name">
 				<label>Sprache vom Newsletter</label>
-				<select autocomplete="one-time-code" type="text" id="lang">
+				<select  type="text" id="lang">
 					<option value="de_DE" selected>de_DE</option>
 					<option value="en_GB">en_GB</option>
 					<option value="es_ES">es_ES</option>
@@ -218,27 +218,27 @@
 					<option value="it_IT">it_IT</option>
 				</select>
 				<label onmouseenter="showTooltip(this, 1, 'Email muss mit Newsletter Domain übereinstimmen')">Email vom Absender*<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 1.999c5.524 0 10.002 4.478 10.002 10.002 0 5.523-4.478 10.001-10.002 10.001-5.524 0-10.002-4.478-10.002-10.001C1.998 6.477 6.476 1.999 12 1.999Zm0 1.5a8.502 8.502 0 1 0 0 17.003A8.502 8.502 0 0 0 12 3.5Zm-.004 7a.75.75 0 0 1 .744.648l.007.102.003 5.502a.75.75 0 0 1-1.493.102l-.007-.101-.003-5.502a.75.75 0 0 1 .75-.75ZM12 7.003a.999.999 0 1 1 0 1.997.999.999 0 0 1 0-1.997Z"/></svg></label>
-				<input autocomplete="one-time-code" type="text" placeholder="info@domain.com" id="sender_email">
+				<input  type="text" placeholder="info@domain.com" id="sender_email">
 				<label onmouseenter="showTooltip(this, 1, 'Wenn nicht leer: Text wird immer am Ende des Newsletter angezeigt')">Abmeldelink Text<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 1.999c5.524 0 10.002 4.478 10.002 10.002 0 5.523-4.478 10.001-10.002 10.001-5.524 0-10.002-4.478-10.002-10.001C1.998 6.477 6.476 1.999 12 1.999Zm0 1.5a8.502 8.502 0 1 0 0 17.003A8.502 8.502 0 0 0 12 3.5Zm-.004 7a.75.75 0 0 1 .744.648l.007.102.003 5.502a.75.75 0 0 1-1.493.102l-.007-.101-.003-5.502a.75.75 0 0 1 .75-.75ZM12 7.003a.999.999 0 1 1 0 1.997.999.999 0 0 1 0-1.997Z"/></svg></label>
-				<input autocomplete="one-time-code" type="text" placeholder="Unsubscribe" id="unsubscribe">
+				<input  type="text" placeholder="Unsubscribe" id="unsubscribe">
 				<label onmouseenter="showTooltip(this, 1, 'Anzeigetext für eingefügte Dateilinks<br>${file_name} wird mit dem Dateinamen ersetzt')">Link-Anzeigetext<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 1.999c5.524 0 10.002 4.478 10.002 10.002 0 5.523-4.478 10.001-10.002 10.001-5.524 0-10.002-4.478-10.002-10.001C1.998 6.477 6.476 1.999 12 1.999Zm0 1.5a8.502 8.502 0 1 0 0 17.003A8.502 8.502 0 0 0 12 3.5Zm-.004 7a.75.75 0 0 1 .744.648l.007.102.003 5.502a.75.75 0 0 1-1.493.102l-.007-.101-.003-5.502a.75.75 0 0 1 .75-.75ZM12 7.003a.999.999 0 1 1 0 1.997.999.999 0 0 1 0-1.997Z"/></svg></label>
-				<input autocomplete="one-time-code" type="text" placeholder="Öffne ${file_name}" id="file_text">
+				<input  type="text" placeholder="Öffne ${file_name}" id="file_text">
 				<label onmouseenter="showTooltip(this, 1, 'Wird beim Duplizieren an den ursprünglichen Betreff angehängt')">Suffix für duplizierte Newsletterbetreff<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 1.999c5.524 0 10.002 4.478 10.002 10.002 0 5.523-4.478 10.001-10.002 10.001-5.524 0-10.002-4.478-10.002-10.001C1.998 6.477 6.476 1.999 12 1.999Zm0 1.5a8.502 8.502 0 1 0 0 17.003A8.502 8.502 0 0 0 12 3.5Zm-.004 7a.75.75 0 0 1 .744.648l.007.102.003 5.502a.75.75 0 0 1-1.493.102l-.007-.101-.003-5.502a.75.75 0 0 1 .75-.75ZM12 7.003a.999.999 0 1 1 0 1.997.999.999 0 0 1 0-1.997Z"/></svg></label>
-				<input autocomplete="one-time-code" type="text" placeholder=" - Kopie" id="copy_text">
+				<input  type="text" placeholder=" - Kopie" id="copy_text">
 
 				<p>Logins</p>
 				<label onmouseenter="showTooltip(this, 1, 'Auffindbar in der URL: https://newsletter.infomaniak.com/v3/DOMAIN_ID/dashboard')">Infomaniak Newsletter*<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 1.999c5.524 0 10.002 4.478 10.002 10.002 0 5.523-4.478 10.001-10.002 10.001-5.524 0-10.002-4.478-10.002-10.001C1.998 6.477 6.476 1.999 12 1.999Zm0 1.5a8.502 8.502 0 1 0 0 17.003A8.502 8.502 0 0 0 12 3.5Zm-.004 7a.75.75 0 0 1 .744.648l.007.102.003 5.502a.75.75 0 0 1-1.493.102l-.007-.101-.003-5.502a.75.75 0 0 1 .75-.75ZM12 7.003a.999.999 0 1 1 0 1.997.999.999 0 0 1 0-1.997Z"/></svg></label>
-				<input autocomplete="one-time-code" type="text" placeholder="Domain ID" id="infomaniak_domain">
+				<input  type="text" placeholder="Domain ID" id="infomaniak_domain">
 				<small>(Der API Key kann unter <span onclick="t.opener.openUrl('https://manager.infomaniak.com/v3/ng/profile/user/token/add')" class="link">diesem Link</span> mit Scope Newsletter erstellen.)</small>
 				<button class="settings_show" onclick="this.nextElementSibling.style.display = 'block'; this.style.display = 'none';">API Key überschreiben</button>
-				<input autocomplete="one-time-code" type="text" placeholder="TOKEN" id="infomaniak_secret" style="display: none;">
+				<input  type="text" placeholder="TOKEN" id="infomaniak_secret" style="display: none;">
 				
 				<label>WebDav Server</label>
-				<input autocomplete="one-time-code" type="text" placeholder="Public URL" id="public_url">
-				<input autocomplete="one-time-code" type="text" placeholder="WebDav URL" id="webdav_url">
-				<input autocomplete="one-time-code" type="text" placeholder="Nutzername" id="webdav_username">
+				<input  type="text" placeholder="Public URL" id="public_url">
+				<input  type="text" placeholder="WebDav URL" id="webdav_url">
+				<input  type="text" placeholder="Nutzername" id="webdav_username">
 				<button class="settings_show" onclick="this.nextElementSibling.style.display = 'block'; this.style.display = 'none';">Passwort überschreiben</button>
-				<input autocomplete="one-time-code" type="text" placeholder="Passwort" id="webdav_password" style="display: none;">
+				<input  type="text" placeholder="Passwort" id="webdav_password" style="display: none;">
 			</settingsbox>
 			<buttonbox>
 				<button onclick="saveSettings('ok');">OK</button>
@@ -316,7 +316,7 @@
 			 <tr><td style="background-color: #888888;"></td><td style="background-color: #a10000;"></td><td style="background-color: #b26b00;"></td><td style="background-color: #b2b200;"></td><td style="background-color: #006100;"></td><td style="background-color: #0047b2;"></td><td style="background-color: #6b24b2;"></td></tr>
 			 <tr><td style="background-color: #444444;"></td><td style="background-color: #5c0000;"></td><td style="background-color: #663d00;"></td><td style="background-color: #666600;"></td><td style="background-color: #003700;"></td><td style="background-color: #002966;"></td><td style="background-color: #3d1466;"></td></tr>
 		</table>
-		<label><input autocomplete="one-time-code" type="color" id="favcolor" value="#ff0000"><span>Weitere Farben</span></label>
+		<label><input  type="color" id="favcolor" value="#ff0000"><span>Weitere Farben</span></label>
 	</picker>
 
 	<dialog>

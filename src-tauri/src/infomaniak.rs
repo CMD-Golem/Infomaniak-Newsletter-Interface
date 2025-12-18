@@ -7,14 +7,17 @@ async fn fetch(method: Method, url: &str, data: &str) -> Result<String, String> 
 	let config = CONFIG.lock().unwrap().clone();
 
 	let client = reqwest::Client::new();
-	let request = client.request(method, format!("https://api.infomaniak.com/1/newsletters/{}/{}", config.infomaniak_domain, url))
-		.header(CONTENT_TYPE, "application/json")
-		.bearer_auth(config.infomaniak_secret)
-		.body(data.to_string())
+	let mut request = client.request(method.clone(), format!("https://api.infomaniak.com/1/newsletters/{}/{}", config.infomaniak_domain, url));
+
+	if method != Method::GET {
+		request = request.header(CONTENT_TYPE, "application/json").body(data.to_string());
+	}
+
+	let response = request.bearer_auth(config.infomaniak_secret)
 		.send().await.map_err(|e| reqwest_error(e))?
 		.text().await.map_err(|e| reqwest_error(e))?;
 
-	return Ok(request);
+	return Ok(response);
 }
 
 fn reqwest_error(e: reqwest::Error) -> String {
@@ -84,7 +87,7 @@ pub async fn delete_mailinglist(id: u32) -> Result<String, String> {
 
 #[tauri::command]
 pub async fn mailinglist_get_contacts(id: u32) -> Result<String, String> {
-	Ok(fetch(Method::GET, "subscribers", &format!("{{\"filter\":{{\"groups\":[{id}]}}}}")).await?)
+	Ok(fetch(Method::POST, "subscribers/filter", &format!("{{\"filter\":{{\"groups\":[{}]}}}}", id)).await?)
 }
 
 #[tauri::command]
@@ -100,7 +103,7 @@ pub async fn mailinglist_add_contact(group: u32, email: &str) -> Result<String, 
 	// get all scbscribers
 	let client = reqwest::Client::new();
 	let subscribers = client.request(Method::GET, format!("https://api.infomaniak.com/1/newsletters/{}/subscribers", config.infomaniak_domain))
-		.header(CONTENT_TYPE, "application/json")
+		// .header(CONTENT_TYPE, "application/json")
 		.bearer_auth(&config.infomaniak_secret)
 		.send().await.map_err(|e| reqwest_error(e))?
 		.text().await.map_err(|e| reqwest_error(e))?;
@@ -155,7 +158,7 @@ pub async fn mailinglist_remove_contact(subscriber: u32, group: i64) -> Result<S
 	// get all scbscribers
 	let client = reqwest::Client::new();
 	let subscribers = client.request(Method::GET, format!("https://api.infomaniak.com/1/newsletters/{}/subscribers/{}?with=groups", config.infomaniak_domain, subscriber))
-		.header(CONTENT_TYPE, "application/json")
+		// .header(CONTENT_TYPE, "application/json")
 		.bearer_auth(&config.infomaniak_secret)
 		.send().await.map_err(|e| reqwest_error(e))?
 		.text().await.map_err(|e| reqwest_error(e))?;
@@ -175,7 +178,7 @@ pub async fn mailinglist_remove_contact(subscriber: u32, group: i64) -> Result<S
 	if (len == 1 && first_group == group) || len == 0 {
 		// delete subscriber
 		let response = client.request(Method::DELETE, format!("https://api.infomaniak.com/1/newsletters/{}/subscribers/{}/forget", config.infomaniak_domain, subscriber))
-			.header(CONTENT_TYPE, "application/json")
+			// .header(CONTENT_TYPE, "application/json")
 			.bearer_auth(&config.infomaniak_secret)
 			.send().await.map_err(|e| reqwest_error(e))?
 			.text().await.map_err(|e| reqwest_error(e))?;
@@ -206,7 +209,7 @@ pub async fn get_credits() -> Result<String, String> {
 
 	let client = reqwest::Client::new();
 	let response = client.request(Method::GET, format!("https://api.infomaniak.com/1/newsletters/{}/credits/details", config.infomaniak_domain))
-		.header(CONTENT_TYPE, "application/json")
+		// .header(CONTENT_TYPE, "application/json")
 		.bearer_auth(&config.infomaniak_secret)
 		.send().await.map_err(|e| reqwest_error(e))?
 		.text().await.map_err(|e| reqwest_error(e))?;

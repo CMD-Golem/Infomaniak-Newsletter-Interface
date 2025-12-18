@@ -1,6 +1,7 @@
 use std::{env, fs};
 use tauri::{Manager, WindowEvent::Destroyed};
 use tauri_plugin_updater::UpdaterExt;
+use tauri_plugin_prevent_default::{Flags, PlatformOptions};
 
 mod infomaniak;
 mod storage;
@@ -38,6 +39,7 @@ pub fn run() {
 		.plugin(tauri_plugin_fs::init())
 		.plugin(tauri_plugin_clipboard_manager::init())
 		.plugin(tauri_plugin_opener::init())
+		.plugin(prevent_default())
 		.setup(|app| {
 			// clear temp folder
 			let window = app.get_webview_window("main").unwrap();
@@ -62,4 +64,14 @@ pub fn run() {
 		})
 		.run(tauri::generate_context!())
 		.expect("error while running tauri application");
+}
+
+fn prevent_default() -> tauri::plugin::TauriPlugin<tauri::Wry> {
+	tauri_plugin_prevent_default::Builder::new()
+		.with_flags(Flags::all().difference(Flags::DEV_TOOLS | Flags::RELOAD | Flags::FIND))
+		.platform(PlatformOptions::new()
+			.general_autofill(false)
+			.password_autosave(false)
+		)
+		.build()
 }

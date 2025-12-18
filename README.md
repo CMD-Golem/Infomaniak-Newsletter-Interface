@@ -6,9 +6,6 @@ Currently only in German, text for translation is defined in the html files and 
 
 Built with [Tauri](https://tauri.app/) and [Quill](https://quilljs.com/) and powered by
 * [Resize images by scrapooo](https://github.com/scrapooo/quill-resize-module)
-* Currently not enabled:
-	* [Typo.js by Christopher Finke](https://github.com/cfinke/Typo.js)
-	* [Better tables by soccerloway](https://github.com/soccerloway/quill-better-table)
 * [Microsoft Icons](https://github.com/microsoft/fluentui-system-icons)
 
 # New versions:
