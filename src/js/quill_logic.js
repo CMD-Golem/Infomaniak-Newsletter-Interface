@@ -1,7 +1,3 @@
-// https://github.com/soccerloway/quill-better-table optional
-// https://amourspirit.github.io/Typo.js/spell.html optional
-// https://github.com/scrapooo/quill-resize-module in use
-
 // add custom text sizes and fonts
 var Size = Quill.import("attributors/style/size");
 Size.whitelist = ["8px", "9px", "10px", "11px", "12px", "13px", "14px", "15px", "16px", "17px", "18px", "19px", "20px", "21px", "22px", "23px", "24px", "25px", "26px", "27px", "28px", "29px", "30px"];
@@ -45,16 +41,48 @@ class StyleImageBlot extends ImageBlot {
 Quill.register(StyleImageBlot);
 Quill.register("modules/resize", window.QuillResizeModule);
 
+const {
+  default: TableUp,
+  TableResizeLine,
+  TableMenuSelect,
+  TableSelection,
+  tableMenuTools,
+} = window.TableUp;
+
+Quill.register("modules/table-up", TableUp);
+
 // register editor
 var quill = new Quill("#editor", 
 	{
 		modules: {
 			toolbar: true,
-			table: true,
 			resize: {
 				locale: {
 					center: "center",
 				}
+			},
+			[TableUp.moduleName]: {
+				full: true,
+				modules: [
+					{ module: TableResizeLine },
+					{ module: TableSelection },
+					{
+						module: TableMenuSelect,
+						options: {
+							tipText: false,
+							tools: [
+								tableMenuTools.InsertTop,
+								tableMenuTools.InsertRight,
+								tableMenuTools.InsertBottom,
+								tableMenuTools.InsertLeft,
+								tableMenuTools.Break,
+								tableMenuTools.DeleteRow,
+								tableMenuTools.DeleteColumn,
+								tableMenuTools.DeleteTable,
+							]
+						}
+					}
+				]
 			}
 		},
 		theme: "snow",

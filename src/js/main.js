@@ -13,6 +13,7 @@ const text_contact_duplicate = "Kontaktgruppe duplizieren";
 const text_contact_delete = "Kontaktgruppe löschen";
 const text_contact_remove = "Aus Kontaktgruppe entfernen";
 const text_contact_default = "Neue Kontaktgruppe";
+const text_default_unsubscribe = "Abmelden";
 const copy = " - Kopie";
 
 

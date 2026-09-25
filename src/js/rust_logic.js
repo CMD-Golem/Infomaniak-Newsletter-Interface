@@ -82,12 +82,12 @@ function initEditor() {
 	attachments.innerHTML = "";
 	active_campaign = 0;
 
-	if (unsubscribe != "") {
-		quill.insertText(0, unsubscribe, {
-			link: "*|UNSUBSCRIBED|*",
-			size: "9px"
-		});
-	}
+	if (unsubscribe == "") unsubscribe = text_default_unsubscribe;
+
+	quill.insertText(0, unsubscribe, {
+		link: "*|UNSUBSCRIBED|*",
+		size: "9px"
+	});
 
 	unsaved_campaign = false;
 }
@@ -265,7 +265,7 @@ async function getCampaign(id) {
 	var json = JSON.parse(response);
 
 	if (json.result == "success") {
-		quill.clipboard.dangerouslyPasteHTML(json.data.content)
+		quill.clipboard.dangerouslyPasteHTML(json.data.content);
 		subject.value = json.data.subject;
 		unsaved_campaign = false;
 		active_campaign = id;
@@ -354,11 +354,27 @@ async function saveCampaign() {
 	// create data string if a campaign is active
 	var app_version = await t.app.getVersion();
 
-	var html_content = quill.getSemanticHTML();
+	var temp_div = document.createElement("div");
+	temp_div.innerHTML = quill.getSemanticHTML();
+
+	var paragraphs = temp_div.getElementsByTagName("p");
+	for (var i = 0; i < paragraphs.length; i++) {
+		var style = paragraphs[i].getAttribute('style') || '';
+		paragraphs[i].setAttribute('style', style + " margin: 0; padding: 0;");
+	}
+
+	var microgramma = temp_div.getElementsByClassName("ql-font-microgramma");
+	for (var i = 0; i < microgramma.length; i++) {
+		var style = microgramma[i].getAttribute('style') || '';
+		microgramma[i].setAttribute('style', style + " font-family:MicrogrammaDBolExt; panose-1:2 14 9 7 3 5 6 6 2 4;");
+	}
+
+	var html_content = temp_div.innerHTML;
 	html_content = html_content.replaceAll("  ", "&nbsp;&nbsp;");
 	html_content = html_content.replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;");
-	if (!html_content.includes('<a href="*|UNSUBSCRIBED|*"')) html_content += '<template><a href="*|UNSUBSCRIBED|*" target="_blank"></a></template>';
-	var content = `<style data-infonewsversion=${app_version}>p {margin: 0;} * {font-size: ${standard_text_size}; font-family: ${standard_font}} .ql-font-microgramma {font-family:MicrogrammaDBolExt; panose-1:2 14 9 7 3 5 6 6 2 4;}</style>` + html_content.replaceAll('"', '\\"').replaceAll("<p></p>", "<br>");
+	html_content = html_content.replaceAll('<p style=" margin: 0; padding: 0;"></p>', "<br>");
+
+	var content = `<div data-infonewsversion="${app_version}" style="font-size: ${standard_text_size}; font-family: ${standard_font}">${html_content}</div>`.replaceAll('"', '\\"');
 
 	var data = `{
 		"subject":"${subject.value}",

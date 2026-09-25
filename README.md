@@ -6,10 +6,5 @@ Currently only in German, text for translation is defined in the html files and 
 
 Built with [Tauri](https://tauri.app/) and [Quill](https://quilljs.com/) and powered by
 * [Resize images by scrapooo](https://github.com/scrapooo/quill-resize-module)
+* [TableUp by quill-modules](https://github.com/quill-modules/quill-table-up)
 * [Microsoft Icons](https://github.com/microsoft/fluentui-system-icons)
-
-# New versions:
-- updater.json with new signature
-- package.json
-- 2x tauri.conf.json
-- Cargo.toml
