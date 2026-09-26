@@ -30,12 +30,12 @@
 	color: black;
 }
 
-.ql-toolbar, #editor-resizer .toolbar {
+editor .ql-toolbar, editor #editor-resizer .toolbar {
 	display: none;
 }
 
 .ql-container {
-    font-size: var(--font_size);
+	font-size: var(--font_size);
 }
 
 #toolbar .ql-font span[data-label='arial']::before {

@@ -42,6 +42,8 @@ const error_msg = [
 	{id:"quill_no_selection", msg:"Plazieren den Cursor im Text Editor um an dieser Stelle einzufügen", buttons:["dialog_ok"]},
 	{id:"not_found", msg:"Die Datei konnte nicht gefunden werden.", buttons:["dialog_ok"]},
 	{id:"webdav_error", msg:"Folgende Nachricht wurde vom Server zurückgegeben:<br><br>${additional_info}", buttons:["dialog_ok"]},
+	{id:"confirm_sending", msg:"Das Senden des Newsletters wird vorbereitet.", buttons:["dialog_ok"]},
+	{id:"confirm_testing", msg:"Das Testmail wird verschickt.", buttons:["dialog_ok"]}
 ]
 
 // status translation

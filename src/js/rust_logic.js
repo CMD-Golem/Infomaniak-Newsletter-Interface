@@ -3,7 +3,6 @@ var active_campaign = null;
 var active_tab = "show_draft";
 var settings = undefined;
 var unlisten;
-const settings_array = ["infomaniak_domain", "public_url", "webdav_url", "webdav_username", "sender_name", "sender_email", "lang", "unsubscribe", "file_text", "copy_text"];
 
 
 // initalize and load everything after document loaded
@@ -11,8 +10,6 @@ var campaign_list = document.querySelector("list");
 var el_test_email = document.getElementById("test_email");
 var newsletter_group = document.getElementById("newsletter_group");
 var subject = document.getElementById("subject");
-var el_infomaniak_secret = document.getElementById("infomaniak_secret");
-var el_webdav_password = document.getElementById("webdav_password");
 
 quill.on('text-change', () => { unsaved_campaign = true });
 
@@ -21,27 +18,8 @@ window.onload = async () => {
 
 	if (invoke == undefined) return;
 
-	var response = await invoke("get_config");
-	json = JSON.parse(response);
-
-	if (json.status == "error") return openDialog("backend_error", json.error);
-
-	settings = json;
-	el_test_email.value = settings.test_email;
-
-	if (
-		json.infomaniak_secret == "true" &&
-		json.sender_name != "" &&
-		json.sender_email != ""
-	) {
-		getMailinglists();
-		initEditor();
-		getCampaigns(true, true);
-		getCredits();
-	}
-	else {
-		openSettings(json, true);
-	}
+	await checkSettings();
+	t.event.listen("changed_settings", checkSettings);
 
 	t.event.listen("changed_mailinglists", async () => {
 		var set_value = newsletter_group.value;
@@ -57,6 +35,46 @@ window.onload = async () => {
 			else if (user_action == "dialog_cancel") event.preventDefault();
 		}
 	});
+}
+
+async function checkSettings() {
+	var json = await invoke("get_config");
+	var res = JSON.parse(json);
+
+	if (res.status == "error") return openDialog("backend_error", res.error);
+
+	settings = res;
+	el_test_email.value = settings.test_email;
+
+	if (
+		settings.infomaniak_secret == "true" &&
+		settings.sender_name != "" &&
+		settings.sender_email != ""
+	) {
+		getMailinglists();
+		initEditor();
+		getCampaigns(true, true);
+		getCredits();
+	}
+	else {
+		var webview = new t.webviewWindow.WebviewWindow("settings", {
+			title: "Manage Settings",
+			url: "settings.html",
+			width: 680,
+			height: 380,
+			minWidth: 600,
+			minHeight: 280,
+			maximizable: false,
+			minimizable: false,
+			skipTaskbar: true
+		});
+
+		webview.once('tauri://error', function (e) {
+			if (e.payload == "a webview with label `settings` already exists") {
+				webview.setFocus();
+			}
+		});
+	}
 }
 
 async function getCredits() {
@@ -90,100 +108,6 @@ function initEditor() {
 	});
 
 	unsaved_campaign = false;
-}
-
-// settings panel
-async function openSettings(json, disable_cancel) {
-	document.querySelector("settings").style.display = "block";
-
-	if (json == undefined) {
-		var response = await invoke("get_config");
-		json = JSON.parse(response);
-	}
-
-	if (json.status == "error") return openDialog("backend_error", json.error);
-	if (disable_cancel) document.getElementById("settings_cancel").disabled = true;
-
-	// show current settings on page
-	for (var i = 0; i < settings_array.length; i++) document.getElementById(settings_array[i]).value = json[settings_array[i]];
-}
-
-async function saveSettings(action) {
-	// check if settings are defined
-	if (
-		document.getElementById("sender_name").value == "" ||
-		document.getElementById("sender_email").value == "" ||
-		document.getElementById("infomaniak_domain").value == "" ||
-		(el_infomaniak_secret.value == "" && settings.infomaniak_secret == "false")
-	) {
-		openDialog("undefined_settings");
-		return;
-	}
-
-	document.getElementById("settings_cancel").disabled = false;
-	if (action != "apply") closeSettings(action);
-	if (action == "cancel") return false;
-
-	// store changes before
-	if (unsaved_campaign) {
-		var user_action = await openDialog("unsaved_changes");
-
-		if (user_action == "dialog_yes") await saveCampaign();
-		else if (user_action == "dialog_no") unsaved_campaign = false;
-		else if (user_action == "dialog_cancel") return false;
-	}
-	active_campaign = null;
-
-	// save settings
-	var new_settings = [];
-
-	for (var i = 0; i < settings_array.length; i++) validateSettings(settings_array[i], new_settings);
-
-	if (el_infomaniak_secret.value != "") new_settings.push({property:"infomaniak_secret", value:el_infomaniak_secret.value});
-	if (el_webdav_password.value != "") new_settings.push({property:"webdav_password", value:el_webdav_password.value});
-
-	if (new_settings.length != 0) {
-		var response = await invoke("change_config", {data:JSON.stringify(new_settings)});
-		if (response != "success") {
-			console.log("error in settings")
-			return openDialog("backend_error", response);
-		}
-	}
-
-	// reload settings
-	var response = await invoke("get_config");
-	json = JSON.parse(response);
-
-	if (json.status == "error") return openDialog("backend_error", json.error);
-	settings = json;
-	
-	// reload backend
-	getCampaigns(true, true);
-	getCredits();
-	getMailinglists();
-}
-
-function validateSettings(property, new_settings) {
-	var value = document.getElementById(property).value;
-
-	if (settings[property] != value) {
-		settings[property] = value;
-		new_settings.push({property:property, value:value});
-	}
-}
-
-function closeSettings(action) {
-	if (action == "cancel" && document.getElementById("settings_cancel").getAttribute("disabled") == "") return
-
-	document.querySelector("settings").style.display = "none";
-	el_infomaniak_secret.style.display = "none";
-	el_webdav_password.style.display = "none";
-
-	el_infomaniak_secret.previousElementSibling.style.display = "block";
-	el_webdav_password.previousElementSibling.style.display = "block";
-
-	el_infomaniak_secret.value = "";
-	el_webdav_password.value = "";
 }
 
 // #####################################################################################
@@ -442,55 +366,60 @@ async function saveCampaign() {
 }
 
 // send or test campaign
-async function sendCampaign(is_test) {
+async function sendCampaign() {
 	var should_continue = await saveCampaign();
 	if (!should_continue) return false;
 
-	// send test mail
-	if (is_test) {
-		if (el_test_email.value == "") {
-			openDialog("no_test_mail");
-			return false;
-		}
+	openDialog("confirm_sending");
 
-		var response = await invoke("test_campaign", {id:active_campaign, data:`{"email":"${el_test_email.value}"}`});
-		var json = JSON.parse(response);
+	var response = await invoke("send_campaign", {id:active_campaign});
+	var json = JSON.parse(response);
 
-		if (json.result != "success") {
-			openDialog("backend_error", JSON.stringify(json.error));
-			return;
-		}
+	if (json.result == "success") {
+		var json = await getCampaigns();
 
-		openDialog("sent_test_mail");
+		if (json == false) return false;
 
-		if (el_test_email.value != settings.test_email) {
-			settings.test_email = el_test_email.value;
-			await invoke("change_config", {data:JSON.stringify([{property:"test_email", value:el_test_email.value}])});
-		}
-	}
-	else {
-		var response = await invoke("send_campaign", {id:active_campaign});
-		var json = JSON.parse(response);
-
-		if (json.result == "success") {
-			var json = await getCampaigns();
-
-			if (json == false) return false;
-
-			for (var i = 0; i < json.data.length; i++) {
-				var campaign_object = json.data[i];
-				if (campaign_object.id == active_campaign && campaign_object.started_at != null) {
-					var date = new Date(campaign_object.started_at * 1000);
-				}
+		for (var i = 0; i < json.data.length; i++) {
+			var campaign_object = json.data[i];
+			if (campaign_object.id == active_campaign && campaign_object.started_at != null) {
+				var date = new Date(campaign_object.started_at * 1000);
 			}
-
-			var timeout = campaign_object.started_at * 1000 - Date.now() + 8000;
-
-			openDialog("sent_campaign", date.toLocaleString());
-			setTimeout(getCredits, 500);
-			setTimeout(getCampaigns, timeout);
 		}
-		else openDialog("backend_error", JSON.stringify(json.error));
+
+		var timeout = campaign_object.started_at * 1000 - Date.now() + 8000;
+
+		openDialog("sent_campaign", date.toLocaleString());
+		setTimeout(getCredits, 500);
+		setTimeout(getCampaigns, timeout);
+	}
+	else openDialog("backend_error", JSON.stringify(json.error));
+}
+
+async function testCampaign() {
+	var should_continue = await saveCampaign();
+	if (!should_continue) return false;
+
+	if (el_test_email.value == "") {
+		openDialog("no_test_mail");
+		return false;
+	}
+
+	openDialog("confirm_testing");
+
+	var response = await invoke("test_campaign", {id:active_campaign, data:`{"email":"${el_test_email.value}"}`});
+	var json = JSON.parse(response);
+
+	if (json.result != "success") {
+		openDialog("backend_error", JSON.stringify(json.error));
+		return;
+	}
+
+	openDialog("sent_test_mail");
+
+	if (el_test_email.value != settings.test_email) {
+		settings.test_email = el_test_email.value;
+		await invoke("change_config", {data:JSON.stringify([{property:"test_email", value:el_test_email.value}])});
 	}
 }
 
