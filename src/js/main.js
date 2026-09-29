@@ -72,11 +72,11 @@ function openDialog(id, additional_info) {
 
 		active_error_dialog = error_msg.find(function(item) { return item.id == id; });
 
-		if (active_error_dialog.title != undefined) dialog.children[0].innerHTML = active_error_dialog.title;
-		else dialog.children[0].style.display = "none";
+		if (active_error_dialog.title != undefined) dialog.firstElementChild.children[0].innerHTML = active_error_dialog.title;
+		else dialog.firstElementChild.children[0].style.display = "none";
 
 		var msg = active_error_dialog.msg.replace("${additional_info}", additional_info);
-		dialog.children[1].innerHTML = msg;
+		dialog.firstElementChild.children[1].innerHTML = msg;
 
 		for (var i = 0; i < active_error_dialog.buttons.length; i++) {
 			var button = document.getElementById(active_error_dialog.buttons[i]);
@@ -86,7 +86,7 @@ function openDialog(id, additional_info) {
 				resolve(e.target.id);
 
 				dialog.open = false;
-				dialog.children[0].style.display = "block";
+				dialog.firstElementChild.children[0].style.display = "block";
 
 				var buttons = dialog.getElementsByTagName("button");
 				for (var i = 0; i < buttons.length; i++) {

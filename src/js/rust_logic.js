@@ -18,8 +18,8 @@ window.onload = async () => {
 
 	if (invoke == undefined) return;
 
-	await checkSettings();
-	t.event.listen("changed_settings", checkSettings);
+	await checkSettings(true);
+	t.event.listen("changed_settings", () => checkSettings(true));
 
 	t.event.listen("changed_mailinglists", async () => {
 		var set_value = newsletter_group.value;
@@ -28,16 +28,20 @@ window.onload = async () => {
 	});
 
 	unlisten = await t.window.getCurrentWindow().onCloseRequested(async (event) => {
+		event.preventDefault();
+
 		if (unsaved_campaign) {
 			var user_action = await openDialog("unsaved_changes");
 	
 			if (user_action == "dialog_yes") await saveCampaign();
-			else if (user_action == "dialog_cancel") event.preventDefault();
+			else if (user_action == "dialog_cancel") return;
 		}
+
+		t.app.exit();
 	});
 }
 
-async function checkSettings() {
+async function checkSettings(reload) {
 	var json = await invoke("get_config");
 	var res = JSON.parse(json);
 
@@ -45,35 +49,33 @@ async function checkSettings() {
 
 	settings = res;
 	el_test_email.value = settings.test_email;
+	
+	// close dialog
+	dialog.open = false;
+	dialog.firstElementChild.children[0].style.display = "block";
+
+	var button = document.getElementById("dialog_settings");
+	button.style.display = "none";
 
 	if (
-		settings.infomaniak_secret == "true" &&
-		settings.sender_name != "" &&
-		settings.sender_email != ""
+		settings.infomaniak_secret != "true" ||
+		settings.sender_name == "" ||
+		settings.sender_email == ""
 	) {
+		dialog.open = true;
+		dialog.firstElementChild.children[0].style.display = "none";
+
+		active_error_dialog = error_msg.find(function(item) { return item.id == "undefined_settings" });
+		dialog.firstElementChild.children[1].innerHTML = active_error_dialog.msg;
+
+		button.style.display = "inline-block";
+		button.addEventListener("click", openSettings);
+	}
+	else if (reload) {
 		getMailinglists();
 		initEditor();
 		getCampaigns(true, true);
 		getCredits();
-	}
-	else {
-		var webview = new t.webviewWindow.WebviewWindow("settings", {
-			title: "Manage Settings",
-			url: "settings.html",
-			width: 680,
-			height: 380,
-			minWidth: 600,
-			minHeight: 280,
-			maximizable: false,
-			minimizable: false,
-			skipTaskbar: true
-		});
-
-		webview.once('tauri://error', function (e) {
-			if (e.payload == "a webview with label `settings` already exists") {
-				webview.setFocus();
-			}
-		});
 	}
 }
 
@@ -535,4 +537,37 @@ function openMailinglists() {
 			webview.setFocus();
 		}
 	});
+}
+
+async function openSettings() {
+	// store changes before
+	if (unsaved_campaign) {
+		var user_action = await openDialog("unsaved_changes");
+
+		if (user_action == "dialog_yes") await saveCampaign();
+		else if (user_action == "dialog_no") unsaved_campaign = false;
+		else if (user_action == "dialog_cancel") return false;
+	}
+	active_campaign = null;
+
+	var webview = new t.webviewWindow.WebviewWindow("settings", {
+		title: "Manage Settings",
+		url: "settings.html",
+		width: 680,
+		height: 380,
+		minWidth: 600,
+		minHeight: 280,
+		maximizable: false,
+		minimizable: false,
+		skipTaskbar: true
+	});
+
+	webview.once('tauri://error', function (e) {
+		if (e.payload == "a webview with label `settings` already exists") {
+			webview.setFocus();
+		}
+	});
+
+	webview.onFocusChanged(({ payload: focused }) => { if (!focused) checkSettings(false) });
+	webview.onCloseRequested((e) => checkSettings(false));
 }

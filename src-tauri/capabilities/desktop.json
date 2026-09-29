@@ -1,16 +1,16 @@
 {
-  "$schema": "../gen/schemas/desktop-schema.json",
-  "identifier": "desktop-capability",
-  "platforms": [
-    "macOS",
-    "windows",
-    "linux"
-  ],
-  "windows": [
-    "main"
-  ],
-  "permissions": [
-    "updater:default",
-    "window-state:default"
-  ]
+	"$schema": "../gen/schemas/desktop-schema.json",
+	"identifier": "desktop-capability",
+	"platforms": [
+		"macOS",
+		"windows",
+		"linux"
+	],
+	"windows": [
+		"main"
+	],
+	"permissions": [
+		"updater:default",
+		"window-state:default"
+	]
 }

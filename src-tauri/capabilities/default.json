@@ -1,23 +1,24 @@
 {
-  "$schema": "../gen/schemas/desktop-schema.json",
-  "identifier": "default",
-  "description": "Capability for the main window",
-  "windows": [
-    "main"
-  ],
-  "permissions": [
-    "core:default",
-	"core:webview:allow-create-webview-window",
-	"core:window:allow-set-focus",
-	"core:window:allow-close",
-    "core:window:allow-show",
-    "core:window:allow-hide",
-    "core:window:allow-destroy",
-    "opener:default",
-    "clipboard-manager:allow-read-image",
-	"clipboard-manager:allow-read-text",
-	"fs:allow-temp-write-recursive",
-	"fs:allow-temp-read-recursive",
-    "dialog:default"
-  ]
+	"$schema": "../gen/schemas/desktop-schema.json",
+	"identifier": "default",
+	"description": "Capability for the main window",
+	"windows": [
+		"main"
+	],
+	"permissions": [
+		"core:default",
+		"core:webview:allow-create-webview-window",
+		"core:window:allow-set-focus",
+		"core:window:allow-close",
+		"core:window:allow-show",
+		"core:window:allow-hide",
+		"core:window:allow-destroy",
+		"core:app:allow-exit",
+		"opener:default",
+		"clipboard-manager:allow-read-image",
+		"clipboard-manager:allow-read-text",
+		"fs:allow-temp-write-recursive",
+		"fs:allow-temp-read-recursive",
+		"dialog:default"
+	]
 }

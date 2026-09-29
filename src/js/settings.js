@@ -1,9 +1,8 @@
-const settings_array = ["infomaniak_domain", "public_url", "webdav_url", "webdav_username", "sender_name", "sender_email", "lang", "unsubscribe", "file_text", "copy_text"];
 const toolbar_options = ['bold', 'italic', 'underline', 'strike', 'link', { 'align': [] }, { 'color': [] }]
-
 
 var el_infomaniak_secret = document.getElementById("infomaniak_secret");
 var el_webdav_password = document.getElementById("webdav_password");
+var settings = undefined;
 
 var quill = new Quill("#editor", 
 	{
@@ -15,22 +14,25 @@ var quill = new Quill("#editor",
 );
 
 // settings panel
-async function openSettings(json, disable_cancel) {
-	document.querySelector("settings").style.display = "block";
+async function openSettings() {
+	var json = await invoke("get_config");
+	settings = JSON.parse(json);
 
-	if (json == undefined) {
-		var response = await invoke("get_config");
-		json = JSON.parse(response);
-	}
+	if (settings.status == "error") return openDialog("backend_error", settings.error);
 
-	if (json.status == "error") return openDialog("backend_error", json.error);
-	if (disable_cancel) document.getElementById("settings_cancel").disabled = true;
+	quill.clipboard.dangerouslyPasteHTML(settings.signature);
 
-	// show current settings on page
-	for (var i = 0; i < settings_array.length; i++) document.getElementById(settings_array[i]).value = json[settings_array[i]];
+	delete settings.infomaniak_secret;
+	delete settings.webdav_password;
+	delete settings.test_email;
+	delete settings.signature;
+
+	for (var [key, value] of Object.entries(settings)) document.getElementById(key).value = value;
 }
 
-async function saveSettings(action) {
+openSettings();
+
+async function saveSettings() {
 	// check if settings are defined
 	if (
 		document.getElementById("sender_name").value == "" ||
@@ -42,27 +44,25 @@ async function saveSettings(action) {
 		return;
 	}
 
-	document.getElementById("settings_cancel").disabled = false;
-	if (action != "apply") closeSettings(action);
-	if (action == "cancel") return false;
-
-	// store changes before
-	if (unsaved_campaign) {
-		var user_action = await openDialog("unsaved_changes");
-
-		if (user_action == "dialog_yes") await saveCampaign();
-		else if (user_action == "dialog_no") unsaved_campaign = false;
-		else if (user_action == "dialog_cancel") return false;
-	}
-	active_campaign = null;
-
 	// save settings
 	var new_settings = [];
 
-	for (var i = 0; i < settings_array.length; i++) validateSettings(settings_array[i], new_settings);
+	for (var key of Object.keys(settings)) validateSettings(key, new_settings);;
 
-	if (el_infomaniak_secret.value != "") new_settings.push({property:"infomaniak_secret", value:el_infomaniak_secret.value});
-	if (el_webdav_password.value != "") new_settings.push({property:"webdav_password", value:el_webdav_password.value});
+	if (el_infomaniak_secret.value != "") {
+		new_settings.push({property:"infomaniak_secret", value:el_infomaniak_secret.value});
+		el_infomaniak_secret.style.display = "none";
+		el_infomaniak_secret.previousElementSibling.style.display = "block";
+		el_infomaniak_secret.value = "";
+	}
+	if (el_webdav_password.value != "") {
+		new_settings.push({property:"webdav_password", value:el_webdav_password.value});
+		el_webdav_password.style.display = "none";
+		el_webdav_password.previousElementSibling.style.display = "block";
+		el_webdav_password.value = "";
+	}
+
+	console.log(new_settings)
 
 	if (new_settings.length != 0) {
 		var response = await invoke("change_config", {data:JSON.stringify(new_settings)});
@@ -70,22 +70,13 @@ async function saveSettings(action) {
 			console.log("error in settings")
 			return openDialog("backend_error", response);
 		}
+
+		await t.event.emit('changed_settings');
 	}
-
-	// reload settings
-	var response = await invoke("get_config");
-	json = JSON.parse(response);
-
-	if (json.status == "error") return openDialog("backend_error", json.error);
-	settings = json;
-	
-	// reload backend
-	getCampaigns(true, true);
-	getCredits();
-	getMailinglists();
 }
 
 function validateSettings(property, new_settings) {
+	console.log(property)
 	var value = document.getElementById(property).value;
 
 	if (settings[property] != value) {
@@ -94,16 +85,17 @@ function validateSettings(property, new_settings) {
 	}
 }
 
-function closeSettings(action) {
-	if (action == "cancel" && document.getElementById("settings_cancel").getAttribute("disabled") == "") return
+function changeTab(el, is_profile, id) {
+	document.querySelector(".selected")?.classList.remove("selected");
+	el.classList.add("selected");
 
-	document.querySelector("settings").style.display = "none";
-	el_infomaniak_secret.style.display = "none";
-	el_webdav_password.style.display = "none";
+	if (is_profile) {
+		document.querySelector("profile").style.display = "block";
+		document.querySelector("general").style.display = "none";
+	}
+	else {
+		document.querySelector("profile").style.display = "none";
+		document.querySelector("general").style.display = "block";
+	}
 
-	el_infomaniak_secret.previousElementSibling.style.display = "block";
-	el_webdav_password.previousElementSibling.style.display = "block";
-
-	el_infomaniak_secret.value = "";
-	el_webdav_password.value = "";
 }

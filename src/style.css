@@ -128,7 +128,6 @@ navigation button svg {
 }
 
 list {
-	padding: 0 10px;
 	display: block;
 	flex-grow: 1;
 	overflow-y: auto;
@@ -138,6 +137,7 @@ listitem {
 	display: flex;
 	align-items: center;
 	height: 60px;
+	padding: 0 10px;
 	border-bottom: 1px #c7c7c7 solid;
 }
 
@@ -151,7 +151,7 @@ listitem p, listitem input {
 	overflow: hidden;
 }
 
-listitem.selected p, listitem.selected input {
+listitem.selected p, listitem.selected input, .settings listitem.selected {
 	font-weight: bold;
 }
 
@@ -546,7 +546,14 @@ header select, header select:focus {
 }
 
 /* Dialog */
-dialog, dialogbox, enter {
+dialog {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background-color: transparent;
+}
+
+dialogbox, enter {
 	position: absolute;
 	top: 50%;
 	left: 50%;
@@ -590,16 +597,16 @@ enter input {
 }
 
 /* New Settings */
-.settings status {
-	padding: 0 10px;
+.settings status, .settings navigation {
 	display: block;
+	width: unset;
 }
 
-.settings status listitem {
-	
+.settings status listitem, .settings navigation listitem {
+	border: none;
 }
 
-.settings listitem {
+.settings listitem, .settings navigation {
 	height: 40px;
 }
 
@@ -609,10 +616,6 @@ general, profile {
 	height: calc(100vh - 20px);
 	padding: 10px 15px;
 	overflow-y: auto;
-}
-
-general {
-	display: none;
 }
 
 .settings p {
@@ -661,13 +664,13 @@ settings, mailinglists {
 	height: 100vh;
 }
 
-dialogbox {
+/* dialogbox {
 	display: block;
 	position: relative;
 	text-align: left;
 	padding: 20px;
 	max-width: 1200px;
-}
+} */
 
 settingsbox {
 	display: block;
@@ -720,9 +723,9 @@ buttonbox {
 	text-align: right;
 }
 
-@media screen and (max-width: 1280px) {
+/* @media screen and (max-width: 1280px) {
 	dialogbox {
 		margin: 0;
 		width: calc(100% - 80px);
 	}
-}
+} */
